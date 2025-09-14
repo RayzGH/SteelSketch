@@ -1,806 +1,426 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>SteelSketch - Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
-  <style>
-    :root {
-      --primary: #1e40af;
-      --primary-hover: #1d4ed8;
-      --secondary: #64748b;
-      --bg: #f1f5f9;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-secondary: #64748b;
-      --border: #e2e8f0;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-      --success: #22c55e;
-      --warning: #facc15;
-      --danger: #ef4444;
-      --info: #3b82f6;
-      --toolbar-h: 60px; /* Hauteur de la barre du haut */
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; padding: 0; height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #1e1e2f; color: #eee;
+    display: flex;
+    flex-direction: column;
+  }
 
-    body.dark {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-secondary: #94a3b8;
-      --border: #475569;
-      --primary: #60a5fa;
-      --primary-hover: #3b82f6;
-    }
+  header {
+    padding: 1rem 2rem;
+    background: #282942;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.3s ease, color 0.3s ease;
-      overflow-x: hidden;
-    }
+  #user-name {
+    font-weight: 700;
+    font-size: 1.3rem;
+    user-select: none;
+  }
 
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--toolbar-h);
-      background: linear-gradient(270deg, var(--primary), #0ea5e9, var(--primary));
-      background-size: 400% 400%;
-      animation: headerGradient 10s ease infinite;
-      color: white;
-      padding: 0 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: var(--shadow-md);
-      z-index: 1000;
-    }
+  #logout-btn {
+    background: #ff4757;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    right: 0;
+    transition: background 0.3s ease;
+  }
+  #logout-btn:hover {
+    background: #e84118;
+  }
 
-    @keyframes headerGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+  main {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    overflow: hidden;
+  }
 
-    .logo {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
+  /* Liste amis à gauche */
+  #friends-container {
+    width: 260px;
+    background: #282942;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #friends-title {
+    padding: 1rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+    border-bottom: 1px solid #444666;
+    user-select: none;
+  }
+  #friends-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  /* Scrollbar custom */
+  #friends-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  #friends-list::-webkit-scrollbar-thumb {
+    background: #565680;
+    border-radius: 4px;
+  }
+  #friends-list::-webkit-scrollbar-track {
+    background: #1e1e2f;
+  }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+  .friend-item {
+    background: #3a3a5e;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    color: #ccc;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    user-select: none;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+  .friend-item:hover {
+    background: #52528f;
+    color: white;
+  }
 
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  .friend-icon {
+    width: 28px;
+    height: 28px;
+    background: #6668aa;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ddd;
+    user-select: none;
+  }
 
-    .user-name {
-      font-weight: 600;
-    }
+  /* Message si pas d’amis */
+  #no-friends {
+    margin-top: auto;
+    margin-bottom: auto;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  #no-friends svg {
+    width: 64px;
+    height: 64px;
+    fill: #6668aa;
+  }
 
-    .logout-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
+  /* Section centrale */
+  #content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  section {
+    background: #282942;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  section h2 {
+    margin: 0 0 0.8rem 0;
+    font-weight: 700;
+    text-align: center;
+    font-size: 1.4rem;
+    user-select: none;
+    color: #c3c3f8;
+  }
 
-    .logout-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
+  /* Bouton Nouveau Projet */
+  #new-project-btn {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, #6a5af9, #b867f9);
+    color: white;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(106, 90, 249, 0.7);
+    align-self: center;
+    user-select: none;
+    transition: filter 0.3s ease;
+  }
+  #new-project-btn:hover {
+    filter: brightness(1.15);
+  }
 
-    .sidebar {
-      position: fixed;
-      left: 0;
-      top: var(--toolbar-h);
-      width: 280px;
-      height: calc(100vh - var(--toolbar-h));
-      background: var(--card-bg);
-      border-right: 1px solid var(--border);
-      padding: 30px 20px;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-      z-index: 999;
+  /* Effet vague (ripple effect) */
+  #new-project-btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    animation: ripple-effect 0.6s linear;
+    pointer-events: none;
+    transform: scale(0);
+  }
+  @keyframes ripple-effect {
+    to {
+      transform: scale(4);
+      opacity: 0;
     }
+  }
 
-    body.sidebar-closed .sidebar {
-      transform: translateX(-100%);
-    }
+  /* Stats & Activités */
+  #stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 2rem;
+  }
+  .stat-box {
+    flex: 1;
+    background: #3a3a5e;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+    color: #ddd;
+  }
+  .stat-box h3 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #c3c3f8;
+  }
+  .stat-box p {
+    margin: 0.5rem 0 0 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
 
-    .sidebar-toggle {
-      position: absolute;
-      top: 20px;
-      right: -15px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-left: none;
-      padding: 8px;
-      cursor: pointer;
-      border-radius: 0 8px 8px 0;
-      transition: transform 0.3s;
-    }
+  /* Activité récentes (exemple) */
+  #activity-list {
+    max-height: 200px;
+    overflow-y: auto;
+    color: #ccc;
+    font-size: 1rem;
+  }
+  #activity-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  #activity-list::-webkit-scrollbar-thumb {
+    background: #565680;
+    border-radius: 4px;
+  }
+  #activity-list::-webkit-scrollbar-track {
+    background: #1e1e2f;
+  }
+  .activity-item {
+    margin-bottom: 0.5rem;
+    user-select: none;
+  }
 
-    body.sidebar-closed .sidebar-toggle {
-      transform: translateX(15px);
-    }
-
-    .sidebar h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: var(--text);
-    }
-
-    .friend-code {
-      background: var(--bg);
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-size: 14px;
-      margin-bottom: 20px;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .friend-code i {
-      cursor: pointer;
-      color: var(--secondary);
-    }
-
-    .add-friend {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 25px;
-    }
-
-    .add-friend input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .add-friend button {
-      padding: 10px 15px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .friend-list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      height: calc(100% - 200px);
-      overflow-y: auto;
-      padding-right: 10px;
-    }
-
-    .friend {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px;
-      background: var(--bg);
-      border-radius: 8px;
-      transition: transform 0.2s;
-    }
-
-    .friend:hover {
-      transform: translateX(5px);
-    }
-
-    .status {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    .online { background: var(--success); }
-    .idle { background: var(--warning); }
-    .dnd { background: var(--danger); }
-    .offline { background: var(--secondary); }
-
-    .friend-name {
-      font-weight: 500;
-    }
-
-    .no-friends {
-      text-align: center;
-      color: var(--text-secondary);
-      font-style: italic;
-      margin-top: 20px;
-    }
-
-    .content {
-      flex: 1;
-      padding: calc(var(--toolbar-h) + 40px) 40px 40px 320px;
-      transition: padding-left 0.3s ease;
-    }
-
-    body.sidebar-closed .content {
-      padding-left: 40px;
-    }
-
-    .dashboard-overview {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 40px;
-    }
-
-    .overview-card {
-      flex: 1;
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.3s;
-    }
-
-    .overview-card:hover {
-      box-shadow: var(--shadow-md);
-    }
-
-    .overview-card h3 {
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-
-    .overview-number {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .search-bar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 12px 14px;
-      font-size: 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      transition: border-color 0.3s;
-    }
-
-    .search-input:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
-
-    .new-project-btn {
-      padding: 12px 20px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.3s, transform 0.2s;
-    }
-
-    .new-project-btn:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
-    }
-
-    .projects {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .project-item {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.3s, box-shadow 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .project-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: var(--primary);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-
-    .project-item:hover::before {
-      transform: scaleX(1);
-    }
-
-    .project-item:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .project-name {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    .project-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 15px;
-    }
-
-    .project-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .action-btn {
-      padding: 8px 15px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-    }
-
-    .action-btn.delete {
-      background: var(--danger);
-    }
-
-    .action-btn:hover {
-      background: var(--primary-hover);
-    }
-
-    .action-btn.delete:hover {
-      background: #dc2626;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      animation: fadeIn 0.3s;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-md);
-      width: 400px;
-      animation: scaleIn 0.3s;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 20px;
-      color: var(--text-secondary);
-    }
-
-    .modal h2 {
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
-
-    .modal input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    .modal .btn {
-      width: 100%;
-      margin-top: 10px;
-    }
-
-    .chart-container {
-      margin-top: 40px;
-      padding: 20px;
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes scaleIn {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+</style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo">SteelSketch</div>
-    <div class="user-info">
-      <div class="user-avatar"><i class="fas fa-user"></i></div>
-      <span id="user-name">Chargement...</span>
-    </div>
-    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
-  </header>
+<header>
+  <div id="user-name">Chargement...</div>
+  <button id="logout-btn" title="Déconnexion">Déconnexion</button>
+</header>
 
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-chevron-left"></i></button>
-    <h2>Amis</h2>
-    <div class="friend-code">Ton code ami : <strong id="friend-code">Chargement...</strong> <i class="fas fa-copy" onclick="copyFriendCode()" style="cursor:pointer;"></i></div>
-    <div class="add-friend">
-      <input type="text" id="add-friend-input" placeholder="Code ami...">
-      <button class="btn" onclick="addFriend()"><i class="fas fa-plus"></i></button>
+<main>
+  <div id="friends-container">
+    <div id="friends-title">Mes amis</div>
+    <div id="friends-list">
+      <!-- amis insérés ici dynamiquement -->
     </div>
-    <div class="friend-list" id="friend-list">
-      <!-- Amis listés ici -->
+    <div id="no-friends" style="display:none;">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div>Aucun ami pour le moment.</div>
     </div>
   </div>
 
-  <!-- Contenu principal -->
-  <div class="content">
-    <h1 style="animation: fadeInUp 0.5s;">Mes Projets</h1>
-    <div class="search-bar">
-      <input class="search-input" type="text" placeholder="Rechercher un projet..." onkeyup="searchProjects(this.value)">
-      <button class="new-project-btn" onclick="openCreateModal()"><i class="fas fa-plus"></i> Nouveau projet</button>
-    </div>
+  <div id="content">
+    <button id="new-project-btn">Nouveau projet</button>
 
-    <div class="dashboard-overview">
-      <div class="overview-card">
+    <section id="stats">
+      <div class="stat-box">
         <h3>Projets totaux</h3>
-        <div class="overview-number" id="total-projects">0</div>
+        <p id="total-projects">0</p>
       </div>
-      <div class="overview-card">
-        <h3>Projets partagés</h3>
-        <div class="overview-number" id="shared-projects">0</div>
+      <div class="stat-box">
+        <h3>Activité récente</h3>
+        <div id="activity-list">
+          <!-- activité ajoutée ici -->
+        </div>
       </div>
-      <div class="overview-card">
-        <h3>Dernier projet</h3>
-        <div class="overview-number" id="last-project">Aucun</div>
-      </div>
-    </div>
-
-    <div class="chart-container">
-      <h3>Activité récente</h3>
-      <canvas id="activityChart" height="200"></canvas>
-    </div>
-
-    <div class="projects" id="projects-list">
-      <!-- Projets -->
-    </div>
+    </section>
   </div>
+</main>
 
-  <!-- Modal Créer Projet -->
-  <div id="createModal" class="modal">
-    <div class="modal-content">
-      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
-      <h2>Créer un nouveau projet</h2>
-      <input id="projectName" type="text" placeholder="Nom du projet">
-      <input id="projectDesc" type="text" placeholder="Description (optionnel)">
-      <button class="btn" onclick="createNewProject()">Créer le projet</button>
-    </div>
-  </div>
+<script>
+  // Simul données (à remplacer par Firebase ou autre)
+  const user = {
+    displayName: null,
+    email: "user@example.com",
+    uid: "abc123",
+    providerData: [
+      { displayName: "Jean Dupont" }
+    ]
+  };
 
-  <!-- Firebase + librairies -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  const friendsData = [
+    { uid: "u1", name: "Alice" },
+    { uid: "u2", name: "Bob" },
+    { uid: "u3", name: "Charlie" },
+    // Vide possible pour test "aucun ami" []
+  ];
 
-  <script>
-    const firebaseConfig = { /* ... ta config ... */ };
+  const projectsData = [
+    { id: 1, name: "Projet Alpha" },
+    { id: 2, name: "Projet Beta" }
+  ];
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  const activityData = [
+    "Ajout du projet Alpha",
+    "Modification du projet Beta",
+    "Connexion effectuée"
+  ];
 
-    let sidebarOpen = true;
-
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        // Nom + utilisateur
-        const nameEl = document.getElementById('user-name');
-        if (nameEl) nameEl.innerText = user.displayName || user.email;
-
-        generateFriendCode(user.uid);
-        loadFriends(user.uid);
-        loadProjects(user.uid);
-        loadActivityChart(user.uid);
-      } else {
-        window.location.href = 'index.html';
+  // -- Affichage nom utilisateur
+  function displayUserName(user) {
+    let display = user.displayName;
+    if (!display) {
+      for (const profile of user.providerData) {
+        if (profile.displayName) {
+          display = profile.displayName;
+          break;
+        }
       }
+    }
+    if (!display) display = user.email;
+    const nameEl = document.getElementById("user-name");
+    if (nameEl) nameEl.innerText = display;
+  }
+
+  // -- Gestion amis
+  function loadFriends(friends) {
+    const list = document.getElementById("friends-list");
+    const noFriendsMsg = document.getElementById("no-friends");
+
+    list.innerHTML = ""; // reset
+
+    if (friends.length === 0) {
+      noFriendsMsg.style.display = "flex";
+      return;
+    } else {
+      noFriendsMsg.style.display = "none";
+    }
+
+    friends.forEach(f => {
+      const item = document.createElement("div");
+      item.className = "friend-item";
+      // Icon avec initiale
+      const icon = document.createElement("div");
+      icon.className = "friend-icon";
+      icon.innerText = f.name.charAt(0).toUpperCase();
+      item.appendChild(icon);
+
+      const name = document.createElement("div");
+      name.innerText = f.name;
+      item.appendChild(name);
+
+      list.appendChild(item);
     });
+  }
 
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = 'index.html';
-      }).catch(err => console.error('Erreur logout:', err));
-    }
+  // -- Affichage projets et stats
+  function loadProjects(projects) {
+    const totalProjectsEl = document.getElementById("total-projects");
+    totalProjectsEl.innerText = projects.length;
+  }
 
-    function toggleSidebar() {
-      sidebarOpen = !sidebarOpen;
-      document.body.classList.toggle('sidebar-closed', !sidebarOpen);
-    }
+  // -- Activités
+  function loadActivity(activity) {
+    const list = document.getElementById("activity-list");
+    list.innerHTML = "";
+    activity.forEach(act => {
+      const item = document.createElement("div");
+      item.className = "activity-item";
+      item.innerText = act;
+      list.appendChild(item);
+    });
+  }
 
-    function generateFriendCode(uid) {
-      const code = uid.slice(0,6).toUpperCase();
-      const fcEl = document.getElementById('friend-code');
-      if (fcEl) fcEl.innerText = code;
-    }
+  // -- Ripple effect bouton Nouveau projet
+  const newProjectBtn = document.getElementById("new-project-btn");
+  newProjectBtn.addEventListener("click", (e) => {
+    // Effet ripple
+    const circle = document.createElement("span");
+    circle.classList.add("ripple");
+    const rect = newProjectBtn.getBoundingClientRect();
 
-    function copyFriendCode() {
-      const code = document.getElementById('friend-code').innerText;
-      if (code) navigator.clipboard.writeText(code).then(() => {
-        alert('Code copié dans le presse‑papiers !');
-      });
-    }
+    circle.style.left = (e.clientX - rect.left) + "px";
+    circle.style.top = (e.clientY - rect.top) + "px";
+    newProjectBtn.appendChild(circle);
 
-    function addFriend() {
-      const input = document.getElementById('add-friend-input');
-      if (!input) return;
-      const code = input.value.toUpperCase().trim();
-      if (!code) {
-        alert('Code requis');
-        return;
-      }
-      const user = auth.currentUser;
-      if (!user) return;
+    setTimeout(() => {
+      circle.remove();
+    }, 600);
 
-      // On ne veut pas s'ajouter soi-même
-      if (code === (user.uid.slice(0,6).toUpperCase())) {
-        alert("Tu ne peux pas t'ajouter toi-même !");
-        return;
-      }
+    // Action du bouton
+    alert("Créer un nouveau projet (à implémenter) !");
+  });
 
-      // Ajouter dans Firestore
-      db.collection('friends').add({
-        userId: user.uid,
-        friendCode: code,
-        status: 'pending',
-        addedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        input.value = '';
-        loadFriends(user.uid);
-      }).catch(err => {
-        console.error('Erreur addFriend:', err);
-        alert('Erreur: ' + err.message);
-      });
-    }
+  // -- Déconnexion
+  const logoutBtn = document.getElementById("logout-btn");
+  logoutBtn.addEventListener("click", () => {
+    // Ici ta logique de déconnexion (ex Firebase signOut)
+    alert("Déconnexion en cours (à implémenter) !");
+    // Exemple : firebase.auth().signOut();
+  });
 
-    function loadFriends(userId) {
-      const container = document.getElementById('friend-list');
-      if (!container) return;
-      container.innerHTML = '';
-      db.collection('friends')
-        .where('userId', '==', userId)
-        .get()
-        .then(snapshot => {
-          if (snapshot.empty) {
-            container.innerHTML = '<div class="no-friends">Aucun ami ajouté pour le moment.</div>';
-            return;
-          }
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const div = document.createElement('div');
-            div.className = 'friend';
-            div.innerHTML = `
-              <span class="status offline"></span>
-              <span class="friend-name">${data.friendCode}</span>
-            `;
-            container.appendChild(div);
-          });
-        })
-        .catch(err => {
-          console.error('Erreur loadFriends:', err);
-        });
-    }
+  // -- Initialisation page
+  function init() {
+    displayUserName(user);
+    loadFriends(friendsData);
+    loadProjects(projectsData);
+    loadActivity(activityData);
+  }
 
-    function openCreateModal() {
-      const m = document.getElementById('createModal');
-      if (m) m.style.display = 'flex';
-    }
+  init();
 
-    function closeModal() {
-      const m = document.getElementById('createModal');
-      if (m) m.style.display = 'none';
-    }
-
-    function createNewProject() {
-      const nameInput = document.getElementById('projectName');
-      const descInput = document.getElementById('projectDesc');
-      if (!nameInput) return;
-      const name = nameInput.value.trim();
-      const desc = descInput ? descInput.value.trim() : '';
-
-      if (!name) {
-        alert('Nom du projet requis');
-        return;
-      }
-
-      const user = auth.currentUser;
-      if (!user) {
-        alert('Utilisateur non connecté');
-        return;
-      }
-
-      db.collection('projects').add({
-        name: name,
-        desc: desc,
-        userId: user.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        closeModal();
-        loadProjects(user.uid);
-        nameInput.value = '';
-        if (descInput) descInput.value = '';
-      }).catch(err => {
-        console.error('Erreur createProject:', err);
-        alert('Erreur: ' + err.message);
-      });
-    }
-
-    function loadProjects(userId) {
-      const container = document.getElementById('projects-list');
-      if (!container) return;
-      const totalProjects = document.getElementById('total-projects');
-      const lastProject = document.getElementById('last-project');
-      const sharedProjects = document.getElementById('shared-projects');
-      container.innerHTML = '';
-      db.collection('projects')
-        .where('userId', '==', userId)
-        .orderBy('createdAt', 'desc')
-        .get()
-        .then(snapshot => {
-          if (totalProjects) totalProjects.innerText = snapshot.size;
-          if (sharedProjects) sharedProjects.innerText = 0; // à améliorer + logique partagé
-          if (snapshot.size > 0 && lastProject) {
-            lastProject.innerText = snapshot.docs[0].data().name;
-          }
-          if (snapshot.empty) {
-            container.innerHTML = '<p style="color: var(--text-secondary);">Aucun projet pour le moment.</p>';
-            return;
-          }
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const div = document.createElement('div');
-            div.className = 'project-item';
-            div.innerHTML = `
-              <div class="project-name">${data.name}</div>
-              <div class="project-desc">${data.desc || 'Aucune description'}</div>
-              <div class="project-actions">
-                <button class="action-btn" onclick="openProject('${doc.id}')">Ouvrir</button>
-                <button class="action-btn delete" onclick="deleteProject('${doc.id}')">Supprimer</button>
-              </div>
-            `;
-            container.appendChild(div);
-          });
-        })
-        .catch(err => console.error('Erreur loadProjects:', err));
-    }
-
-    function searchProjects(query) {
-      const items = document.querySelectorAll('.project-item');
-      items.forEach(item => {
-        const nameEl = item.querySelector('.project-name');
-        if (!nameEl) return;
-        const name = nameEl.innerText.toLowerCase();
-        if (name.includes(query.toLowerCase())) {
-          item.style.display = 'block';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-    }
-
-    function openProject(id) {
-      alert(`Ouverture du projet ${id}`); // à développer
-    }
-
-    function deleteProject(id) {
-      if (confirm('Supprimer ce projet ?')) {
-        db.collection('projects').doc(id).delete()
-          .then(() => loadProjects(auth.currentUser.uid))
-          .catch(err => {
-            console.error('Erreur deleteProject:', err);
-            alert('Erreur : ' + err.message);
-          });
-      }
-    }
-
-    function loadActivityChart(userId) {
-      const ctxEl = document.getElementById('activityChart');
-      if (!ctxEl) return;
-      const ctx = ctxEl.getContext('2d');
-      activityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          datasets: [{
-            label: 'Projets créés',
-            data: [3, 5, 2, 7, 4, 6], // données stub pour le moment
-            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
-            tension: 0.4,
-            fill: true,
-            backgroundColor: 'rgba(30, 64, 175, 0.2)'
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          },
-          animation: {
-            duration: 2000,
-            easing: 'easeInOutQuad'
-          }
-        }
-      });
-    }
-
-  </script>
+</script>
 
 </body>
 </html>
