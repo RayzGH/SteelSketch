@@ -23,6 +23,7 @@
       --warning: #facc15;
       --danger: #ef4444;
       --info: #3b82f6;
+      --toolbar-h: 60px; /* Hauteur de la barre du haut */
     }
 
     body.dark {
@@ -49,11 +50,12 @@
       top: 0;
       left: 0;
       width: 100%;
+      height: var(--toolbar-h);
       background: linear-gradient(270deg, var(--primary), #0ea5e9, var(--primary));
       background-size: 400% 400%;
       animation: headerGradient 10s ease infinite;
       color: white;
-      padding: 15px 30px;
+      padding: 0 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -83,7 +85,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: #ffffff33;
+      background: rgba(255,255,255,0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -198,7 +200,7 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
-      height: calc(100% - 150px); /* Adjust for other elements */
+      height: calc(100% - 200px);
       overflow-y: auto;
       padding-right: 10px;
     }
@@ -227,7 +229,7 @@
     .online { background: var(--success); }
     .idle { background: var(--warning); }
     .dnd { background: var(--danger); }
-    .offline { background: var(--secondary-text); }
+    .offline { background: var(--secondary); }
 
     .friend-name {
       font-weight: 500;
@@ -242,7 +244,7 @@
 
     .content {
       flex: 1;
-      padding: 100px 40px 40px 320px;
+      padding: calc(var(--toolbar-h) + 40px) 40px 40px 320px;
       transition: padding-left 0.3s ease;
     }
 
@@ -382,12 +384,12 @@
       transition: background 0.3s;
     }
 
-    .action-btn:hover {
-      background: var(--primary-hover);
-    }
-
     .action-btn.delete {
       background: var(--danger);
+    }
+
+    .action-btn:hover {
+      background: var(--primary-hover);
     }
 
     .action-btn.delete:hover {
@@ -424,7 +426,7 @@
       right: 10px;
       cursor: pointer;
       font-size: 20px;
-      color: var(--secondary-text);
+      color: var(--text-secondary);
     }
 
     .modal h2 {
@@ -484,7 +486,7 @@
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-chevron-right"></i></button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-chevron-left"></i></button>
     <h2>Amis</h2>
     <div class="friend-code">Ton code ami : <strong id="friend-code">Chargement...</strong> <i class="fas fa-copy" onclick="copyFriendCode()" style="cursor:pointer;"></i></div>
     <div class="add-friend">
@@ -540,36 +542,30 @@
     </div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase + librairies -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
-      authDomain: "steelsketch-b7264.firebaseapp.com",
-      projectId: "steelsketch-b7264",
-      storageBucket: "steelsketch-b7264.firebasestorage.app",
-      messagingSenderId: "424606073739",
-      appId: "1:424606073739:web:696f400e992a50d7bee58e",
-      measurementId: "G-TD79BYQ5P6"
-    };
+    const firebaseConfig = { /* ... ta config ... */ };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     let sidebarOpen = true;
-    let activityChart;
 
     auth.onAuthStateChanged((user) => {
       if (user) {
-        document.getElementById('user-name').innerText = user.displayName || user.email;
-        loadProjects(user.uid);
+        // Nom + utilisateur
+        const nameEl = document.getElementById('user-name');
+        if (nameEl) nameEl.innerText = user.displayName || user.email;
+
         generateFriendCode(user.uid);
         loadFriends(user.uid);
+        loadProjects(user.uid);
         loadActivityChart(user.uid);
       } else {
         window.location.href = 'index.html';
@@ -579,152 +575,211 @@
     function logout() {
       auth.signOut().then(() => {
         window.location.href = 'index.html';
-      });
+      }).catch(err => console.error('Erreur logout:', err));
     }
 
     function toggleSidebar() {
       sidebarOpen = !sidebarOpen;
-      const sidebar = document.getElementById('sidebar');
-      sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
-      document.querySelector('.content').style.paddingLeft = sidebarOpen ? '320px' : '40px';
-      document.querySelector('.sidebar-toggle i').className = sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+      document.body.classList.toggle('sidebar-closed', !sidebarOpen);
     }
 
     function generateFriendCode(uid) {
-      // Simple stub for friend code: take first 6 chars upper
       const code = uid.slice(0,6).toUpperCase();
-      document.getElementById('friend-code').innerText = code;
+      const fcEl = document.getElementById('friend-code');
+      if (fcEl) fcEl.innerText = code;
     }
 
     function copyFriendCode() {
       const code = document.getElementById('friend-code').innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        alert('Code copié dans le presse-papiers !');
+      if (code) navigator.clipboard.writeText(code).then(() => {
+        alert('Code copié dans le presse‑papiers !');
       });
     }
 
     function addFriend() {
-      const code = document.getElementById('add-friend-input').value.toUpperCase();
-      if (!code) return alert('Code requis');
+      const input = document.getElementById('add-friend-input');
+      if (!input) return;
+      const code = input.value.toUpperCase().trim();
+      if (!code) {
+        alert('Code requis');
+        return;
+      }
       const user = auth.currentUser;
+      if (!user) return;
+
+      // On ne veut pas s'ajouter soi-même
+      if (code === (user.uid.slice(0,6).toUpperCase())) {
+        alert("Tu ne peux pas t'ajouter toi-même !");
+        return;
+      }
+
+      // Ajouter dans Firestore
       db.collection('friends').add({
         userId: user.uid,
         friendCode: code,
         status: 'pending',
         addedAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        document.getElementById('add-friend-input').value = '';
+        input.value = '';
         loadFriends(user.uid);
-      }).catch(err => alert('Erreur: ' + err.message));
+      }).catch(err => {
+        console.error('Erreur addFriend:', err);
+        alert('Erreur: ' + err.message);
+      });
     }
 
     function loadFriends(userId) {
       const container = document.getElementById('friend-list');
+      if (!container) return;
       container.innerHTML = '';
-      db.collection('friends').where('userId', '==', userId).get().then(snapshot => {
-        if (snapshot.empty) {
-          container.innerHTML = '<div class="no-friends">Aucun ami ajouté pour le moment.</div>';
-          return;
-        }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const div = document.createElement('div');
-          div.className = 'friend';
-          div.innerHTML = `<span class="status offline"></span> ${data.friendCode}`; // Status stub
-          container.appendChild(div);
+      db.collection('friends')
+        .where('userId', '==', userId)
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            container.innerHTML = '<div class="no-friends">Aucun ami ajouté pour le moment.</div>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.className = 'friend';
+            div.innerHTML = `
+              <span class="status offline"></span>
+              <span class="friend-name">${data.friendCode}</span>
+            `;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error('Erreur loadFriends:', err);
         });
-      });
     }
 
     function openCreateModal() {
-      document.getElementById('createModal').style.display = 'flex';
+      const m = document.getElementById('createModal');
+      if (m) m.style.display = 'flex';
     }
 
     function closeModal() {
-      document.getElementById('createModal').style.display = 'none';
+      const m = document.getElementById('createModal');
+      if (m) m.style.display = 'none';
     }
 
     function createNewProject() {
-      const name = document.getElementById('projectName').value;
-      const desc = document.getElementById('projectDesc').value;
-      if (!name) return alert('Nom du projet requis');
+      const nameInput = document.getElementById('projectName');
+      const descInput = document.getElementById('projectDesc');
+      if (!nameInput) return;
+      const name = nameInput.value.trim();
+      const desc = descInput ? descInput.value.trim() : '';
+
+      if (!name) {
+        alert('Nom du projet requis');
+        return;
+      }
+
       const user = auth.currentUser;
+      if (!user) {
+        alert('Utilisateur non connecté');
+        return;
+      }
+
       db.collection('projects').add({
-        name,
-        desc,
+        name: name,
+        desc: desc,
         userId: user.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         closeModal();
         loadProjects(user.uid);
-      }).catch(err => alert('Erreur: ' + err.message));
+        nameInput.value = '';
+        if (descInput) descInput.value = '';
+      }).catch(err => {
+        console.error('Erreur createProject:', err);
+        alert('Erreur: ' + err.message);
+      });
     }
 
     function loadProjects(userId) {
       const container = document.getElementById('projects-list');
-      container.innerHTML = '';
+      if (!container) return;
       const totalProjects = document.getElementById('total-projects');
       const lastProject = document.getElementById('last-project');
       const sharedProjects = document.getElementById('shared-projects');
-      db.collection('projects').where('userId', '==', userId).orderBy('createdAt', 'desc').get().then(snapshot => {
-        totalProjects.innerText = snapshot.size;
-        sharedProjects.innerText = 0; // Stub
-        container.innerHTML = '';
-        if (snapshot.size > 0) {
-          lastProject.innerText = snapshot.docs[0].data().name;
-        } else {
-          lastProject.innerText = 'Aucun';
-        }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const div = document.createElement('div');
-          div.className = 'project-item';
-          div.style.animation = 'fadeInUp 0.5s';
-          div.innerHTML = `
-            <div class="project-name">${data.name}</div>
-            <div class="project-desc">${data.desc || 'Aucune description'}</div>
-            <div class="project-actions">
-              <button class="action-btn" onclick="openProject('${doc.id}')">Ouvrir</button>
-              <button class="action-btn delete" onclick="deleteProject('${doc.id}')">Supprimer</button>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-      }).catch(err => console.error('Erreur chargement projets:', err));
+      container.innerHTML = '';
+      db.collection('projects')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+          if (totalProjects) totalProjects.innerText = snapshot.size;
+          if (sharedProjects) sharedProjects.innerText = 0; // à améliorer + logique partagé
+          if (snapshot.size > 0 && lastProject) {
+            lastProject.innerText = snapshot.docs[0].data().name;
+          }
+          if (snapshot.empty) {
+            container.innerHTML = '<p style="color: var(--text-secondary);">Aucun projet pour le moment.</p>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.className = 'project-item';
+            div.innerHTML = `
+              <div class="project-name">${data.name}</div>
+              <div class="project-desc">${data.desc || 'Aucune description'}</div>
+              <div class="project-actions">
+                <button class="action-btn" onclick="openProject('${doc.id}')">Ouvrir</button>
+                <button class="action-btn delete" onclick="deleteProject('${doc.id}')">Supprimer</button>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => console.error('Erreur loadProjects:', err));
     }
 
     function searchProjects(query) {
       const items = document.querySelectorAll('.project-item');
       items.forEach(item => {
-        const name = item.querySelector('.project-name').innerText.toLowerCase();
-        item.style.display = name.includes(query.toLowerCase()) ? 'block' : 'none';
+        const nameEl = item.querySelector('.project-name');
+        if (!nameEl) return;
+        const name = nameEl.innerText.toLowerCase();
+        if (name.includes(query.toLowerCase())) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
       });
     }
 
     function openProject(id) {
-      // Stub: open project
-      alert(`Ouverture du projet ${id}`);
+      alert(`Ouverture du projet ${id}`); // à développer
     }
 
     function deleteProject(id) {
       if (confirm('Supprimer ce projet ?')) {
-        db.collection('projects').doc(id).delete().then(() => {
-          loadProjects(auth.currentUser.uid);
-        }).catch(err => alert('Erreur: ' + err.message));
+        db.collection('projects').doc(id).delete()
+          .then(() => loadProjects(auth.currentUser.uid))
+          .catch(err => {
+            console.error('Erreur deleteProject:', err);
+            alert('Erreur : ' + err.message);
+          });
       }
     }
 
     function loadActivityChart(userId) {
-      // Stub data for chart
-      const ctx = document.getElementById('activityChart').getContext('2d');
+      const ctxEl = document.getElementById('activityChart');
+      if (!ctxEl) return;
+      const ctx = ctxEl.getContext('2d');
       activityChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [{
             label: 'Projets créés',
-            data: [3, 5, 2, 7, 4, 6],
-            borderColor: var(--primary),
+            data: [3, 5, 2, 7, 4, 6], // données stub pour le moment
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
             tension: 0.4,
             fill: true,
             backgroundColor: 'rgba(30, 64, 175, 0.2)'
@@ -744,6 +799,7 @@
         }
       });
     }
+
   </script>
 
 </body>
