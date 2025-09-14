@@ -2,28 +2,20 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>SteelSketch - Dashboard</title>
+  <title>SteelSketch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
-      --primary: #1e40af;
+      --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --bg: #f1f5f9;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #0f172a;
+      --text: #1e293b;
       --secondary-text: #64748b;
       --border: #e2e8f0;
       --shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    body.dark {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --secondary-text: #94a3b8;
-      --border: #475569;
     }
 
     body {
@@ -31,88 +23,93 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      transition: background 0.3s, color 0.3s;
     }
 
     header {
       background: var(--primary);
       color: white;
-      padding: 15px 30px;
+      padding: 16px 32px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     .logo {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
 
     .user-info {
       font-size: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .user-info i {
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .btn {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: white;
+      padding: 10px 18px;
+      background: white;
+      color: var(--primary);
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s, transform 0.2s;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
     }
 
     .btn:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
+      background: #e0e7ff;
     }
 
     .content {
-      padding: 40px;
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
+      padding: 40px 20px;
     }
 
-    h1 {
-      font-size: 32px;
-      margin-bottom: 30px;
-      animation: fadeIn 0.5s ease-in;
-    }
-
-    .search-bar {
+    .top-bar {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
     }
 
     .search-input {
       flex: 1;
       padding: 12px;
+      font-size: 16px;
       border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.3s;
     }
 
-    .search-input:focus {
-      border-color: var(--primary);
-      outline: none;
+    .new-btn {
+      background: var(--primary);
+      color: white;
+    }
+
+    .new-btn:hover {
+      background: var(--primary-hover);
     }
 
     .projects {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 20px;
-      animation: fadeInUp 0.5s ease-in;
     }
 
     .project-item {
@@ -121,24 +118,24 @@
       padding: 20px;
       border-radius: 12px;
       box-shadow: var(--shadow);
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: all 0.3s ease;
     }
 
     .project-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.12);
     }
 
     .project-name {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .project-desc {
       font-size: 14px;
       color: var(--secondary-text);
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
 
     .project-actions {
@@ -147,55 +144,50 @@
     }
 
     .action-btn {
-      padding: 8px 15px;
+      flex: 1;
       background: var(--primary);
       color: white;
       border: none;
+      padding: 8px;
       border-radius: 6px;
-      cursor: pointer;
       font-size: 14px;
-      transition: background 0.3s;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
     .action-btn:hover {
       background: var(--primary-hover);
     }
 
-    .action-btn.delete {
+    .delete {
       background: #ef4444;
     }
 
-    .action-btn.delete:hover {
+    .delete:hover {
       background: #dc2626;
     }
 
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
-      animation: fadeIn 0.3s;
+      z-index: 1000;
     }
 
     .modal-content {
-      background: var(--card-bg);
+      background: white;
       padding: 30px;
-      border-radius: 12px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
       box-shadow: var(--shadow);
-      width: 400px;
-      animation: scaleIn 0.3s;
     }
 
-    .modal h2 {
-      margin-bottom: 20px;
-    }
-
-    .modal input {
+    .modal-content input {
       width: 100%;
       padding: 12px;
       margin-bottom: 15px;
@@ -203,39 +195,29 @@
       border-radius: 8px;
     }
 
-    .modal .btn {
+    .modal-content .btn {
       width: 100%;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes scaleIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="logo">SteelSketch - Dashboard</div>
-    <div class="user-info"><i class="fas fa-user"></i> <span id="user-name">Chargement...</span></div>
-    <button class="btn" onclick="logout()">Se déconnecter</button>
+    <div class="logo">SteelSketch</div>
+    <div class="header-right">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="user-name">Chargement...</span>
+      </div>
+      <button class="btn" onclick="logout()">Déconnexion</button>
+    </div>
   </header>
 
   <div class="content">
-    <h1>Mes projets</h1>
-    <div class="search-bar">
-      <input class="search-input" type="text" placeholder="Rechercher un projet..." onkeyup="searchProjects(this.value)">
-      <button class="btn" onclick="openCreateModal()">+ Nouveau projet</button>
+    <div class="top-bar">
+      <input class="search-input" type="text" placeholder="🔍 Rechercher un projet..." onkeyup="searchProjects(this.value)">
+      <button class="btn new-btn" onclick="openCreateModal()">+ Nouveau projet</button>
     </div>
 
     <div class="projects" id="projects-list">
@@ -243,13 +225,13 @@
     </div>
   </div>
 
-  <!-- Modal pour nouveau projet -->
+  <!-- Modal -->
   <div id="createModal" class="modal">
     <div class="modal-content">
-      <h2>Créer un nouveau projet</h2>
+      <h2>Créer un projet</h2>
       <input id="projectName" type="text" placeholder="Nom du projet">
       <input id="projectDesc" type="text" placeholder="Description (optionnel)">
-      <button class="btn" onclick="createNewProject()">Créer</button>
+      <button class="btn new-btn" onclick="createNewProject()">Créer</button>
       <button class="btn delete" onclick="closeModal()">Annuler</button>
     </div>
   </div>
@@ -284,9 +266,7 @@
     });
 
     function logout() {
-      auth.signOut().then(() => {
-        window.location.href = 'index.html';
-      });
+      auth.signOut().then(() => window.location.href = 'index.html');
     }
 
     function openCreateModal() {
@@ -298,58 +278,87 @@
     }
 
     function createNewProject() {
-      const name = document.getElementById('projectName').value;
-      const desc = document.getElementById('projectDesc').value;
-      if (!name) return alert('Nom du projet requis');
+      const name = document.getElementById('projectName').value.trim();
+      const desc = document.getElementById('projectDesc').value.trim();
+      if (!name) {
+        alert("Veuillez entrer un nom de projet.");
+        return;
+      }
+
       const user = auth.currentUser;
+
       db.collection('projects').add({
-        name,
-        desc,
+        name: name,
+        desc: desc,
         userId: user.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         closeModal();
         loadProjects(user.uid);
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectDesc').value = '';
+      }).catch(error => {
+        console.error("Erreur lors de la création du projet :", error);
+        alert("Une erreur est survenue.");
       });
     }
 
     function loadProjects(userId) {
       const container = document.getElementById('projects-list');
-      container.innerHTML = '';
-      db.collection('projects').where('userId', '==', userId).get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const div = document.createElement('div');
-          div.className = 'project-item';
-          div.innerHTML = `
-            <div class="project-name">${data.name}</div>
-            <div class="project-desc">${data.desc || 'Aucune description'}</div>
-            <div class="project-actions">
-              <button class="action-btn" onclick="openProject('${doc.id}')">Ouvrir</button>
-              <button class="action-btn delete" onclick="deleteProject('${doc.id}')">Supprimer</button>
-            </div>
-          `;
-          container.appendChild(div);
+      container.innerHTML = '<p>Chargement...</p>';
+
+      db.collection('projects')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+          container.innerHTML = '';
+          if (snapshot.empty) {
+            container.innerHTML = '<p>Aucun projet trouvé.</p>';
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.className = 'project-item';
+            div.innerHTML = `
+              <div class="project-name">${data.name}</div>
+              <div class="project-desc">${data.desc || 'Aucune description'}</div>
+              <div class="project-actions">
+                <button class="action-btn" onclick="openProject('${doc.id}')">Ouvrir</button>
+                <button class="action-btn delete" onclick="deleteProject('${doc.id}')">Supprimer</button>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        }).catch(error => {
+          console.error("Erreur de chargement :", error);
+          container.innerHTML = '<p>Erreur lors du chargement des projets.</p>';
         });
-      });
     }
 
     function searchProjects(query) {
       const items = document.querySelectorAll('.project-item');
+      query = query.toLowerCase();
       items.forEach(item => {
         const name = item.querySelector('.project-name').innerText.toLowerCase();
-        item.style.display = name.includes(query.toLowerCase()) ? 'block' : 'none';
+        item.style.display = name.includes(query) ? 'block' : 'none';
       });
     }
 
     function openProject(id) {
-      alert(`Ouverture du projet ${id} (fonctionnalité à venir)`);
+      alert(`Ouverture du projet ${id} — fonctionnalité à venir.`);
+      // Redirection ou chargement du projet ici
     }
 
     function deleteProject(id) {
-      if (confirm('Supprimer ce projet ?')) {
+      if (confirm("Voulez-vous vraiment supprimer ce projet ?")) {
         db.collection('projects').doc(id).delete().then(() => {
           loadProjects(auth.currentUser.uid);
+        }).catch(error => {
+          alert("Erreur lors de la suppression.");
+          console.error("Suppression échouée :", error);
         });
       }
     }
