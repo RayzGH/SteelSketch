@@ -2,11 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>SteelSketch - Connexion</title>
+  <title>SteelSketch - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Firebase (via CDN) -->
+  <!-- Firebase (CDN) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -15,11 +15,93 @@
       font-family: 'Inter', sans-serif;
       margin: 0;
       height: 100vh;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(-45deg, #0f172a, #1e3a8a, #0ea5e9, #1e40af);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      color: #0f172a;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      top: 0;
+      left: 0;
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 1200 120' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M321.39 56.44c58-10.79 114.16-30.13 172-41.86 82.39-16.72 168.19-17.73 250.45-.39C823.78 31 906.67 72 985.66 92.83c70.05 18.48 146.53 26.09 214.34 3V0H0v27.35a600.21 600.21 0 00321.39 29.09Z' fill='%230ea5e910'/></svg>");
+      background-size: 200% 100%;
+      animation: wave 20s linear infinite;
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    header {
+      width: 100%;
+      padding: 20px 40px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .header-buttons button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .header-buttons button:hover {
+      background: #1d4ed8;
+    }
+
+    .header-buttons .white-btn {
+      background: white;
+      color: #1e40af;
+    }
+
+    .main-content {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0f172a;
-      color: white;
+      height: 100vh;
     }
 
     .card {
@@ -28,8 +110,9 @@
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       text-align: center;
+      z-index: 1;
       width: 400px;
-      color: #0f172a;
+      margin-top: 60px;
     }
 
     h1 {
@@ -43,7 +126,7 @@
       color: #64748b;
     }
 
-    button {
+    .card button {
       padding: 10px 20px;
       width: 100%;
       background: #1e40af;
@@ -52,42 +135,59 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
+      transition: 0.2s;
     }
 
-    button:hover {
+    .card button:hover {
       background: #1d4ed8;
     }
 
-    #user-info {
-      margin-top: 20px;
-      color: #0f172a;
-      font-weight: 500;
-    }
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
 
-    #logout {
-      margin-top: 15px;
-      background: white;
-      color: #1e40af;
-      border: 1px solid #1e40af;
-    }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
 
-    #logout:hover {
-      background: #e0e7ff;
+      .header-buttons {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>Bienvenue sur SteelSketch</h1>
-    <p>Connecte-toi avec ton compte Google pour accéder à tes projets.</p>
-    <button onclick="loginWithGoogle()">Se connecter avec Google</button>
-    <div id="user-info"></div>
-    <button id="logout" style="display:none;" onclick="logout()">Se déconnecter</button>
+  <!-- Particules -->
+  <div id="particles-js"></div>
+
+  <!-- Vague -->
+  <div class="wave"></div>
+
+  <!-- Barre supérieure -->
+  <header>
+    <div class="logo">SteelSketch</div>
+    <div class="header-buttons">
+      <button onclick="alert('Téléchargement à venir !')">Installer</button>
+      <button class="white-btn" onclick="alert('Pas encore de compte ? Utilise Google pour t’inscrire')">Pas de compte ?</button>
+    </div>
+  </header>
+
+  <!-- Zone de connexion -->
+  <div class="main-content">
+    <div class="card">
+      <h1>Connectez-vous à SteelSketch</h1>
+      <p>Accédez à vos projets et collaborez en temps réel.</p>
+      <button onclick="loginWithGoogle()">Se connecter avec Google</button>
+    </div>
   </div>
 
+  <!-- Firebase Config + Login -->
   <script>
-    // ✅ Config Firebase que tu m’as donnée
+    // ✅ Configuration Firebase (tu l’avais donnée)
     const firebaseConfig = {
       apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
       authDomain: "steelsketch-b7264.firebaseapp.com",
@@ -98,40 +198,58 @@
       measurementId: "G-TD79BYQ5P6"
     };
 
-    // Initialiser Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Connexion avec Google
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then((result) => {
           const user = result.user;
-          document.getElementById("user-info").innerHTML =
-            `Connecté en tant que <b>${user.displayName}</b><br>${user.email}`;
-          document.getElementById("logout").style.display = "block";
+          // Enregistrement local
+          localStorage.setItem('loggedIn', true);
+          localStorage.setItem('userEmail', user.email);
+          localStorage.setItem('userName', user.displayName);
+          // Redirection
+          window.location.href = 'dashboard.html';
         })
         .catch((error) => {
-          alert("Erreur de connexion : " + error.message);
+          alert("Erreur lors de la connexion : " + error.message);
         });
     }
+  </script>
 
-    // Déconnexion
-    function logout() {
-      auth.signOut().then(() => {
-        document.getElementById("user-info").innerHTML = "";
-        document.getElementById("logout").style.display = "none";
-      });
-    }
-
-    // Garder l'utilisateur connecté
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        document.getElementById("user-info").innerHTML =
-          `Connecté en tant que <b>${user.displayName}</b><br>${user.email}`;
-        document.getElementById("logout").style.display = "block";
-      }
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS('particles-js', {
+      "particles": {
+        "number": { "value": 60, "density": { "enable": true, "value_area": 800 }},
+        "color": { "value": "#93c5fd" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5 },
+        "size": { "value": 3, "random": true },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#93c5fd",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": { "enable": true, "speed": 2, "out_mode": "out" }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": true, "mode": "repulse" },
+          "onclick": { "enable": true, "mode": "push" }
+        },
+        "modes": {
+          "repulse": { "distance": 100, "duration": 0.4 },
+          "push": { "particles_nb": 4 }
+        }
+      },
+      "retina_detect": true
     });
   </script>
 </body>
