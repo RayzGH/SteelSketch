@@ -2,1542 +2,258 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>SteelSketch v2.0</title>
+  <title>SteelSketch - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <style type="text/css">@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/latin/wght/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/cyrillic/wght/normal.woff2);unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/latin-ext/wght/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/greek/wght/normal.woff2);unicode-range:U+0370-03FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/greek-ext/wght/normal.woff2);unicode-range:U+1F00-1FFF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/vietnamese/wght/normal.woff2);unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:300;src:url(/cf-fonts/v/inter/5.0.16/cyrillic-ext/wght/normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/cyrillic/wght/normal.woff2);unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/latin-ext/wght/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/greek-ext/wght/normal.woff2);unicode-range:U+1F00-1FFF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/vietnamese/wght/normal.woff2);unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/cyrillic-ext/wght/normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/greek/wght/normal.woff2);unicode-range:U+0370-03FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:400;src:url(/cf-fonts/v/inter/5.0.16/latin/wght/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/latin-ext/wght/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/vietnamese/wght/normal.woff2);unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/greek/wght/normal.woff2);unicode-range:U+0370-03FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/latin/wght/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/cyrillic/wght/normal.woff2);unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/cyrillic-ext/wght/normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:500;src:url(/cf-fonts/v/inter/5.0.16/greek-ext/wght/normal.woff2);unicode-range:U+1F00-1FFF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/cyrillic-ext/wght/normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/greek-ext/wght/normal.woff2);unicode-range:U+1F00-1FFF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/latin-ext/wght/normal.woff2);unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/vietnamese/wght/normal.woff2);unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/cyrillic/wght/normal.woff2);unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/latin/wght/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:Inter;font-style:normal;font-weight:600;src:url(/cf-fonts/v/inter/5.0.16/greek/wght/normal.woff2);unicode-range:U+0370-03FF;font-display:swap;}</style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --left-w: 280px;
-      --right-w: 320px;
-      --toolbar-h: 60px;
-      --status-h: 30px;
-      --bg: #f8fafc;
-      --accent: #1e40af;
-      --accent-hover: #1d4ed8;
-      --border: #e2e8f0;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --text-primary: #0f172a;
-      --text-secondary: #64748b;
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(-45deg, #0f172a, #1e3a8a, #0ea5e9, #1e40af);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      color: #0f172a;
     }
-    body.dark {
-      --bg: #0f172a;
-      --accent: #60a5fa;
-      --accent-hover: #3b82f6;
-      --border: #475569;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); }
-    #topbar {
-      position: fixed; left: 0; right: var(--right-w); top: 0; height: var(--toolbar-h);
-      background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 8px 16px; z-index: 40; box-shadow: var(--shadow-sm);
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      top: 0;
+      left: 0;
     }
-    #logo { height: 36px; width: auto; }
-    #topbar .group { display: flex; gap: 8px; align-items: center; }
-    #topbar button, #topbar select, #topbar input { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 14px; transition: all 0.2s; color: var(--text-primary); }
-    #topbar button:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-    #topbar button.primary { background: var(--accent); color: white; border: none; }
-    #topbar button.primary:hover { background: var(--accent-hover); }
-    #leftPanel {
-      position: fixed; left: 0; top: var(--toolbar-h); bottom: var(--status-h); width: var(--left-w);
-      background: var(--bg); border-right: 1px solid var(--border); padding: 16px; overflow: auto; box-shadow: var(--shadow-sm);
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      background: url("data:image/svg+xml;utf8,<svg viewBox='0 0 1200 120' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M321.39 56.44c58-10.79 114.16-30.13 172-41.86 82.39-16.72 168.19-17.73 250.45-.39C823.78 31 906.67 72 985.66 92.83c70.05 18.48 146.53 26.09 214.34 3V0H0v27.35a600.21 600.21 0 00321.39 29.09Z' fill='%230ea5e910'/></svg>");
+      background-size: 200% 100%;
+      animation: wave 20s linear infinite;
+      opacity: 0.3;
+      z-index: -1;
     }
-    #leftPanel h3 { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .panel { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
-    label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); font-weight: 500; }
-    input[type=number], select, input[type=text] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; transition: border-color 0.2s; background: var(--bg); color: var(--text-primary); }
-    input[type=number]:focus, select:focus { border-color: var(--accent); outline: none; }
-    .toolbtn { display: block; width: 100%; text-align: left; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--bg); cursor: pointer; font-size: 14px; transition: all 0.2s; color: var(--text-primary); }
-    .toolbtn:hover { background: #f1f5f9; }
-    body.dark .toolbtn:hover { background: #1e293b; }
-    .toolbtn.active { background: linear-gradient(135deg, var(--accent)/0.1, transparent); border-color: var(--accent); font-weight: 500; }
-    #canvasWrap { position: fixed; left: var(--left-w); right: var(--right-w); top: var(--toolbar-h); bottom: var(--status-h); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); overflow: auto; }
-    body.dark #canvasWrap { background: linear-gradient(135deg, #1e293b, #0f172a); }
-    #workArea { position: relative; background: transparent; border-radius: 12px; box-shadow: var(--shadow-md); padding: 24px; }
-    canvas { background: white; border: 2px solid var(--border); border-radius: 12px; display: block; cursor: crosshair; transition: box-shadow 0.2s; }
-    body.dark canvas { background: #1e293b; }
-    canvas:hover { box-shadow: var(--shadow-md); }
-    #rightPanel {
-      position: fixed; right: 0; top: var(--toolbar-h); bottom: var(--status-h); width: var(--right-w); background: var(--bg); border-left: 1px solid var(--border); padding: 16px; overflow: auto; box-shadow: var(--shadow-sm);
+
+    header {
+      width: 100%;
+      padding: 20px 40px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      z-index: 10;
     }
-    h4 { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .stat { background: var(--bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: flex-start; }
-    .muted { color: var(--text-secondary); font-size: 14px; margin-bottom: 4px; }
-    .small { font-size: 12px; color: var(--text-secondary); }
-    .bignum { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 4px; }
-    .property-panel { background: linear-gradient(135deg, var(--bg), #f8fafc); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.3s ease; }
-    body.dark .property-panel { background: linear-gradient(135deg, #1e293b, #0f172a); }
-    .property-panel:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
-    body.dark .property-panel:hover { background: linear-gradient(135deg, #334155, #1e293b); }
-    .property-panel summary { font-weight: 500; color: var(--text-primary); list-style: none; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-    .property-panel summary::-webkit-details-marker { display: none; }
-    .property-panel[open] summary { font-weight: 600; }
-    .property-panel input { width: 90px; margin-right: 8px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--bg); color: var(--text-primary); }
-    .property-panel input:focus { border-color: var(--accent); }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    footer.note { font-size: 12px; color: var(--text-secondary); margin-top: 16px; text-align: center; }
-    #statusBar { position: fixed; left: var(--left-w); right: var(--right-w); bottom: 0; height: var(--status-h); background: #1e293b; color: white; display: flex; align-items: center; padding: 0 16px; font-size: 12px; z-index: 40; }
-    body.dark #statusBar { background: #f8fafc; color: #0f172a; }
-    .tooltip { position: relative; display: inline-block; }
-    .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #334155; color: white; text-align: left; border-radius: 8px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 12px; }
-    body.dark .tooltip .tooltiptext { background-color: #e2e8f0; color: #0f172a; }
-    .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-    .btn-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
-    button.small { padding: 4px 8px; font-size: 12px; }
-    @media (max-width: 1000px) {
-      #leftPanel { display: none; }
-      #rightPanel { display: none; }
-      #topbar { right: 0; }
-      #canvasWrap { left: 0; right: 0; }
-      #statusBar { left: 0; right: 0; }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .header-buttons button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .header-buttons button:hover {
+      background: #1d4ed8;
+    }
+
+    .header-buttons .white-btn {
+      background: white;
+      color: #1e40af;
+    }
+
+    .main-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      z-index: 1;
+      width: 400px;
+      margin-top: 60px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #64748b;
+    }
+
+    .card button {
+      padding: 10px 20px;
+      width: 100%;
+      background: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+
+    .card button:hover {
+      background: #1d4ed8;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .header-buttons {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- TOP BAR -->
-  <div id="topbar">
-    <div class="group">
-      <img id="logo" src="https://via.placeholder.com/40x40/1e40af/ffffff?text=SS" alt="SteelSketch" />
-      <strong style="font-size:18px;">SteelSketch v2.0</strong>
+
+  <!-- Particles background -->
+  <div id="particles-js"></div>
+
+  <!-- Vagues -->
+  <div class="wave"></div>
+
+  <!-- Barre du haut -->
+  <header>
+    <div class="logo">SteelSketch</div>
+    <div class="header-buttons">
+      <button onclick="alert('Téléchargement à venir !')">Installer</button>
+      <button class="white-btn" onclick="alert('Fonction à venir')">Je n’ai pas de compte ENT</button>
     </div>
-    <div class="group" style="margin-left:auto">
-      <label style="font-size:12px;margin:0 6px 0 0;color:var(--text-secondary)">Zoom</label>
-      <select id="zoomSelect"><option>50%</option><option>100%</option><option>150%</option><option>200%</option><option>250%</option><option>300%</option></select>
-      <select id="nestAlgo"><option>first-fit</option><option selected>best-fit</option></select>
-      <button id="optimizeBtn" class="primary">Optimiser</button>
-      <button id="simulateBtn">Simuler</button>
-      <button id="undoBtn" class="small">Annuler</button>
-      <button id="redoBtn" class="small">Rétablir</button>
-    </div>
-    <div class="group">
-      <label style="font-size:12px;margin:0 6px 0 0;color:var(--text-secondary)">Kerf (mm)</label>
-      <input id="kerf" type="number" value="1" step="0.1" style="width:70px">
-      <div class="btn-group">
-        <button id="saveBtn" class="small">Sauvegarder</button>
-        <button id="loadBtn" class="small">Charger</button>
-        <button id="exportDXF" class="small">DXF</button>
-        <button id="exportGCode" class="small">G-code</button>
-        <button id="exportPDF" class="small">PDF</button>
-        <button id="generateFiche" class="small">Fiche Technique</button>
-        <button id="darkModeBtn" class="small"><i class="fas fa-sun"></i></button>
-      </div>
+  </header>
+
+  <!-- Page de connexion -->
+  <div class="main-content">
+    <div class="card">
+      <h1>Connectez-vous à SteelSketch</h1>
+      <p>Accédez à vos projets et collaborez en temps réel.</p>
+      <button onclick="loginWithENT()">Se connecter via ENT</button>
     </div>
   </div>
 
-  <!-- LEFT PANEL -->
-  <aside id="leftPanel">
-    <h3>Configuration Tôle</h3>
-    <div class="panel tooltip">
-      <label>Largeur (mm)</label><input id="sheetW" type="number" value="800" min="100">
-      <label>Hauteur (mm)</label><input id="sheetH" type="number" value="600" min="100">
-      <label>Épaisseur (mm)</label><input id="thickness" type="number" value="3" step="0.1" min="0.1">
-      <label>Matériau</label>
-      <select id="material">
-        <option value="steel">Acier</option>
-        <option value="alu">Aluminium</option>
-        <option value="inox">Inox</option>
-        <option value="copper">Cuivre</option>
-      </select>
-      <div class="btn-group">
-        <button id="applySheet" style="flex:1;background:var(--accent);color:white;border:none">Appliquer</button>
-        <button id="clearBtn" style="flex:1">Effacer</button>
-      </div>
-      <span class="tooltiptext">Configurez la tôle ici. Les dimensions affectent le canvas et les calculs de coût/poids.</span>
-    </div>
-
-    <h3>Outils</h3>
-    <div class="panel">
-      <button class="toolbtn active" id="tool_select" title="Sélection / Déplacer / Suppr (Shift+clic)">Sélection</button>
-      <button class="toolbtn" id="tool_rect" title="Rectangle pour découpe">Rectangle</button>
-      <button class="toolbtn" id="tool_circle" title="Cercle">Cercle</button>
-      <button class="toolbtn" id="tool_line" title="Ligne droite">Ligne</button>
-      <button class="toolbtn" id="tool_triangle" title="Triangle rectangle">Triangle</button>
-      <button class="toolbtn" id="tool_bend" title="Ligne de pliage">Pli</button>
-      <button class="toolbtn" id="tool_text" title="Annotation">Annotation</button>
-      <button class="toolbtn" id="tool_rotate" title="Rotation">Rotation</button>
-    </div>
-
-    <h3>Calques</h3>
-    <div class="panel tooltip">
-      <label><input type="checkbox" checked id="layer_cut"> Découpe</label>
-      <label><input type="checkbox" checked id="layer_mark"> Marquage</label>
-      <label><input type="checkbox" checked id="layer_bend"> Pliage</label>
-      <label><input type="checkbox" checked id="layer_drill"> Perçage</label>
-      <label><input type="checkbox" checked id="layer_annot"> Annotations</label>
-      <span class="tooltiptext">Activez/désactivez les calques pour afficher ou masquer les éléments correspondants.</span>
-    </div>
-
-    <h3>Options</h3>
-    <div class="panel tooltip">
-      <label><input type="checkbox" id="snapToggle" checked> Accroche au quadrillage</label>
-      <label><input type="checkbox" id="gridToggle" checked> Quadrillage adaptatif</label>
-      <label><input type="checkbox" id="pedagoMode"> Mode pédagogique</label>
-      <span class="tooltiptext">Activez le mode pédagogique pour des tutoriels et astuces interactifs.</span>
-    </div>
-
-    <div class="panel tooltip">
-      <div class="muted" style="font-size:13px;">Aide</div>
-      <div class="small" style="line-height:1.4;">Utilisez les outils pour dessiner. Optimisez avec best-fit. Exportez pour fabrication. Mode pédago : tutoriels et tooltips.</div>
-      <span class="tooltiptext">Guide rapide pour commencer. Survolez les éléments pour plus d'infos en mode pédagogique.</span>
-    </div>  </aside>
-
-  <!-- CENTER WORK AREA -->
-  <div id="canvasWrap">
-    <div id="workArea">
-      <canvas id="canvas" width="1000" height="700"></canvas>
-    </div>
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <aside id="rightPanel">
-    <details open class="tooltip">
-      <summary><h4>Explorer</h4></summary>
-      <div id="properties"></div>
-      <span class="tooltiptext">Outil clé pour éditer, déplacer, supprimer ou dupliquer les formes avec précision numérique. Cliquez sur une forme pour ouvrir ses propriétés.</span>
-    </details>
-    <details class="tooltip">
-      <summary><h4>Analyse</h4></summary>
-      <div class="stat tooltip">
-        <div class="muted">Surface tôle</div>
-        <div class="bignum" id="stat_sheetArea">—</div>
-        <div class="muted" id="stat_dims">—</div>
-        <span class="tooltiptext">Surface totale de la tôle et ses dimensions.</span>
-      </div>
-      <div class="stat tooltip">
-        <div class="muted">Surface utilisée</div>
-        <div class="bignum" id="stat_cutArea">0 mm²</div>
-        <div class="muted">Utilisation <span id="stat_util">0%</span> • Chutes <span id="stat_waste">100%</span></div>
-        <span class="tooltiptext">Pourcentage de tôle utilisé et chutes restantes.</span>
-      </div>
-      <div class="stat tooltip">
-        <div class="muted">Poids</div>
-        <div class="bignum" id="stat_weight">0 kg</div>
-        <div class="muted">Coût : <span id="stat_cost">0 €</span></div>
-        <span class="tooltiptext">Poids et coût estimés basés sur le matériau et la surface utilisée.</span>
-      </div>
-    </details>
-    <footer class="note">
-      SteelSketch • v2.0 • Éducatif & Pro
-    </footer>
-  </aside>
-
-  <!-- STATUS BAR -->
-  <div id="statusBar">Prêt</div>
-
-  <input type="file" id="loadFile" style="display: none;" accept=".json,.sketch">
-
+  <!-- Connexion ENT -->
   <script>
-    /* ======================
-       Utilitaires & état
-       ====================== */
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const canvasWrap = document.getElementById('canvasWrap');
-    const statusBar = document.getElementById('statusBar');
-    let tool = 'select';
-    let shapes = [];
-    let history = [];
-    let historyIndex = -1;
-    let drawing = false, dragging = false, panning = false, resizing = false, rotating = false;
-    let dragOffsetX = 0, dragOffsetY = 0, panOffsetX = 0, panOffsetY = 0, startX = 0, startY = 0;
-    let currentShape = null, selectedShape = null, resizeHandle = null;
-    let sheet = { x: 50, y: 50, width: 800, height: 600, scale: 1, thickness: 3, material: 'steel' };
-    const materialsDB = {
-      steel: { name: 'Acier', density: 7850, price: 1.5 },
-      alu: { name: 'Aluminium', density: 2700, price: 3.0 },
-      inox: { name: 'Inox', density: 8000, price: 2.5 },
-      copper: { name: 'Cuivre', density: 8960, price: 6.0 }
-    };
-    const defaultColors = {
-      rect: 'rgba(59,130,246,0.2)',
-      circle: 'rgba(239,68,68,0.2)',
-      line: 'rgba(34,197,94,0.2)',
-      triangle: 'rgba(251,191,36,0.2)',
-      bend: 'rgba(245,101,101,0.3)',
-      text: 'rgba(0,0,0,1)'
-    };
-    const typeIcons = {
-      rect: '□',
-      circle: '○',
-      line: '─',
-      triangle: '△',
-      bend: '↬',
-      text: 'T'
-    };
-    const kerfInput = document.getElementById('kerf');
-    const zoomSelect = document.getElementById('zoomSelect');
-    const nestAlgoSelect = document.getElementById('nestAlgo');
-    const snapToggle = document.getElementById('snapToggle');
-    let zoomFactor = 1.0;
-    let baseScale = 1.0;
-    const pedagoMode = document.getElementById('pedagoMode');
-    const gridToggle = document.getElementById('gridToggle');
-    const snapDistance = 10; // Pixels for snapping
-    let openDetails = new Set();
-    let darkMode = false;
-
-    /* Initialize UI elements */
-    function $id(i) { return document.getElementById(i); }
-    $id('applySheet').addEventListener('click', applySheetConfig);
-    $id('clearBtn').addEventListener('click', () => { saveHistory(); shapes = []; redraw(); buildExplorer(); updateStatus('Canvas effacé'); });
-    $id('tool_rect').addEventListener('click', () => selectTool('rect'));
-    $id('tool_circle').addEventListener('click', () => selectTool('circle'));
-    $id('tool_line').addEventListener('click', () => selectTool('line'));
-    $id('tool_triangle').addEventListener('click', () => selectTool('triangle'));
-    $id('tool_select').addEventListener('click', () => selectTool('select'));
-    $id('tool_bend').addEventListener('click', () => selectTool('bend'));
-    $id('tool_text').addEventListener('click', () => selectTool('text'));
-    $id('tool_rotate').addEventListener('click', () => selectTool('rotate'));
-    $id('optimizeBtn').addEventListener('click', () => { optimizeLayout(); updateStatus('Optimisation effectuée'); });
-    $id('simulateBtn').addEventListener('click', simulateTrajectory);
-    $id('undoBtn').addEventListener('click', undo);
-    $id('redoBtn').addEventListener('click', redo);
-    $id('saveBtn').addEventListener('click', saveProject);
-    $id('loadBtn').addEventListener('click', () => $id('loadFile').click());
-    $id('loadFile').addEventListener('change', loadProject);
-    $id('exportDXF').addEventListener('click', exportDXF);
-    $id('exportGCode').addEventListener('click', exportGCode);
-    $id('exportPDF').addEventListener('click', exportPDF);
-    $id('generateFiche').addEventListener('click', generateFicheTechnique);
-    $id('darkModeBtn').addEventListener('click', toggleDarkMode);
-    zoomSelect.addEventListener('change', handleZoomChange);
-    [$id('layer_cut'), $id('layer_mark'), $id('layer_bend'), $id('layer_drill'), $id('layer_annot')].forEach(cb => cb.addEventListener('change', () => { redraw(); buildExplorer(); }));
-    pedagoMode.addEventListener('change', () => {
-      if (pedagoMode.checked) {
-        pedagoAlert('Mode pédagogique activé : Survolez pour des astuces. Cliquez sur un outil pour un tutoriel.');
-        showTutorial();
-        showQuiz();
-      }
-    });
-    gridToggle.addEventListener('change', redraw);
-    snapToggle.addEventListener('change', () => updateStatus(snapToggle.checked ? 'Accroche activée' : 'Accroche désactivée'));
-
-    function toggleDarkMode() {
-      darkMode = !darkMode;
-      document.body.classList.toggle('dark', darkMode);
-      $id('darkModeBtn').innerHTML = darkMode ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-      redraw();
+    function loginWithENT() {
+      localStorage.setItem('loggedIn', true);
+      localStorage.setItem('user', 'user@example.com');
+      window.location.href = 'dashboard.html';
     }
+  </script>
 
-    function selectTool(t) {
-      tool = t;
-      document.querySelectorAll('.toolbtn').forEach(b => b.classList.remove('active'));
-      $id(`tool_${t}`).classList.add('active');
-      currentShape = null;
-      dragging = false;
-      panning = false;
-      resizing = false;
-      rotating = false;
-      canvas.style.cursor = t === 'select' ? 'grab' : 'crosshair';
-      updateStatus(`Outil sélectionné : ${t}`);
-      if (pedagoMode.checked) pedagoAlert(`Outil ${t} : ${getToolTip(t)}`);
-    }
-
-    function pedagoAlert(msg) {
-      if (pedagoMode.checked) alert(msg);
-    }
-
-    function updateStatus(msg) {
-      statusBar.innerText = msg;
-      setTimeout(() => { if (statusBar.innerText === msg) statusBar.innerText = 'Prêt'; }, 3000);
-    }
-
-    function showTutorial() {
-      if (!pedagoMode.checked) return;
-      pedagoAlert('Bienvenue dans SteelSketch !\n1. Configurez la tôle (gauche).\n2. Choisissez un outil pour dessiner.\n3. Optimisez et exportez (haut).\n4. Consultez l\'analyse (droite).\n5. Utilisez les annotations pour commenter.\n6. Sauvegardez et chargez vos projets.');
-    }
-
-    function showQuiz() {
-      // Simple quiz example
-      const answer = prompt("Quiz: Quelle est la densité de l'acier ? (g/cm³)");
-      if (answer == "7.85") {
-        alert("Correct!");
-      } else {
-        alert("Faux, c'est 7.85 g/cm³");
-      }
-    }
-
-    function getToolTip(t) {
-      const tips = {
-        select: 'Clic pour sélectionner/déplacer, Shift+clic pour supprimer.',
-        rect: 'Drag pour dessiner un rectangle dans n\'importe quelle direction. Maintenez Shift pour un carré.',
-        circle: 'Drag depuis le centre pour définir le rayon.',
-        line: 'Drag pour tracer une ligne droite.',
-        triangle: 'Drag pour base/hauteur dans n\'importe quelle direction. Maintenez Shift pour triangle équilatéral.',
-        bend: 'Ligne pour indiquer un pliage (calque séparé).',
-        text: 'Clic pour ajouter annotation.',
-        rotate: 'Sélectionnez une forme et drag pour la rotates.'
-      };
-      return tips[t] || 'Outil de dessin.';
-    }
-
-    function updateZoom() {
-      canvas.style.transform = `scale(${zoomFactor})`;
-      canvas.style.transformOrigin = 'center center';
-    }
-
-    function handleZoomChange() {
-      const targetZoom = parseFloat(zoomSelect.value) / 100;
-      zoomFactor = targetZoom;
-      updateZoom();
-      applySheetConfig();
-      updateStatus(`Zoom réglé à ${zoomSelect.value}`);
-    }
-
-    /* Undo/Redo */
-    function saveHistory() {
-      history = history.slice(0, historyIndex + 1);
-      history.push(JSON.parse(JSON.stringify(shapes)));
-      historyIndex++;
-      if (history.length > 50) { history.shift(); historyIndex--; }
-      updateStatus('Action enregistrée');
-    }
-
-    function undo() {
-      if (historyIndex > 0) {
-        historyIndex--;
-        shapes = JSON.parse(JSON.stringify(history[historyIndex]));
-        redraw();
-        buildExplorer();
-        updateStatus('Annulation effectuée');
-      }
-    }
-
-    function redo() {
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        shapes = JSON.parse(JSON.stringify(history[historyIndex]));
-        redraw();
-        buildExplorer();
-        updateStatus('Rétablissement effectué');
-      }
-    }
-
-    /* Sheet config & centering */
-    function applySheetConfig() {
-      const w = Math.max(100, parseFloat($id('sheetW').value) || 800);
-      const h = Math.max(100, parseFloat($id('sheetH').value) || 600);
-      sheet.width = w;
-      sheet.height = h;
-      sheet.thickness = Math.max(0.1, parseFloat($id('thickness').value) || 3);
-      sheet.material = $id('material').value;
-
-      const margin = 80;
-      const scaleX = (canvas.width - margin * 2) / w;
-      const scaleY = (canvas.height - margin * 2) / h;
-      baseScale = Math.min(scaleX, scaleY);
-      sheet.scale = baseScale * zoomFactor;
-
-      sheet.x = (canvas.width - w * sheet.scale) / 2;
-      sheet.y = (canvas.height - h * sheet.scale) / 2;
-
-      shapes.forEach(s => clampShapeToSheet(s));
-      redraw();
-      buildExplorer();
-      updateStatus('Configuration de la tôle appliquée');
-    }
-
-    /* Zoom & Pan - No panning, fixed sheet position */
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const oldZoomFactor = zoomFactor;
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      zoomFactor *= delta;
-      zoomFactor = Math.max(0.5, Math.min(3.0, zoomFactor));
-      const newZoom = zoomFactor * 100;
-      zoomSelect.value = Math.round(newZoom) + '%';
-      updateZoom();
-      applySheetConfig();
-    });
-
-    /* Mouse events - drawing, dragging, panning, resizing, rotating */
-    canvas.addEventListener('mousedown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      let clientX = (e.clientX - rect.left) / zoomFactor;
-      let clientY = (e.clientY - rect.top) / zoomFactor;
-      if (snapToggle.checked) {
-        clientX = Math.round(clientX / snapDistance) * snapDistance;
-        clientY = Math.round(clientY / snapDistance) * snapDistance;
-      }
-      startX = clientX;
-      startY = clientY;
-
-      if (!pointInSheet(clientX, clientY)) {
-        return;
-      }
-
-      saveHistory();
-
-      if (tool === 'select') {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          const s = shapes[idx];
-          resizeHandle = getResizeHandle(s, clientX, clientY);
-          if (resizeHandle) {
-            resizing = true;
-            canvas.style.cursor = resizeHandle.cursor;
-          } else {
-            dragging = true;
-            dragOffsetX = clientX - (s.x || s.points[0].x);
-            dragOffsetY = clientY - (s.y || s.points[0].y);
-            canvas.style.cursor = 'grabbing';
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS('particles-js',
+      {
+        "particles": {
+          "number": {
+            "value": 60,
+            "density": {
+              "enable": true,
+              "value_area": 800
+            }
+          },
+          "color": {
+            "value": "#93c5fd"
+          },
+          "shape": {
+            "type": "circle"
+          },
+          "opacity": {
+            "value": 0.5
+          },
+          "size": {
+            "value": 3,
+            "random": true
+          },
+          "line_linked": {
+            "enable": true,
+            "distance": 150,
+            "color": "#93c5fd",
+            "opacity": 0.4,
+            "width": 1
+          },
+          "move": {
+            "enable": true,
+            "speed": 2,
+            "out_mode": "out"
           }
-          if (e.shiftKey) {
-            shapes.splice(idx, 1);
-            selectedShape = null;
-            redraw();
-            buildExplorer();
-            updateStatus('Forme supprimée');
-            return;
-          } else {
-            selectShape(idx);
-          }
-        } else {
-          selectShape(null);
-        }
-        redraw();
-        return;
-      } else if (tool === 'rotate') {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          selectedShape = idx;
-          rotating = true;
-          canvas.style.cursor = 'crosshair';
-          const s = shapes[idx];
-          const cx = s.x + (s.w || 0) / 2;
-          const cy = s.y + (s.h || 0) / 2;
-          startAngle = Math.atan2(clientY - cy, clientX - cx) - (s.rotation || 0) * Math.PI / 180;
-        }
-        return;
-      } else if (tool === 'text') {
-        const text = prompt("Entrez l'annotation:");
-        if (text) {
-          shapes.push({ type: 'text', x: clientX, y: clientY, text: text, layer: 'annot' });
-          redraw();
-          buildExplorer();
-        }
-        return;
-      }
-
-      drawing = true;
-      const layer = tool === 'bend' ? 'bend' : 'cut';
-      if (tool === 'rect' || tool === 'triangle') {
-        currentShape = { type: tool, x: clientX, y: clientY, w: 0, h: 0, rotation: 0, layer };
-        shapes.push(currentShape);
-      } else if (tool === 'circle') {
-        currentShape = { type: 'circle', x: clientX, y: clientY, r: 0, layer };
-        shapes.push(currentShape);
-      } else if (tool === 'line' || tool === 'bend') {
-        currentShape = { type: tool === 'bend' ? 'bend' : 'line', x: clientX, y: clientY, x2: clientX, y2: clientY, layer };
-        shapes.push(currentShape);
-      }
-      redraw();
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      let clientX = (e.clientX - rect.left) / zoomFactor;
-      let clientY = (e.clientY - rect.top) / zoomFactor;
-      if (snapToggle.checked) {
-        clientX = Math.round(clientX / snapDistance) * snapDistance;
-        clientY = Math.round(clientY / snapDistance) * snapDistance;
-      }
-
-      if (dragging && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        const newX = clientX - dragOffsetX;
-        const newY = clientY - dragOffsetY;
-        const dx = newX - (s.x || s.points[0].x);
-        const dy = newY - (s.y || s.points[0].y);
-        if (s.type === 'rect' || s.type === 'triangle' || s.type === 'circle' || s.type === 'text') {
-          s.x += dx;
-          s.y += dy;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          s.x += dx;
-          s.y += dy;
-          s.x2 += dx;
-          s.y2 += dy;
-        }
-        clampShapeToSheet(s);
-        redraw();
-        updateStatus('Déplacement de la forme');
-      } else if (resizing && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        handleResize(s, clientX, clientY, resizeHandle);
-        clampShapeToSheet(s);
-        redraw();
-        updateStatus('Redimensionnement de la forme');
-      } else if (rotating && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        const cx = s.x + (s.w || 0) / 2;
-        const cy = s.y + (s.h || 0) / 2;
-        s.rotation = (Math.atan2(clientY - cy, clientX - cx) - startAngle) * 180 / Math.PI;
-        redraw();
-        updateStatus('Rotation de la forme');
-      } else if (drawing && currentShape) {
-        let mx = clientX, my = clientY;
-        if (currentShape.type === 'rect' || currentShape.type === 'triangle') {
-          if (e.shiftKey) {
-            const size = Math.max(Math.abs(mx - currentShape.x), Math.abs(my - currentShape.y));
-            currentShape.w = mx > currentShape.x ? size : -size;
-            currentShape.h = my > currentShape.y ? size : -size;
-          } else {
-            currentShape.w = mx - currentShape.x;
-            currentShape.h = my - currentShape.y;
-          }
-          normalizeShapeWH(currentShape);
-        } else if (currentShape.type === 'circle') {
-          currentShape.r = Math.hypot(mx - currentShape.x, my - currentShape.y);
-        } else if (currentShape.type === 'line' || currentShape.type === 'bend') {
-          currentShape.x2 = mx;
-          currentShape.y2 = my;
-        }
-        clampShapeToSheet(currentShape);
-        redraw();
-        updateStatus(`Dessin : ${currentShape.type} (${Math.round(Math.abs(currentShape.w) / sheet.scale || currentShape.r / sheet.scale || 0)} mm)`);
-      } else if (tool === 'select' && !drawing && !dragging && !panning) {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          const handle = getResizeHandle(shapes[idx], clientX, clientY);
-          canvas.style.cursor = handle ? handle.cursor : 'grab';
-        } else {
-          canvas.style.cursor = 'grab';
-        }
-      } else if (tool === 'rotate' && !rotating) {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          canvas.style.cursor = 'crosshair';
-        } else {
-          canvas.style.cursor = 'default';
-        }
-      }
-    });
-
-    canvas.addEventListener('mouseup', (e) => {
-      const wasDrawing = drawing;
-      const wasDraggingOrResizing = dragging || resizing || rotating;
-      drawing = false;
-      dragging = false;
-      panning = false;
-      resizing = false;
-      rotating = false;
-      canvas.style.cursor = tool === 'select' ? 'grab' : 'crosshair';
-      if (currentShape) {
-        clampShapeToSheet(currentShape);
-        normalizeShapeWH(currentShape); // Normalize only on release
-        saveHistory();
-        buildExplorer();
-        currentShape = null;
-      } else if (wasDraggingOrResizing) {
-        saveHistory();
-        buildExplorer();
-      }
-      redraw();
-      updateStatus('Prêt');
-    });
-
-    canvas.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
-
-    /* Keyboard shortcuts */
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      switch (e.key.toLowerCase()) {
-        case 's': selectTool('select'); break;
-        case 'r': selectTool('rect'); break;
-        case 'c': selectTool('circle'); break;
-        case 'l': selectTool('line'); break;
-        case 't': selectTool('triangle'); break;
-        case 'b': selectTool('bend'); break;
-        case 'a': selectTool('text'); break;
-        case 'o': selectTool('rotate'); break;
-        case 'z': if (e.ctrlKey) undo(); break;
-        case 'y': if (e.ctrlKey) redo(); break;
-        case 'delete': if (selectedShape !== null) { shapes.splice(selectedShape, 1); selectedShape = null; saveHistory(); redraw(); buildExplorer(); updateStatus('Forme supprimée'); } break;
-      }
-    });
-
-    function normalizeShapeWH(s) {
-      if ((s.type === 'rect' || s.type === 'triangle') && (s.w < 0 || s.h < 0)) {
-        if (s.w < 0) { s.x += s.w; s.w = -s.w; }
-        if (s.h < 0) { s.y += s.h; s.h = -s.h; }
-      }
-    }
-
-    function getResizeHandle(s, x, y) {
-      if (s.type !== 'rect' && s.type !== 'triangle') return null;
-      const handles = [
-        { x: s.x + s.w, y: s.y + s.h, cursor: 'se-resize', type: 'bottom-right' },
-        { x: s.x, y: s.y + s.h, cursor: 'sw-resize', type: 'bottom-left' },
-        { x: s.x + s.w, y: s.y, cursor: 'ne-resize', type: 'top-right' },
-        { x: s.x, y: s.y, cursor: 'nw-resize', type: 'top-left' }
-      ];
-      for (const h of handles) {
-        if (Math.hypot(x - h.x, y - h.y) < 10) return h;
-      }
-      return null;
-    }
-
-    function handleResize(s, x, y, handle) {
-      if (s.type === 'rect' || s.type === 'triangle') {
-        if (handle.type === 'bottom-right') {
-          s.w = x - s.x;
-          s.h = y - s.y;
-        } else if (handle.type === 'bottom-left') {
-          s.w = s.x + s.w - x;
-          s.x = x;
-          s.h = y - s.y;
-        } else if (handle.type === 'top-right') {
-          s.w = x - s.x;
-          s.h = s.y + s.h - y;
-          s.y = y;
-        } else if (handle.type === 'top-left') {
-          s.w = s.x + s.w - x;
-          s.x = x;
-          s.h = s.y + s.h - y;
-          s.y = y;
-        }
-        normalizeShapeWH(s);
-      }
-    }
-
-    /* Drawing functions */
-    function redraw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
-
-      // Draw sheet
-      ctx.fillStyle = darkMode ? '#1e293b' : '#ffffff';
-      ctx.strokeStyle = darkMode ? '#f8fafc' : '#1e293b';
-      ctx.lineWidth = 2;
-      ctx.fillRect(sheet.x, sheet.y, sheet.width * sheet.scale, sheet.height * sheet.scale);
-      ctx.strokeRect(sheet.x, sheet.y, sheet.width * sheet.scale, sheet.height * sheet.scale);
-
-      // Sheet grid adaptive
-      if (gridToggle.checked) drawSheetGrid();
-
-      // Center lines
-      ctx.save();
-      ctx.strokeStyle = 'rgba(34,197,94,0.6)';
-      ctx.setLineDash([5, 5]);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(sheet.x + (sheet.width * sheet.scale) / 2, sheet.y);
-      ctx.lineTo(sheet.x + (sheet.width * sheet.scale) / 2, sheet.y + sheet.height * sheet.scale);
-      ctx.moveTo(sheet.x, sheet.y + (sheet.height * sheet.scale) / 2);
-      ctx.lineTo(sheet.x + sheet.width * sheet.scale, sheet.y + (sheet.height * sheet.scale) / 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // Draw shapes
-      shapes.forEach((s, idx) => {
-        if (!shouldDrawLayer(s.layer)) return;
-        drawShape(s, idx === selectedShape);
-      });
-
-      // Draw resize handles
-      if (selectedShape !== null && (shapes[selectedShape].type === 'rect' || shapes[selectedShape].type === 'triangle')) {
-        drawResizeHandles(shapes[selectedShape]);
-      }
-
-      updateStats();
-      buildExplorer();
-    }
-
-    function drawGrid() {
-      const step = 25;
-      ctx.save();
-      ctx.fillStyle = darkMode ? '#0f172a' : '#f1f5f9';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = darkMode ? '#475569' : '#e2e8f0';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x < canvas.width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function drawSheetGrid() {
-      const numDivs = 10;
-      const stepX = (sheet.width * sheet.scale) / numDivs;
-      const stepY = (sheet.height * sheet.scale) / numDivs;
-      ctx.save();
-      ctx.strokeStyle = darkMode ? '#475569' : '#e2e8f0';
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= numDivs; i++) {
-        const gx = sheet.x + i * stepX;
-        ctx.beginPath();
-        ctx.moveTo(gx, sheet.y);
-        ctx.lineTo(gx, sheet.y + sheet.height * sheet.scale);
-        ctx.stroke();
-      }
-      for (let i = 0; i <= numDivs; i++) {
-        const gy = sheet.y + i * stepY;
-        ctx.beginPath();
-        ctx.moveTo(sheet.x, gy);
-        ctx.lineTo(sheet.x + sheet.width * sheet.scale, gy);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function drawShape(s, highlight = false) {
-      ctx.save();
-      ctx.lineWidth = highlight ? 3 : 2;
-      ctx.strokeStyle = highlight ? '#f59e0b' : (s.layer === 'bend' ? '#ef4444' : '#475569');
-      ctx.fillStyle = defaultColors[s.type] || 'rgba(148,163,184,0.2)';
-      ctx.beginPath();
-
-      let tempS = JSON.parse(JSON.stringify(s)); // Temp copy for normalize
-      normalizeShapeWH(tempS); // Normalize for drawing
-
-      if (tempS.type === 'rect' || tempS.type === 'triangle') {
-        ctx.translate(tempS.x + tempS.w / 2, tempS.y + tempS.h / 2);
-        ctx.rotate(tempS.rotation * Math.PI / 180);
-        if (tempS.type === 'rect') {
-          ctx.fillRect(-tempS.w / 2, -tempS.h / 2, tempS.w, tempS.h);
-          ctx.strokeRect(-tempS.w / 2, -tempS.h / 2, tempS.w, tempS.h);
-        } else {
-          ctx.moveTo(-tempS.w / 2, tempS.h / 2);
-          ctx.lineTo(-tempS.w / 2, -tempS.h / 2);
-          ctx.lineTo(tempS.w / 2, tempS.h / 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.resetTransform();
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`${Math.round(Math.abs(s.w) / sheet.scale)}×${Math.round(Math.abs(s.h) / sheet.scale)}mm`, tempS.x + 4, tempS.y + 14);
-      } else if (s.type === 'circle') {
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`Ø${Math.round(2 * s.r / sheet.scale)}mm`, s.x - s.r, s.y + 4);
-      } else if (s.type === 'line' || s.type === 'bend') {
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(s.x2, s.y2);
-        ctx.stroke();
-        const len = Math.hypot(s.x2 - s.x, s.y2 - s.y) / sheet.scale;
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`${Math.round(len)}mm`, (s.x + s.x2) / 2 + 4, (s.y + s.y2) / 2 + 4);
-      } else if (s.type === 'text') {
-        ctx.fillStyle = darkMode ? '#f8fafc' : defaultColors.text;
-        ctx.font = '12px Inter';
-        ctx.fillText(s.text, s.x, s.y);
-      }
-
-      if (highlight) {
-        ctx.globalCompositeOperation = 'xor';
-        ctx.stroke();
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
-      ctx.restore();
-    }
-
-    function drawResizeHandles(s) {
-      const handles = [
-        { x: s.x + s.w, y: s.y + s.h },
-        { x: s.x, y: s.y + s.h },
-        { x: s.x + s.w, y: s.y },
-        { x: s.x, y: s.y }
-      ];
-      ctx.save();
-      ctx.fillStyle = '#f59e0b';
-      for (const h of handles) {
-        ctx.beginPath();
-        ctx.arc(h.x, h.y, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    /* Layer visibility */
-    function shouldDrawLayer(layer) {
-      const cb = $id(`layer_${layer}`);
-      return cb ? cb.checked : true;
-    }
-
-    /* Hit test utilities */
-    function pointInSheet(x, y) {
-      return x >= sheet.x && x <= sheet.x + sheet.width * sheet.scale && y >= sheet.y && y <= sheet.y + sheet.height * sheet.scale;
-    }
-
-    function findShapeIndexAt(x, y) {
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const s = shapes[i];
-        if (!shouldDrawLayer(s.layer)) continue;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          const absW = Math.abs(s.w);
-          const absH = Math.abs(s.h);
-          const cos = Math.cos(-s.rotation * Math.PI / 180);
-          const sin = Math.sin(-s.rotation * Math.PI / 180);
-          const cx = x - (s.x + s.w / 2);
-          const cy = y - (s.y + s.h / 2);
-          const rx = cx * cos - cy * sin;
-          const ry = cx * sin + cy * cos;
-          if (Math.abs(rx) <= absW / 2 && Math.abs(ry) <= absH / 2) return i;
-        } else if (s.type === 'circle') {
-          if (Math.hypot(x - s.x, y - s.y) <= s.r) return i;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          const d = pointToSegmentDistance(x, y, s.x, s.y, s.x2, s.y2);
-          if (d < 6) return i;
-        } else if (s.type === 'text') {
-          ctx.font = '12px Inter';
-          const width = ctx.measureText(s.text).width;
-          if (x >= s.x && x <= s.x + width && y >= s.y - 12 && y <= s.y) return i;
-        }
-      }
-      return -1;
-    }
-
-    function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
-      const A = px - x1, B = py - y1;
-      const C = x2 - x1, D = y2 - y1;
-      const len2 = C * C + D * D;
-      let param = len2 !== 0 ? (A * C + B * D) / len2 : -1;
-      let xx, yy;
-      if (param < 0) { xx = x1; yy = y1; }
-      else if (param > 1) { xx = x2; yy = y2; }
-      else { xx = x1 + param * C; yy = y1 + param * D; }
-      return Math.hypot(px - xx, py - yy);
-    }
-
-    /* Clamp shape to sheet */
-    function clampShapeToSheet(shape) {
-      const xMin = sheet.x, yMin = sheet.y;
-      const xMax = sheet.x + sheet.width * sheet.scale;
-      const yMax = sheet.y + sheet.height * sheet.scale;
-
-      if (shape.type === 'rect' || shape.type === 'triangle') {
-        let left = Math.min(shape.x, shape.x + shape.w);
-        let right = Math.max(shape.x, shape.x + shape.w);
-        let top = Math.min(shape.y, shape.y + shape.h);
-        let bottom = Math.max(shape.y, shape.y + shape.h);
-
-        left = Math.max(xMin, left);
-        right = Math.min(xMax, right);
-        top = Math.max(yMin, top);
-        bottom = Math.min(yMax, bottom);
-
-        if (left < right && top < bottom) {
-          shape.x = left;
-          shape.w = right - left;
-          shape.y = top;
-          shape.h = bottom - top;
-        } else {
-          shape.w = 0;
-          shape.h = 0;
-        }
-      } else if (shape.type === 'circle') {
-        if (shape.r < 0) shape.r = 0;
-        shape.x = Math.max(xMin + shape.r, Math.min(shape.x, xMax - shape.r));
-        shape.y = Math.max(yMin + shape.r, Math.min(shape.y, yMax - shape.r));
-      } else if (shape.type === 'line' || shape.type === 'bend') {
-        shape.x = Math.max(xMin, Math.min(shape.x, xMax));
-        shape.y = Math.max(yMin, Math.min(shape.y, yMax));
-        shape.x2 = Math.max(xMin, Math.min(shape.x2, xMax));
-        shape.y2 = Math.max(yMin, Math.min(shape.y2, yMax));
-      } else if (shape.type === 'text') {
-        shape.x = Math.max(xMin, Math.min(shape.x, xMax));
-        shape.y = Math.max(yMin, Math.min(shape.y, yMax));
-      }
-      if (!pointInSheet(shape.x || shape.points[0].x, shape.y || shape.points[0].y)) {
-        if (pedagoMode.checked) pedagoAlert('Attention : Forme placée hors de la tôle.');
-      }
-    }
-
-    /* Stats & Explorer */
-    function updateStats() {
-      const sheetArea = sheet.width * sheet.height;
-      $id('stat_sheetArea').innerText = `${sheetArea.toLocaleString()} mm²`;
-      $id('stat_dims').innerText = `Tôle: ${sheet.width} x ${sheet.height} mm • Ép.: ${sheet.thickness} mm • Mat.: ${materialsDB[sheet.material].name}`;
-
-      let cutAreaPx = 0;
-      shapes.forEach(s => {
-        if (!shouldDrawLayer(s.layer) || s.layer === 'bend' || s.type === 'text') return;
-        if (s.type === 'rect') cutAreaPx += Math.abs(s.w / sheet.scale) * Math.abs(s.h / sheet.scale);
-        else if (s.type === 'circle') cutAreaPx += Math.PI * Math.pow(s.r / sheet.scale, 2);
-        else if (s.type === 'triangle') cutAreaPx += 0.5 * Math.abs(s.w / sheet.scale) * Math.abs(s.h / sheet.scale);
-      });
-      const utilization = Math.min(100, Math.round(cutAreaPx / sheetArea * 100));
-      const waste = 100 - utilization;
-
-      $id('stat_cutArea').innerText = `${Math.round(cutAreaPx).toLocaleString()} mm²`;
-      $id('stat_util').innerText = `${utilization}%`;
-      $id('stat_waste').innerText = `${waste}%`;
-
-      const density = materialsDB[sheet.material].density;
-      let totalVolume_m3 = (cutAreaPx * sheet.thickness) / 1e9;
-      let totalMass_kg = totalVolume_m3 * density;
-      let pricePerKg = materialsDB[sheet.material].price;
-      let cost = totalMass_kg * pricePerKg;
-
-      $id('stat_weight').innerText = `${totalMass_kg.toFixed(3)} kg`;
-      $id('stat_cost').innerText = `${cost.toFixed(2)} €`;
-    }
-
-    function getTypeColor(type) {
-      const color = defaultColors[type] || 'rgba(148,163,184,1)';
-      return color.replace(/0\.[0-9]+/, '1');
-    }
-
-    function buildExplorer() {
-      const container = $id('properties');
-      openDetails.clear();
-      container.querySelectorAll('details').forEach(d => {
-        if (d.open) openDetails.add(parseInt(d.dataset.i));
-      });
-      container.innerHTML = '';
-      shapes.forEach((s, i) => {
-        if (!shouldDrawLayer(s.layer)) return;
-        const details = document.createElement('details');
-        details.className = 'property-panel tooltip';
-        details.dataset.i = i;
-        const summary = document.createElement('summary');
-        summary.innerHTML = `<span style="color: ${getTypeColor(s.type)};">${typeIcons[s.type] || ''} <b>${i + 1}. ${s.type.toUpperCase()} (${s.layer})</b></span> <small style="float:right;color:var(--text-secondary);">Clic pour éditer</small>`;
-        const content = document.createElement('div');
-        content.style.padding = '8px 0 0 0';
-        let html = `<div class="row"><label>X (mm):</label><input type="number" value="${Math.round((Math.abs(s.x) || Math.abs(s.points[0].x)) / sheet.scale)}" oninput="updateProp(${i},'x',this.value)"></div>`;
-        html += `<div class="row"><label>Y (mm):</label><input type="number" value="${Math.round((Math.abs(s.y) || Math.abs(s.points[0].y)) / sheet.scale)}" oninput="updateProp(${i},'y',this.value)"></div>`;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          html += `<div class="row"><label>Largeur (mm):</label><input type="number" value="${Math.round(Math.abs(s.w) / sheet.scale)}" oninput="updateProp(${i},'w',this.value)">`;
-          html += `<label>Hauteur (mm):</label><input type="number" value="${Math.round(Math.abs(s.h) / sheet.scale)}" oninput="updateProp(${i},'h',this.value)"></div>`;
-          html += `<div class="row"><label>Rotation (°):</label><input type="number" value="${s.rotation || 0}" oninput="updateProp(${i},'rotation',this.value)"></div>`;
-        } else if (s.type === 'circle') {
-          html += `<div class="row"><label>Rayon (mm):</label><input type="number" value="${Math.round(s.r / sheet.scale)}" oninput="updateProp(${i},'r',this.value)"></div>`;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          html += `<div class="row"><label>X2 (mm):</label><input type="number" value="${Math.round(s.x2 / sheet.scale)}" oninput="updateProp(${i},'x2',this.value)">`;
-          html += `<label>Y2 (mm):</label><input type="number" value="${Math.round(s.y2 / sheet.scale)}" oninput="updateProp(${i},'y2',this.value)"></div>`;
-        } else if (s.type === 'text') {
-          html += `<div class="row"><label>Texte:</label><input type="text" value="${s.text}" oninput="updateProp(${i},'text',this.value)"></div>`;
-        }
-        html += `<div class="btn-group" style="margin-top:8px;"><button class="small" onclick="deleteShape(${i})">Supprimer</button><button class="small" onclick="copyShape(${i})">Dupliquer</button></div>`;
-        content.innerHTML = html;
-        details.appendChild(summary);
-        details.appendChild(content);
-        if (pedagoMode.checked) details.title = `Éditez ${s.type} : drag sur canvas pour déplacer ou redimensionner.`;
-        if (openDetails.has(i)) details.open = true;
-        const listener = () => {
-          if (details.open) {
-            setTimeout(() => selectShape(i), 0);
-          }
-        };
-        details.addEventListener('toggle', listener);
-        container.appendChild(details);
-      });
-      if (selectedShape !== null) {
-        const d = container.querySelector(`details[data-i="${selectedShape}"]`);
-        if (d && !d.open) d.open = true;
-      }
-    }
-
-    function updateProp(index, prop, value) {
-      saveHistory();
-      const val = (prop === 'text') ? value : parseFloat(value) * sheet.scale;
-      if (prop !== 'text' && isNaN(val)) return;
-      const s = shapes[index];
-      if (prop === 'x' || prop === 'y') {
-        const dx = val - (s.x || s.points[0].x);
-        const dy = prop === 'x' ? 0 : val - (s.y || s.points[0].y);
-        if (s.type === 'polygon') {
-          s.points.forEach(p => { if (prop === 'x') p.x += dx; else p.y += dy; });
-        } else {
-          s[prop] = val;
-          if (s.type === 'line' || s.type === 'bend') {
-            if (prop === 'x') s.x2 += dx;
-            if (prop === 'y') s.y2 += dy;
-          }
-        }
-      } else {
-        s[prop] = val;
-      }
-      clampShapeToSheet(s);
-      redraw();
-      buildExplorer();
-      updateStatus(`Propriété ${prop} mise à jour`);
-    }
-
-    function deleteShape(i) {
-      saveHistory();
-      shapes.splice(i, 1);
-      if (selectedShape === i) selectedShape = null;
-      redraw();
-      buildExplorer();
-      updateStatus('Forme supprimée');
-    }
-
-    function copyShape(i) {
-      saveHistory();
-      const s = JSON.parse(JSON.stringify(shapes[i]));
-      const offsetPx = 10 * sheet.scale;
-      s.x = (s.x || s.points[0].x) + offsetPx;
-      s.y = (s.y || s.points[0].y) + offsetPx;
-      if (s.type === 'line' || s.type === 'bend') {
-        s.x2 += offsetPx;
-        s.y2 += offsetPx;
-      }
-      shapes.push(s);
-      redraw();
-      buildExplorer();
-      updateStatus('Forme dupliquée');
-    }
-
-    function selectShape(i) {
-      selectedShape = i;
-      redraw();
-      buildExplorer();
-      updateStatus(selectedShape !== null ? `Forme ${selectedShape + 1} sélectionnée` : 'Aucune forme sélectionnée');
-    }
-
-    /* Nesting optimization */
-    function optimizeLayout() {
-      saveHistory();
-      const algo = nestAlgoSelect.value;
-      if (shapes.length === 0) {
-        updateStatus('Aucune pièce à optimiser');
-        return pedagoAlert('Ajoutez des formes avant d\'optimiser.');
-      }
-      let pieces = shapes.filter(s => s.layer !== 'bend' && s.type !== 'text').map((s, idx) => {
-        let w_mm = 0, h_mm = 0;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          w_mm = Math.abs(s.w) / sheet.scale;
-          h_mm = Math.abs(s.h) / sheet.scale;
-        } else if (s.type === 'circle') {
-          w_mm = h_mm = 2 * (s.r / sheet.scale);
-        } else if (s.type === 'line') {
-          w_mm = Math.abs(s.x2 - s.x) / sheet.scale;
-          h_mm = Math.abs(s.y2 - s.y) / sheet.scale;
-        }
-        return { idx, w_mm, h_mm, area: w_mm * h_mm, s };
-      }).sort((a, b) => b.area - a.area);
-
-      const sheetWmm = sheet.width;
-      const sheetHmm = sheet.height;
-      const kerf = parseFloat(kerfInput.value) || 1;
-      let placements = [];
-
-      function collides(x_mm, y_mm, w_mm, h_mm, placed) {
-        for (const p of placed) {
-          const dx = Math.abs((x_mm + w_mm / 2) - (p.x + p.w / 2));
-          const dy = Math.abs((y_mm + h_mm / 2) - (p.y + p.h / 2));
-          const w_sum = (w_mm + p.w) / 2 + kerf;
-          const h_sum = (h_mm + p.h) / 2 + kerf;
-          if (dx < w_sum && dy < h_sum) return true;
-        }
-        return false;
-      }
-
-      if (algo === 'first-fit') {
-        let cursorY = 0, currentX = 0, shelfH = 0;
-        for (const p of pieces) {
-          const pw = p.w_mm, ph = p.h_mm;
-          if (currentX + pw > sheetWmm) {
-            cursorY += shelfH + kerf;
-            currentX = 0;
-            shelfH = 0;
-          }
-          if (cursorY + ph > sheetHmm) {
-            pedagoAlert(`Impossible de placer toutes les pièces avec ${algo}.`);
-            updateStatus('Optimisation incomplète');
-            break;
-          }
-          if (!collides(currentX, cursorY, pw, ph, placements)) {
-            placements.push({ idx: p.idx, x_mm: currentX, y_mm: cursorY });
-            currentX += pw + kerf;
-            shelfH = Math.max(shelfH, ph);
-          }
-        }
-      } else if (algo === 'best-fit') {
-        let placed = [];
-        for (const p of pieces) {
-          let bestX = 0, bestY = 0, minWaste = Infinity;
-          for (let ty = 0; ty <= sheetHmm - p.h_mm; ty += 5) {
-            for (let tx = 0; tx <= sheetWmm - p.w_mm; tx += 5) {
-              if (!collides(tx, ty, p.w_mm, p.h_mm, placed)) {
-                let waste = estimateWasteAt(tx, ty, placed, p.w_mm, p.h_mm);
-                if (waste < minWaste) {
-                  minWaste = waste;
-                  bestX = tx;
-                  bestY = ty;
-                }
-              }
+        },
+        "interactivity": {
+          "detect_on": "canvas",
+          "events": {
+            "onhover": {
+              "enable": true,
+              "mode": "repulse"
+            },
+            "onclick": {
+              "enable": true,
+              "mode": "push"
+            }
+          },
+          "modes": {
+            "repulse": {
+              "distance": 100,
+              "duration": 0.4
+            },
+            "push": {
+              "particles_nb": 4
             }
           }
-          if (minWaste < Infinity) {
-            placements.push({ idx: p.idx, x_mm: bestX, y_mm: bestY });
-            placed.push({ x: bestX, y: bestY, w: p.w_mm, h: p.h_mm });
-          }
-        }
+        },
+        "retina_detect": true
       }
-
-      placements.forEach(pl => {
-        const s = shapes[pl.idx];
-        const px = sheet.x + pl.x_mm * sheet.scale;
-        const py = sheet.y + pl.y_mm * sheet.scale;
-        s.x = px;
-        s.y = py;
-        if (s.type === 'circle') {
-          s.x += (s.r);
-          s.y += (s.r);
-        } else if (s.type === 'line' || s.type === 'bend') {
-          const dx = s.x2 - s.x;
-          const dy = s.y2 - s.y;
-          s.x2 = px + dx;
-          s.y2 = py + dy;
-        }
-      });
-
-      redraw();
-      buildExplorer();
-      updateStatus(`${algo} appliqué`);
-    }
-
-    function estimateWasteAt(tx, ty, placed, pw, ph) {
-      let overlapArea = 0;
-      for (const p of placed) {
-        const x1 = Math.max(tx, p.x);
-        const y1 = Math.max(ty, p.y);
-        const x2 = Math.min(tx + pw, p.x + p.w);
-        const y2 = Math.min(ty + ph, p.y + p.h);
-        if (x1 < x2 && y1 < y2) {
-          overlapArea += (x2 - x1) * (y2 - y1);
-        }
-      }
-      return overlapArea;
-    }
-
-    /* Simulation */
-    function simulateTrajectory() {
-      if (shapes.length === 0) {
-        updateStatus('Aucune forme à simuler');
-        return pedagoAlert('Ajoutez des formes pour simuler la trajectoire.');
-      }
-      ctx.save();
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      let i = 0;
-      const sim = () => {
-        if (i < shapes.length && shouldDrawLayer(shapes[i].layer) && shapes[i].layer !== 'bend') {
-          const s = shapes[i];
-          ctx.beginPath();
-          if (s.type === 'rect') {
-            ctx.strokeRect(s.x, s.y, s.w, s.h);
-          } else if (s.type === 'circle') {
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.stroke();
-          } else if (s.type === 'line') {
-            ctx.moveTo(s.x, s.y);
-            ctx.lineTo(s.x2, s.y2);
-            ctx.stroke();
-          } else if (s.type === 'triangle') {
-            let tempS = JSON.parse(JSON.stringify(s));
-            normalizeShapeWH(tempS);
-            ctx.translate(tempS.x + tempS.w / 2, tempS.y + tempS.h / 2);
-            ctx.rotate(tempS.rotation * Math.PI / 180);
-            ctx.moveTo(-tempS.w / 2, tempS.h / 2);
-            ctx.lineTo(-tempS.w / 2, -tempS.h / 2);
-            ctx.lineTo(tempS.w / 2, tempS.h / 2);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.resetTransform();
-          }
-          i++;
-          updateStatus(`Simulation : forme ${i}/${shapes.length}`);
-          setTimeout(sim, 500);
-        } else {
-          ctx.restore();
-          redraw();
-          updateStatus('Simulation terminée');
-        }
-      };
-      sim();
-    }
-
-    /* Exports */
-    function download(content, filename, mime = 'text/plain') {
-      const blob = new Blob([content], { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function saveProject() {
-      const data = JSON.stringify({ sheet, shapes });
-      download(data, 'project.sketch', 'application/json');
-    }
-
-    function loadProject(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const data = JSON.parse(ev.target.result);
-        sheet = data.sheet;
-        shapes = data.shapes;
-        applySheetConfig();
-        redraw();
-        buildExplorer();
-      };
-      reader.readAsText(file);
-    }
-
-    function exportDXF() {
-      let dxf = `0
-SECTION
-2
-ENTITIES
-`;
-      shapes.forEach(s => {
-        let tempS = JSON.parse(JSON.stringify(s));
-        normalizeShapeWH(tempS);
-        if (tempS.layer === 'bend' || tempS.type === 'text') return;
-        if (tempS.type === 'rect') {
-          const points = [
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          for (let i = 0; i < 4; i++) {
-            const p1 = points[i];
-            const p2 = points[(i + 1) % 4];
-            dxf += `0
-LINE
-8
-0
-10
-${(p1.x / sheet.scale).toFixed(2)}
-20
-${(p1.y / sheet.scale).toFixed(2)}
-11
-${(p2.x / sheet.scale).toFixed(2)}
-21
-${(p2.y / sheet.scale).toFixed(2)}
-`;
-          }
-        } else if (tempS.type === 'circle') {
-          dxf += `0
-CIRCLE
-8
-0
-10
-${(tempS.x / sheet.scale).toFixed(2)}
-20
-${(tempS.y / sheet.scale).toFixed(2)}
-40
-${(tempS.r / sheet.scale).toFixed(2)}
-`;
-        } else if (tempS.type === 'line') {
-          dxf += `0
-LINE
-8
-0
-10
-${(tempS.x / sheet.scale).toFixed(2)}
-20
-${(tempS.y / sheet.scale).toFixed(2)}
-11
-${(tempS.x2 / sheet.scale).toFixed(2)}
-21
-${(tempS.y2 / sheet.scale).toFixed(2)}
-`;
-        } else if (tempS.type === 'triangle') {
-          const points = [
-            { x: tempS.x, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          for (let i = 0; i < 3; i++) {
-            const p1 = points[i];
-            const p2 = points[(i + 1) % 3];
-            dxf += `0
-LINE
-8
-0
-10
-${(p1.x / sheet.scale).toFixed(2)}
-20
-${(p1.y / sheet.scale).toFixed(2)}
-11
-${(p2.x / sheet.scale).toFixed(2)}
-21
-${(p2.y / sheet.scale).toFixed(2)}
-`;
-          }
-        }
-      });
-      dxf += `0
-ENDSEC
-0
-EOF
-`;
-      download(dxf, 'design.dxf', 'text/plain');
-      updateStatus('Export DXF effectué');
-    }
-
-    function exportGCode() {
-      let gcode = '; G-code généré par SteelSketch v2.0\nG21 ; mm\nG90 ; abs\nM3 ; spindle on\n';
-      const kerf = parseFloat(kerfInput.value) || 1;
-      shapes.forEach(s => {
-        let tempS = JSON.parse(JSON.stringify(s));
-        normalizeShapeWH(tempS);
-        if (tempS.layer === 'bend' || tempS.type === 'text') return;
-        if (tempS.type === 'rect') {
-          const points = [
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          gcode += `G0 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          for (let i = 1; i < points.length; i++) {
-            gcode += `G1 X${(points[i].x / sheet.scale).toFixed(2)} Y${(points[i].y / sheet.scale).toFixed(2)}\n`;
-          }
-          gcode += `G1 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'circle') {
-          gcode += `G0 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          gcode += `G2 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)} R${(tempS.r / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'line') {
-          gcode += `G0 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          gcode += `G1 X${(tempS.x2 / sheet.scale).toFixed(2)} Y${(tempS.y2 / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'triangle') {
-          const points = [
-            { x: tempS.x, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          gcode += `G0 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          for (let i = 1; i < points.length; i++) {
-            gcode += `G1 X${(points[i].x / sheet.scale).toFixed(2)} Y${(points[i].y / sheet.scale).toFixed(2)}\n`;
-          }
-          gcode += `G1 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        }
-      });
-      gcode += 'M5 ; spindle off\nM30 ; end\n';
-      download(gcode, 'design.gcode', 'text/plain');
-      updateStatus('Export G-code effectué');
-    }
-
-    async function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape' });
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 10, 10, 280, 190); // Adjust for A4 landscape
-      pdf.save('design.pdf');
-      updateStatus('Export PDF effectué');
-    }
-
-    function generateFicheTechnique() {
-      const pdf = new jsPDF();
-      pdf.text("Fiche Technique - SteelSketch", 10, 10);
-      pdf.text(`Date: ${new Date().toLocaleDateString()}`, 10, 20);
-      pdf.text(`Tôle: ${sheet.width} x ${sheet.height} mm, Épaisseur: ${sheet.thickness} mm`, 10, 30);
-      pdf.text(`Matériau: ${materialsDB[sheet.material].name}`, 10, 40);
-      pdf.text(`Nombre de pièces: ${shapes.length}`, 10, 50);
-      pdf.text("Pièces:", 10, 60);
-      shapes.forEach((s, i) => {
-        pdf.text(`${i+1}. ${s.type} - Dimensions: ${getShapeDimensions(s)}`, 10, 70 + i*10);
-      });
-      pdf.save('fiche_technique.pdf');
-      updateStatus('Fiche technique générée');
-    }
-
-    function getShapeDimensions(s) {
-      if (s.type === 'rect' || s.type === 'triangle') return `${Math.round(Math.abs(s.w)/sheet.scale)} x ${Math.round(Math.abs(s.h)/sheet.scale)} mm`;
-      if (s.type === 'circle') return `Rayon: ${Math.round(s.r/sheet.scale)} mm`;
-      if (s.type === 'line' || s.type === 'bend') return `Longueur: ${Math.round(Math.hypot(s.x2 - s.x, s.y2 - s.y)/sheet.scale)} mm`;
-      if (s.type === 'text') return s.text;
-      return '';
-    }
-
-    function toggleMultiUser() {
-      multiUserMode = !multiUserMode;
-      updateStatus(multiUserMode ? 'Mode multi-utilisateurs activé (stub)' : 'Mode multi-utilisateurs désactivé');
-      // In real implementation, connect to server or use WebRTC
-    }
-
-    /* Initial setup */
-    updateZoom();
-    applySheetConfig();
-
-    window.addEventListener('resize', () => {
-      canvas.width = Math.max(800, window.innerWidth - (window.innerWidth > 1000 ? 600 : 0));
-      canvas.height = Math.max(600, window.innerHeight - 60);
-      applySheetConfig();
-      redraw();
-    });
+    );
   </script>
 </body>
 </html>
