@@ -5,8 +5,11 @@
   <title>SteelSketch - Connexion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase (via CDN) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -16,22 +19,30 @@
       align-items: center;
       justify-content: center;
       background: #0f172a;
-      overflow: hidden;
-      position: relative;
       color: white;
     }
+
     .card {
       background: white;
       padding: 40px;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       text-align: center;
-      z-index: 1;
       width: 400px;
       color: #0f172a;
     }
-    h1 { font-size: 28px; margin-bottom: 10px; }
-    p { font-size: 16px; margin-bottom: 20px; color: #64748b; }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #64748b;
+    }
+
     button {
       padding: 10px 20px;
       width: 100%;
@@ -42,10 +53,27 @@
       cursor: pointer;
       font-size: 16px;
     }
-    button:hover { background: #1d4ed8; }
-    #user-info { margin-top: 20px; color: #0f172a; font-weight: 500; }
-    #logout { margin-top: 15px; background: white; color: #1e40af; border: 1px solid #1e40af; }
-    #logout:hover { background: #e0e7ff; }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #user-info {
+      margin-top: 20px;
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    #logout {
+      margin-top: 15px;
+      background: white;
+      color: #1e40af;
+      border: 1px solid #1e40af;
+    }
+
+    #logout:hover {
+      background: #e0e7ff;
+    }
   </style>
 </head>
 <body>
@@ -59,14 +87,18 @@
   </div>
 
   <script>
-    // 🔐 CONFIGURATION FIREBASE (à remplacer avec tes infos Firebase)
+    // ✅ Config Firebase que tu m’as donnée
     const firebaseConfig = {
-      apiKey: "TON_API_KEY_ICI",
-      authDomain: "TON_AUTH_DOMAIN.firebaseapp.com",
-      projectId: "TON_PROJECT_ID",
+      apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
+      authDomain: "steelsketch-b7264.firebaseapp.com",
+      projectId: "steelsketch-b7264",
+      storageBucket: "steelsketch-b7264.firebasestorage.app",
+      messagingSenderId: "424606073739",
+      appId: "1:424606073739:web:696f400e992a50d7bee58e",
+      measurementId: "G-TD79BYQ5P6"
     };
 
-    // Initialisation Firebase
+    // Initialiser Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
@@ -93,7 +125,7 @@
       });
     }
 
-    // Gérer l’état de connexion
+    // Garder l'utilisateur connecté
     auth.onAuthStateChanged((user) => {
       if (user) {
         document.getElementById("user-info").innerHTML =
