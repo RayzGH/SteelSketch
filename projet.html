@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <title>SteelSketch v2.0</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>SteelSketch - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
   <style>
+    /* Global variables for consistent design */
     :root {
       --left-w: 280px;
-      --right-w: 320px;
       --toolbar-h: 60px;
-      --status-h: 30px;
       --bg: #f8fafc;
       --accent: #1e40af;
       --accent-hover: #1d4ed8;
@@ -21,1527 +20,1749 @@
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --text-primary: #0f172a;
       --text-secondary: #64748b;
+      --success: #22c55e;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --info: #3b82f6;
     }
+
     body.dark {
       --bg: #0f172a;
-      --accent: #60a5fa;
-      --accent-hover: #3b82f6;
-      --border: #475569;
+      --card-bg: #1e293b;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
+      --border: #475569;
+      --accent: #60a5fa;
+      --accent-hover: #3b82f6;
     }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); }
-    #topbar {
-      position: fixed; left: 0; right: var(--right-w); top: 0; height: var(--toolbar-h);
-      background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 8px 16px; z-index: 40; box-shadow: var(--shadow-sm);
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    #logo { height: 36px; width: auto; }
-    #topbar .group { display: flex; gap: 8px; align-items: center; }
-    #topbar button, #topbar select, #topbar input { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 14px; transition: all 0.2s; color: var(--text-primary); }
-    #topbar button:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-    #topbar button.primary { background: var(--accent); color: white; border: none; }
-    #topbar button.primary:hover { background: var(--accent-hover); }
-    #leftPanel {
-      position: fixed; left: 0; top: var(--toolbar-h); bottom: var(--status-h); width: var(--left-w);
-      background: var(--bg); border-right: 1px solid var(--border); padding: 16px; overflow: auto; box-shadow: var(--shadow-sm);
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+      min-height: 100vh;
     }
-    #leftPanel h3 { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .panel { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
-    label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); font-weight: 500; }
-    input[type=number], select, input[type=text] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; transition: border-color 0.2s; background: var(--bg); color: var(--text-primary); }
-    input[type=number]:focus, select:focus { border-color: var(--accent); outline: none; }
-    .toolbtn { display: block; width: 100%; text-align: left; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--bg); cursor: pointer; font-size: 14px; transition: all 0.2s; color: var(--text-primary); }
-    .toolbtn:hover { background: #f1f5f9; }
-    body.dark .toolbtn:hover { background: #1e293b; }
-    .toolbtn.active { background: linear-gradient(135deg, var(--accent)/0.1, transparent); border-color: var(--accent); font-weight: 500; }
-    #canvasWrap { position: fixed; left: var(--left-w); right: var(--right-w); top: var(--toolbar-h); bottom: var(--status-h); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); overflow: auto; }
-    body.dark #canvasWrap { background: linear-gradient(135deg, #1e293b, #0f172a); }
-    #workArea { position: relative; background: transparent; border-radius: 12px; box-shadow: var(--shadow-md); padding: 24px; }
-    canvas { background: white; border: 2px solid var(--border); border-radius: 12px; display: block; cursor: crosshair; transition: box-shadow 0.2s; }
-    body.dark canvas { background: #1e293b; }
-    canvas:hover { box-shadow: var(--shadow-md); }
-    #rightPanel {
-      position: fixed; right: 0; top: var(--toolbar-h); bottom: var(--status-h); width: var(--right-w); background: var(--bg); border-left: 1px solid var(--border); padding: 16px; overflow: auto; box-shadow: var(--shadow-sm);
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--toolbar-h);
+      background: var(--accent);
+      color: white;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+      transition: background 0.3s;
     }
-    h4 { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .stat { background: var(--bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: flex-start; }
-    .muted { color: var(--text-secondary); font-size: 14px; margin-bottom: 4px; }
-    .small { font-size: 12px; color: var(--text-secondary); }
-    .bignum { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 4px; }
-    .property-panel { background: linear-gradient(135deg, var(--bg), #f8fafc); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.3s ease; }
-    body.dark .property-panel { background: linear-gradient(135deg, #1e293b, #0f172a); }
-    .property-panel:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
-    body.dark .property-panel:hover { background: linear-gradient(135deg, #334155, #1e293b); }
-    .property-panel summary { font-weight: 500; color: var(--text-primary); list-style: none; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-    .property-panel summary::-webkit-details-marker { display: none; }
-    .property-panel[open] summary { font-weight: 600; }
-    .property-panel input { width: 90px; margin-right: 8px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--bg); color: var(--text-primary); }
-    .property-panel input:focus { border-color: var(--accent); }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    footer.note { font-size: 12px; color: var(--text-secondary); margin-top: 16px; text-align: center; }
-    #statusBar { position: fixed; left: var(--left-w); right: var(--right-w); bottom: 0; height: var(--status-h); background: #1e293b; color: white; display: flex; align-items: center; padding: 0 16px; font-size: 12px; z-index: 40; }
-    body.dark #statusBar { background: #f8fafc; color: #0f172a; }
-    .tooltip { position: relative; display: inline-block; }
-    .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #334155; color: white; text-align: left; border-radius: 8px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 12px; }
-    body.dark .tooltip .tooltiptext { background-color: #e2e8f0; color: #0f172a; }
-    .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-    .btn-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
-    button.small { padding: 4px 8px; font-size: 12px; border-radius: 20px; }
-    @media (max-width: 1000px) {
-      #leftPanel { display: none; }
-      #rightPanel { display: none; }
-      #topbar { right: 0; }
-      #canvasWrap { left: 0; right: 0; }
-      #statusBar { left: 0; right: 0; }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 10px 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: var(--toolbar-h);
+      width: var(--left-w);
+      height: calc(100vh - var(--toolbar-h));
+      background: var(--card-bg);
+      border-right: 1px solid var(--border);
+      padding: 30px 20px;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      box-shadow: var(--shadow-sm);
+    }
+
+    body.sidebar-closed .sidebar {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 20px;
+      right: -15px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 0 8px 8px 0;
+      transition: all 0.3s ease;
+      color: var(--text-primary);
+    }
+
+    .sidebar-toggle:hover {
+      background: var(--accent);
+      color: white;
+      transform: translateX(2px);
+    }
+
+    body.sidebar-closed .sidebar-toggle {
+      transform: translateX(15px);
+    }
+
+    body.sidebar-closed .sidebar-toggle:hover {
+      transform: translateX(17px);
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--text-primary);
+    }
+
+    .friend-code {
+      background: var(--bg);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .friend-code i {
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.3s;
+    }
+
+    .friend-code i:hover {
+      color: var(--accent);
+    }
+
+    .add-friend {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 25px;
+    }
+
+    .add-friend input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      transition: border-color 0.3s;
+    }
+
+    .add-friend input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .add-friend button {
+      padding: 10px 15px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .add-friend button:hover {
+      background: var(--accent-hover);
+    }
+
+    .create-group {
+      margin-bottom: 20px;
+    }
+
+    .create-group button {
+      width: 100%;
+      padding: 12px 15px;
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .create-group button:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .friend-list, .group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .friend, .group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .friend::before, .group::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .friend:hover::before, .group:hover::before {
+      transform: translateX(100%);
+    }
+
+    .friend:hover, .group:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    .online { background: var(--success); }
+    .idle { background: var(--warning); }
+    .dnd { background: var(--danger); }
+    .offline { background: var(--secondary-text); }
+
+    .friend-name, .group-name {
+      font-weight: 500;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .group {
+      border-left: 4px solid var(--info);
+    }
+
+    .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .group-members {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .remove-friend, .leave-group {
+      margin-left: auto;
+      cursor: pointer;
+      color: var(--danger);
+      opacity: 0.7;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-friend:hover, .leave-group:hover {
+      opacity: 1;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .no-friends, .no-groups {
+      text-align: center;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-top: 20px;
+      font-size: 14px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .content {
+      margin-left: var(--sidebar-w);
+      padding: calc(var(--toolbar-h) + 30px) 30px 30px 30px;
+      transition: margin-left 0.3s ease;
+      min-height: calc(100vh - var(--toolbar-h));
+    }
+
+    body.sidebar-closed .content {
+      margin-left: 0;
+    }
+
+    .dashboard-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .overview-card {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .overview-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .overview-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .overview-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 15px 18px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    .new-project-btn {
+      position: relative;
+      padding: 15px 25px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 0 rgba(102, 126, 234, 0),
+        0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .new-project-btn::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+      background-size: 400%;
+      z-index: -2;
+      filter: blur(5px);
+      animation: glowing 20s linear infinite;
+      opacity: 0;
+      border-radius: 14px;
+      transition: opacity 0.3s ease;
+    }
+
+    .new-project-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: -1;
+      border-radius: 12px;
+    }
+
+    @keyframes glowing {
+      0% { background-position: 0 0; }
+      50% { background-position: 400% 0; }
+      100% { background-position: 0 0; }
+    }
+
+    .new-project-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 20px 5px rgba(102, 126, 234, 0.4), 0 8px 25px rgba(30, 64, 175, 0.3);
+    }
+
+    .new-project-btn:hover::before {
+      opacity: 1;
+    }
+
+    .new-project-btn:active {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .new-project-btn i {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    .projects {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+
+    .project-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #0ea5e9);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .project-item:hover::before {
+      transform: scaleX(1);
+    }
+
+    .project-item:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .project-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .project-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 10px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn.delete {
+      background: var(--danger);
+    }
+
+    .action-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .action-btn.delete:hover {
+      background: #dc2626;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 35px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      width: 450px;
+      max-width: 90vw;
+      animation: scaleIn 0.3s;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      padding: 5px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--bg);
+      color: var(--text-primary);
+    }
+
+    .modal h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      transition: border-color 0.3s ease;
+    }
+
+    .modal input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal .btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .modal .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .chart-container {
+      margin-top: 40px;
+      padding: 20px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      height: 300px;
+    }
+
+    .chart-container h3 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .chart-container canvas {
+      height: 220px !important;
+    }
+
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 5000;
+      animation: fadeOut 0.5s forwards 2s;
+    }
+
+    .loading-icon {
+      font-size: 60px;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+      z-index: 3000;
+      animation: notificationIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 250px;
+      font-weight: 500;
+    }
+
+    .notification.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .notification.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    .notification.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid var(--info);
+      color: var(--info);
+    }
+
+    @keyframes notificationIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+      }
+      
+      body.sidebar-closed .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .content {
+        margin-left: 0;
+        padding: calc(var(--toolbar-h) + 20px) 20px 20px 20px;
+      }
+      
+      .search-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .projects {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-overview {
+        grid-template-columns: 1fr;
+      }
+      
+      .logo {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- TOP BAR -->
-  <div id="topbar">
-    <div class="group">
-      <img id="logo" src="https://via.placeholder.com/40x40/1e40af/ffffff?text=SS" alt="SteelSketch" />
-      <strong style="font-size:18px;">SteelSketch v2.0</strong>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <i class="fas fa-cube loading-icon"></i>
+    <h2 style="margin: 20px 0 10px 0; color: var(--text-primary);">SteelSketch</h2>
+    <p style="color: var(--text-secondary); margin: 0;">Chargement de votre tableau de bord...</p>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <i class="fas fa-cube"></i> SteelSketch
     </div>
-    <div class="group" style="margin-left:auto">
-      <label style="font-size:12px;margin:0 6px 0 0;color:var(--text-secondary)">Zoom</label>
-      <select id="zoomSelect"><option>50%</option><option>100%</option><option>150%</option><option>200%</option><option>250%</option><option>300%</option></select>
-      <select id="nestAlgo"><option>first-fit</option><option selected>best-fit</option></select>
-      <button id="optimizeBtn" class="primary">Optimiser</button>
-      <button id="simulateBtn">Simuler</button>
-      <button id="undoBtn" class="small">Annuler</button>
-      <button id="redoBtn" class="small">Rétablir</button>
+    <div class="header-right">
+      <div class="user-info">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <span class="user-name" id="user-name">Chargement...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> 
+        Déconnexion
+      </button>
     </div>
-    <div class="group">
-      <label style="font-size:12px;margin:0 6px 0 0;color:var(--text-secondary)">Kerf (mm)</label>
-      <input id="kerf" type="number" value="1" step="0.1" style="width:70px">
-      <div class="btn-group">
-        <button id="saveBtn" class="small">Sauvegarder</button>
-        <button id="loadBtn" class="small">Charger</button>
-        <button id="exportDXF" class="small">DXF</button>
-        <button id="exportGCode" class="small">G-code</button>
-        <button id="exportPDF" class="small">PDF</button>
-        <button id="generateFiche" class="small">Fiche Technique</button>
-        <button id="darkModeBtn" class="small">☀️</button>
+  </header>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="sidebar-header">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" onclick="switchTab('friends')">
+          <i class="fas fa-users"></i> Amis
+        </button>
+        <button class="sidebar-tab" onclick="switchTab('groups')">
+          <i class="fas fa-layer-group"></i> Groupes
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-content">
+      <!-- Onglet Amis -->
+      <div id="friends-tab" class="tab-content active">
+        <div class="friend-code">
+          Code ami : <strong id="friend-code">Chargement...</strong> 
+          <i class="fas fa-copy" onclick="copyFriendCode()" title="Copier le code"></i>
+        </div>
+        <div class="add-friend">
+          <input type="text" id="add-friend-input" placeholder="Code ami..." maxlength="6">
+          <button onclick="addFriend()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="friend-list" id="friend-list">
+          <!-- Amis listés ici -->
+        </div>
+      </div>
+
+      <!-- Onglet Groupes -->
+      <div id="groups-tab" class="tab-content">
+        <div class="create-group">
+          <button onclick="openCreateGroupModal()">
+            <i class="fas fa-plus"></i> Créer un groupe
+          </button>
+        </div>
+        <div class="group-list" id="group-list">
+          <!-- Groupes listés ici -->
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- LEFT PANEL -->
-  <aside id="leftPanel">
-    <h3>Configuration Tôle</h3>
-    <div class="panel tooltip">
-      <label>Largeur (mm)</label><input id="sheetW" type="number" value="800" min="100">
-      <label>Hauteur (mm)</label><input id="sheetH" type="number" value="600" min="100">
-      <label>Épaisseur (mm)</label><input id="thickness" type="number" value="3" step="0.1" min="0.1">
-      <label>Matériau</label>
-      <select id="material">
-        <option value="steel">Acier</option>
-        <option value="alu">Aluminium</option>
-        <option value="inox">Inox</option>
-        <option value="copper">Cuivre</option>
-      </select>
-      <div class="btn-group">
-        <button id="applySheet" style="flex:1;background:var(--accent);color:white;border:none">Appliquer</button>
-        <button id="clearBtn" style="flex:1">Effacer</button>
+  <!-- Contenu principal -->
+  <div class="content">
+    <h1 style="animation: fadeInUp 0.5s; margin: 0 0 30px 0; font-size: 32px; font-weight: 700;">
+      <i class="fas fa-folder-open"></i> Mes Projets
+    </h1>
+
+    <div class="search-bar">
+      <input class="search-input" type="text" placeholder="🔍 Rechercher un projet..." onkeyup="searchProjects(this.value)">
+      <button class="new-project-btn" onclick="openCreateModal()">
+        <i class="fas fa-plus"></i> Nouveau projet
+      </button>
+    </div>
+
+    <div class="dashboard-overview">
+      <div class="overview-card">
+        <h3>Projets totaux</h3>
+        <div class="overview-number" id="total-projects">0</div>
       </div>
-      <span class="tooltiptext">Configurez la tôle ici. Les dimensions affectent le canvas et les calculs de coût/poids.</span>
+      <div class="overview-card">
+        <h3>Projets partagés</h3>
+        <div class="overview-number" id="shared-projects">0</div>
+      </div>
+      <div class="overview-card">
+        <h3>Dernier projet</h3>
+        <div class="overview-number" id="last-project" style="font-size: 16px; font-weight: 600;">Aucun</div>
+      </div>
     </div>
 
-    <h3>Outils</h3>
-    <div class="panel">
-      <button class="toolbtn active" id="tool_select" title="Sélection / Déplacer / Suppr (Shift+clic)">Sélection</button>
-      <button class="toolbtn" id="tool_rect" title="Rectangle pour découpe">Rectangle</button>
-      <button class="toolbtn" id="tool_circle" title="Cercle">Cercle</button>
-      <button class="toolbtn" id="tool_line" title="Ligne droite">Ligne</button>
-      <button class="toolbtn" id="tool_triangle" title="Triangle rectangle">Triangle</button>
-      <button class="toolbtn" id="tool_bend" title="Ligne de pliage">Pli</button>
-      <button class="toolbtn" id="tool_text" title="Annotation">Annotation</button>
-      <button class="toolbtn" id="tool_rotate" title="Rotation">Rotation</button>
+    <div class="chart-container">
+      <h3><i class="fas fa-chart-line"></i> Activité récente</h3>
+      <canvas id="activityChart"></canvas>
     </div>
 
-    <h3>Calques</h3>
-    <div class="panel tooltip">
-      <label><input type="checkbox" checked id="layer_cut"> Découpe</label>
-      <label><input type="checkbox" checked id="layer_mark"> Marquage</label>
-      <label><input type="checkbox" checked id="layer_bend"> Pliage</label>
-      <label><input type="checkbox" checked id="layer_drill"> Perçage</label>
-      <label><input type="checkbox" checked id="layer_annot"> Annotations</label>
-      <span class="tooltiptext">Activez/désactivez les calques pour afficher ou masquer les éléments correspondants.</span>
-    </div>
-
-    <h3>Options</h3>
-    <div class="panel tooltip">
-      <label><input type="checkbox" id="snapToggle" checked> Accroche au quadrillage</label>
-      <label><input type="checkbox" id="gridToggle" checked> Quadrillage adaptatif</label>
-      <label><input type="checkbox" id="pedagoMode"> Mode pédagogique</label>
-      <span class="tooltiptext">Activez le mode pédagogique pour des tutoriels et astuces interactifs.</span>
-    </div>
-
-    <div class="panel tooltip">
-      <div class="muted" style="font-size:13px;">Aide</div>
-      <div class="small" style="line-height:1.4;">Utilisez les outils pour dessiner. Optimisez avec best-fit. Exportez pour fabrication. Mode pédago : tutoriels et tooltips.</div>
-      <span class="tooltiptext">Guide rapide pour commencer. Survolez les éléments pour plus d'infos en mode pédagogique.</span>
-    </div>  </aside>
-
-  <!-- CENTER WORK AREA -->
-  <div id="canvasWrap">
-    <div id="workArea">
-      <canvas id="canvas" width="1000" height="700"></canvas>
+    <div class="projects" id="projects-list">
+      <!-- Projets -->
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
-  <aside id="rightPanel">
-    <details open class="tooltip">
-      <summary><h4>Explorer</h4></summary>
-      <div id="properties"></div>
-      <span class="tooltiptext">Outil clé pour éditer, déplacer, supprimer ou dupliquer les formes avec précision numérique. Cliquez sur une forme pour ouvrir ses propriétés.</span>
-    </details>
-    <details class="tooltip">
-      <summary><h4>Analyse</h4></summary>
-      <div class="stat tooltip">
-        <div class="muted">Surface tôle</div>
-        <div class="bignum" id="stat_sheetArea">—</div>
-        <div class="muted" id="stat_dims">—</div>
-        <span class="tooltiptext">Surface totale de la tôle et ses dimensions.</span>
-      </div>
-      <div class="stat tooltip">
-        <div class="muted">Surface utilisée</div>
-        <div class="bignum" id="stat_cutArea">0 mm²</div>
-        <div class="muted">Utilisation <span id="stat_util">0%</span> • Chutes <span id="stat_waste">100%</span></div>
-        <span class="tooltiptext">Pourcentage de tôle utilisé et chutes restantes.</span>
-      </div>
-      <div class="stat tooltip">
-        <div class="muted">Poids</div>
-        <div class="bignum" id="stat_weight">0 kg</div>
-        <div class="muted">Coût : <span id="stat_cost">0 €</span></div>
-        <span class="tooltiptext">Poids et coût estimés basés sur le matériau et la surface utilisée.</span>
-      </div>
-    </details>
-    <footer class="note">
-      SteelSketch • v2.0 • Éducatif & Pro
-    </footer>
-  </aside>
+  <!-- Modal Créer Projet -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h2><i class="fas fa-plus-circle"></i> Créer un nouveau projet</h2>
+      <input id="projectName" type="text" placeholder="Nom du projet" maxlength="50">
+      <input id="projectDesc" type="text" placeholder="Description (optionnel)" maxlength="200">
+      <button class="btn" onclick="createNewProject()">
+        <i class="fas fa-rocket"></i> Créer le projet
+      </button>
+    </div>
+  </div>
 
-  <!-- STATUS BAR -->
-  <div id="statusBar">Prêt</div>
+  <!-- Modal Créer Groupe -->
+  <div id="createGroupModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h2><i class="fas fa-layer-group"></i> Créer un nouveau groupe</h2>
+      <input id="groupName" type="text" placeholder="Nom du groupe" maxlength="50">
+      <input id="groupDesc" type="text" placeholder="Description (optionnel)" maxlength="200">
+      <button class="btn" onclick="createNewGroup()">
+        <i class="fas fa-users"></i> Créer le groupe
+      </button>
+    </div>
+  </div>
 
-  <input type="file" id="loadFile" style="display: none;" accept=".json,.sketch">
+  <!-- Firebase + librairies -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 
   <script>
-    /* ======================
-       Utilitaires & état
-       ====================== */
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const canvasWrap = document.getElementById('canvasWrap');
-    const statusBar = document.getElementById('statusBar');
-    let tool = 'select';
-    let shapes = [];
-    let history = [];
-    let historyIndex = -1;
-    let drawing = false, dragging = false, panning = false, resizing = false, rotating = false;
-    let dragOffsetX = 0, dragOffsetY = 0, panOffsetX = 0, panOffsetY = 0, startX = 0, startY = 0, startAngle = 0;
-    let currentShape = null, selectedShape = null, resizeHandle = null;
-    let sheet = { x: 50, y: 50, width: 800, height: 600, scale: 1, thickness: 3, material: 'steel' };
-    const materialsDB = {
-      steel: { name: 'Acier', density: 7850, price: 1.5 },
-      alu: { name: 'Aluminium', density: 2700, price: 3.0 },
-      inox: { name: 'Inox', density: 8000, price: 2.5 },
-      copper: { name: 'Cuivre', density: 8960, price: 6.0 }
-    };
-    const defaultColors = {
-      rect: 'rgba(59,130,246,0.2)',
-      circle: 'rgba(239,68,68,0.2)',
-      line: 'rgba(34,197,94,0.2)',
-      triangle: 'rgba(251,191,36,0.2)',
-      bend: 'rgba(245,101,101,0.3)',
-      text: 'rgba(0,0,0,1)'
-    };
-    const typeIcons = {
-      rect: '□',
-      circle: '○',
-      line: '─',
-      triangle: '△',
-      bend: '↬',
-      text: 'T'
-    };
-    const kerfInput = document.getElementById('kerf');
-    const zoomSelect = document.getElementById('zoomSelect');
-    const nestAlgoSelect = document.getElementById('nestAlgo');
-    const snapToggle = document.getElementById('snapToggle');
-    let zoomFactor = 1.0;
-    let baseScale = 1.0;
-    const pedagoMode = document.getElementById('pedagoMode');
-    const gridToggle = document.getElementById('gridToggle');
-    const snapDistance = 10; // Pixels for snapping
-    let openDetails = new Set();
-    let darkMode = false;
-
-    /* Initialize UI elements */
-    function $id(i) { return document.getElementById(i); }
-    $id('applySheet').addEventListener('click', applySheetConfig);
-    $id('clearBtn').addEventListener('click', () => { saveHistory(); shapes = []; redraw(); buildExplorer(); updateStatus('Canvas effacé'); });
-    $id('tool_rect').addEventListener('click', () => selectTool('rect'));
-    $id('tool_circle').addEventListener('click', () => selectTool('circle'));
-    $id('tool_line').addEventListener('click', () => selectTool('line'));
-    $id('tool_triangle').addEventListener('click', () => selectTool('triangle'));
-    $id('tool_select').addEventListener('click', () => selectTool('select'));
-    $id('tool_bend').addEventListener('click', () => selectTool('bend'));
-    $id('tool_text').addEventListener('click', () => selectTool('text'));
-    $id('tool_rotate').addEventListener('click', () => selectTool('rotate'));
-    $id('optimizeBtn').addEventListener('click', () => { optimizeLayout(); updateStatus('Optimisation effectuée'); });
-    $id('simulateBtn').addEventListener('click', simulateTrajectory);
-    $id('undoBtn').addEventListener('click', undo);
-    $id('redoBtn').addEventListener('click', redo);
-    $id('saveBtn').addEventListener('click', saveProject);
-    $id('loadBtn').addEventListener('click', () => $id('loadFile').click());
-    $id('loadFile').addEventListener('change', loadProject);
-    $id('exportDXF').addEventListener('click', exportDXF);
-    $id('exportGCode').addEventListener('click', exportGCode);
-    $id('exportPDF').addEventListener('click', exportPDF);
-    $id('generateFiche').addEventListener('click', generateFicheTechnique);
-    $id('darkModeBtn').addEventListener('click', toggleDarkMode);
-    zoomSelect.addEventListener('change', handleZoomChange);
-    [$id('layer_cut'), $id('layer_mark'), $id('layer_bend'), $id('layer_drill'), $id('layer_annot')].forEach(cb => cb.addEventListener('change', () => { redraw(); buildExplorer(); }));
-    pedagoMode.addEventListener('change', () => {
-      if (pedagoMode.checked) {
-        pedagoAlert('Mode pédagogique activé : Survolez pour des astuces. Cliquez sur un outil pour un tutoriel.');
-        showTutorial();
-        showQuiz();
-      }
-    });
-    gridToggle.addEventListener('change', redraw);
-    snapToggle.addEventListener('change', () => updateStatus(snapToggle.checked ? 'Accroche activée' : 'Accroche désactivée'));
-
-    function toggleDarkMode() {
-      darkMode = !darkMode;
-      document.body.classList.toggle('dark', darkMode);
-      $id('darkModeBtn').innerText = darkMode ? '☀️' : '🌙';
-      redraw();
-    }
-
-    function selectTool(t) {
-      tool = t;
-      document.querySelectorAll('.toolbtn').forEach(b => b.classList.remove('active'));
-      $id(`tool_${t}`).classList.add('active');
-      currentShape = null;
-      dragging = false;
-      panning = false;
-      resizing = false;
-      rotating = false;
-      canvas.style.cursor = t === 'select' ? 'grab' : 'crosshair';
-      updateStatus(`Outil sélectionné : ${t}`);
-      if (pedagoMode.checked) pedagoAlert(`Outil ${t} : ${getToolTip(t)}`);
-    }
-
-    function pedagoAlert(msg) {
-      if (pedagoMode.checked) alert(msg);
-    }
-
-    function updateStatus(msg) {
-      statusBar.innerText = msg;
-      setTimeout(() => { if (statusBar.innerText === msg) statusBar.innerText = 'Prêt'; }, 3000);
-    }
-
-    function showTutorial() {
-      if (!pedagoMode.checked) return;
-      pedagoAlert('Bienvenue dans SteelSketch !\n1. Configurez la tôle (gauche).\n2. Choisissez un outil pour dessiner.\n3. Optimisez et exportez (haut).\n4. Consultez l\'analyse (droite).\n5. Utilisez les annotations pour commenter.\n6. Sauvegardez et chargez vos projets.');
-    }
-
-    function showQuiz() {
-      // Simple quiz example
-      const answer = prompt("Quiz: Quelle est la densité de l'acier ? (g/cm³)");
-      if (answer == "7.85") {
-        alert("Correct!");
-      } else {
-        alert("Faux, c'est 7.85 g/cm³");
+    // Masquer l'écran de chargement après initialisation
+    function hideLoadingScreen() {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
       }
     }
 
-    function getToolTip(t) {
-      const tips = {
-        select: 'Clic pour sélectionner/déplacer, Shift+clic pour supprimer.',
-        rect: 'Drag pour dessiner un rectangle dans n\'importe quelle direction. Maintenez Shift pour un carré.',
-        circle: 'Drag depuis le centre pour définir le rayon.',
-        line: 'Drag pour tracer une ligne droite.',
-        triangle: 'Drag pour base/hauteur dans n\'importe quelle direction. Maintenez Shift pour triangle équilatéral.',
-        bend: 'Ligne pour indiquer un pliage (calque séparé).',
-        text: 'Clic pour ajouter annotation.',
-        rotate: 'Sélectionnez une forme et drag pour la rotates.'
+    // Afficher message d'erreur
+    function showError(message) {
+      const errorContainer = document.getElementById('error-container');
+      if (errorContainer) {
+        errorContainer.innerHTML = `
+          <div class="error-message"><i class="fas fa-exclamation-circle"></i> ${message}</div>
+        `;
+      }
+    }
+
+    // Attendre que Firebase soit chargé
+    function initializeApp() {
+      console.log('Initializing app...');
+      
+      // Vérifier si Firebase est chargé
+      if (typeof firebase === 'undefined') {
+        console.error('Firebase n\'est pas chargé !');
+        showError('Firebase ne s\'est pas chargé correctement.<br>Vérifiez votre connexion internet.');
+        return;
+      }
+
+      console.log('Firebase detected, initializing...');
+
+      // Configuration Firebase - TA VRAIE CONFIG
+      const firebaseConfig = {
+        apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
+        authDomain: "steelsketch-b7264.firebaseapp.com",
+        projectId: "steelsketch-b7264",
+        storageBucket: "steelsketch-b7264.firebasestorage.app",
+        messagingSenderId: "424606073739",
+        appId: "1:424606073739:web:696f400e992a50d7bee58e",
+        measurementId: "G-TD79BYQ5P6"
       };
-      return tips[t] || 'Outil de dessin.';
-    }
 
-    function updateZoom() {
-      canvas.style.transform = `scale(${zoomFactor})`;
-      canvas.style.transformOrigin = 'center center';
-    }
-
-    function handleZoomChange() {
-      const targetZoom = parseFloat(zoomSelect.value) / 100;
-      zoomFactor = targetZoom;
-      updateZoom();
-      applySheetConfig();
-      updateStatus(`Zoom réglé à ${zoomSelect.value}`);
-    }
-
-    /* Undo/Redo */
-    function saveHistory() {
-      history = history.slice(0, historyIndex + 1);
-      history.push(JSON.parse(JSON.stringify(shapes)));
-      historyIndex++;
-      if (history.length > 50) { history.shift(); historyIndex--; }
-      updateStatus('Action enregistrée');
-    }
-
-    function undo() {
-      if (historyIndex > 0) {
-        historyIndex--;
-        shapes = JSON.parse(JSON.stringify(history[historyIndex]));
-        redraw();
-        buildExplorer();
-        updateStatus('Annulation effectuée');
+      try {
+        // Initialisation Firebase
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+          console.log('Firebase initialisé avec succès');
+        }
+        
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        // Maintenant on peut initialiser l'app
+        initializeDashboard();
+        
+      } catch (error) {
+        console.error('Erreur Firebase:', error);
+        showError('Erreur de configuration Firebase:<br>' + error.message + '<br><br>Vérifiez votre configuration.');
       }
     }
 
-    function redo() {
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        shapes = JSON.parse(JSON.stringify(history[historyIndex]));
-        redraw();
-        buildExplorer();
-        updateStatus('Rétablissement effectué');
-      }
-    }
+    function initializeDashboard() {
+      console.log('Initializing dashboard...');
+      
+      let authInitialized = false;
+      let authTimeout;
 
-    /* Sheet config & centering */
-    function applySheetConfig() {
-      const w = Math.max(100, parseFloat($id('sheetW').value) || 800);
-      const h = Math.max(100, parseFloat($id('sheetH').value) || 600);
-      sheet.width = w;
-      sheet.height = h;
-      sheet.thickness = Math.max(0.1, parseFloat($id('thickness').value) || 3);
-      sheet.material = $id('material').value;
+      // Fonction pour vérifier l'authentification
+      function checkAuth() {
+        console.log('Checking auth...');
+        
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          console.log('User found immediately:', currentUser.email);
+          initializeUserData(currentUser);
+          return;
+        }
 
-      const margin = 80;
-      const scaleX = (canvas.width - margin * 2) / w;
-      const scaleY = (canvas.height - margin * 2) / h;
-      baseScale = Math.min(scaleX, scaleY);
-      sheet.scale = baseScale * zoomFactor;
-
-      sheet.x = (canvas.width - w * sheet.scale) / 2;
-      sheet.y = (canvas.height - h * sheet.scale) / 2;
-
-      shapes.forEach(s => clampShapeToSheet(s));
-      redraw();
-      buildExplorer();
-      updateStatus('Configuration de la tôle appliquée');
-    }
-
-    /* Zoom & Pan - No panning, fixed sheet position */
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const oldZoomFactor = zoomFactor;
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      zoomFactor *= delta;
-      zoomFactor = Math.max(0.5, Math.min(3.0, zoomFactor));
-      const newZoom = zoomFactor * 100;
-      zoomSelect.value = Math.round(newZoom) + '%';
-      updateZoom();
-      applySheetConfig();
-    });
-
-    /* Mouse events - drawing, dragging, panning, resizing, rotating */
-    canvas.addEventListener('mousedown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      let clientX = (e.clientX - rect.left) / zoomFactor;
-      let clientY = (e.clientY - rect.top) / zoomFactor;
-      if (snapToggle.checked) {
-        clientX = Math.round(clientX / snapDistance) * snapDistance;
-        clientY = Math.round(clientY / snapDistance) * snapDistance;
-      }
-      startX = clientX;
-      startY = clientY;
-
-      if (!pointInSheet(clientX, clientY)) {
-        return;
+        console.log('No immediate user, waiting...');
+        
+        // Timeout de sécurité
+        authTimeout = setTimeout(() => {
+          console.log('Auth timeout - redirecting to login');
+          window.location.href = 'index.html';
+        }, 3000);
       }
 
-      saveHistory();
+      function initializeUserData(user) {
+        console.log('Initializing user data for:', user.email);
+        
+        if (authTimeout) {
+          clearTimeout(authTimeout);
+          authTimeout = null;
+        }
+        
+        authInitialized = true;
+        
+        // Masquer l'écran de chargement
+        hideLoadingScreen();
+        
+        // Afficher le nom d'utilisateur
+        const nameEl = document.getElementById('user-name');
+        if (nameEl) {
+          const displayName = user.displayName || 
+                             user.email?.split('@')[0] || 
+                             'Utilisateur';
+          nameEl.innerText = displayName;
+          console.log('Display name set to:', displayName);
+        }
+        
+        // Initialiser les données utilisateur
+        generateFriendCode(user.uid);
+        loadFriends(user.uid);
+        loadGroups(user.uid);
+        loadProjects(user.uid);
+        loadActivityChart(user.uid);
+      }
 
-      if (tool === 'select') {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          const s = shapes[idx];
-          resizeHandle = getResizeHandle(s, clientX, clientY);
-          if (resizeHandle) {
-            resizing = true;
-            canvas.style.cursor = resizeHandle.cursor;
-          } else {
-            dragging = true;
-            dragOffsetX = clientX - (s.x || s.points[0].x);
-            dragOffsetY = clientY - (s.y || s.points[0].y);
-            canvas.style.cursor = 'grabbing';
-          }
-          if (e.shiftKey) {
-            shapes.splice(idx, 1);
-            selectedShape = null;
-            redraw();
-            buildExplorer();
-            updateStatus('Forme supprimée');
-            return;
-          } else {
-            if (selectedShape === idx) {
-              selectedShape = null;
-            } else {
-              selectedShape = idx;
+      // Gestion de l'authentification
+      auth.onAuthStateChanged((user) => {
+        console.log('Auth state changed:', user ? `${user.email} (${user.uid.slice(0,8)}...)` : 'null');
+        
+        if (user) {
+          initializeUserData(user);
+        } else if (authInitialized) {
+          console.log('User signed out - redirecting');
+          window.location.href = 'index.html';
+        } else {
+          console.log('No user on initial load - checking auth in 1 second');
+          setTimeout(checkAuth, 1000);
+        }
+      });
+
+      // Déclarer toutes les fonctions globales
+      window.logout = function() {
+        if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+          console.log('Logging out...');
+          auth.signOut().then(() => {
+            console.log('User signed out successfully');
+            window.location.href = 'index.html';
+          }).catch(err => {
+            console.error('Error signing out:', err);
+            showNotification('Erreur lors de la déconnexion', 'error');
+          });
+        }
+      };
+
+      window.toggleSidebar = function() {
+        sidebarOpen = !sidebarOpen;
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
+        document.querySelector('.content').style.marginLeft = sidebarOpen ? 'var(--sidebar-w)' : '0';
+        document.querySelector('.sidebar-toggle i').className = sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+      };
+
+      window.switchTab = function(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        const clickedTab = event.target;
+        clickedTab.classList.add('active');
+        document.getElementById(`${tab}-tab`).classList.add('active');
+      };
+
+      window.generateFriendCode = function(uid) {
+        const code = uid.slice(0,6).toUpperCase();
+        const fcEl = document.getElementById('friend-code');
+        if (fcEl) fcEl.innerText = code;
+      };
+
+      window.copyFriendCode = function() {
+        const code = document.getElementById('friend-code').innerText;
+        if (code && code !== 'Chargement...') {
+          navigator.clipboard.writeText(code).then(() => {
+            showNotification('Code copié !', 'success');
+          }).catch(() => {
+            showNotification('Impossible de copier le code', 'error');
+          });
+        }
+      };
+
+      window.addFriend = function() {
+        const input = document.getElementById('add-friend-input');
+        if (!input) return;
+        
+        const code = input.value.toUpperCase().trim();
+        if (!code) {
+          showNotification('Veuillez entrer un code ami', 'error');
+          return;
+        }
+        
+        if (code.length !== 6) {
+          showNotification('Le code ami doit contenir 6 caractères', 'error');
+          return;
+        }
+        
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const ownCode = user.uid.slice(0, 6).toUpperCase();
+        if (code === ownCode) {
+          showNotification("Vous ne pouvez pas vous ajouter vous-même !", 'error');
+          return;
+        }
+
+        // Rechercher l'utilisateur avec ce code
+        db.collection('users')
+          .where('friendCode', '==', code)
+          .get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              showNotification('Aucun utilisateur trouvé avec ce code', 'error');
+              return;
             }
+
+            const friendData = snapshot.docs[0].data();
+            const friendId = snapshot.docs[0].id;
+
+            // Vérifier si déjà ami
+            return db.collection('friends')
+              .where('userId', '==', user.uid)
+              .where('friendId', '==', friendId)
+              .get()
+              .then(friendSnapshot => {
+                if (!friendSnapshot.empty) {
+                  showNotification('Cet utilisateur est déjà dans votre liste d\'amis !', 'error');
+                  return;
+                }
+
+                // Ajouter l'ami
+                return db.collection('friends').add({
+                  userId: user.uid,
+                  friendId: friendId,
+                  friendCode: code,
+                  friendName: friendData.displayName || friendData.email?.split('@')[0] || 'Utilisateur',
+                  status: 'accepted',
+                  addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              });
+          })
+          .then(() => {
+            input.value = '';
+            loadFriends(user.uid);
+            showNotification('Ami ajouté avec succès !', 'success');
+          })
+          .catch(err => {
+            console.error('Erreur addFriend:', err);
+            showNotification('Erreur lors de l\'ajout : ' + err.message, 'error');
+          });
+      };
+
+      window.loadFriends = function(userId) {
+        const container = document.getElementById('friend-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('friends')
+          .where('userId', '==', userId)
+          .orderBy('addedAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-friends"><i class="fas fa-user-friends"></i><br>Aucun ami ajouté pour le moment.<br><small>Ajoutez des amis avec leur code !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'friend';
+              
+              const statuses = ['online', 'offline', 'idle', 'dnd'];
+              const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+              
+              div.innerHTML = `
+                <span class="status ${randomStatus}"></span>
+                <span class="friend-name">${data.friendName || data.friendCode}</span>
+                <i class="fas fa-times remove-friend" onclick="removeFriend('${doc.id}')" title="Supprimer cet ami"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadFriends:', err);
+            container.innerHTML = '<div class="no-friends" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.removeFriend = function(friendId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet ami ?')) {
+          db.collection('friends').doc(friendId).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) loadFriends(user.uid);
+              showNotification('Ami supprimé', 'success');
+            })
+            .catch(err => {
+              console.error('Erreur removeFriend:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
+        }
+      };
+
+      window.openCreateGroupModal = function() {
+        const modal = document.getElementById('createGroupModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('groupName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
           }
-        } else {
-          selectedShape = null;
         }
-        redraw();
-        buildExplorer();
-        return;
-      } else if (tool === 'rotate') {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          selectedShape = idx;
-          rotating = true;
-          canvas.style.cursor = 'crosshair';
-          const s = shapes[idx];
-          const cx = s.x + (s.w || 0) / 2;
-          const cy = s.y + (s.h || 0) / 2;
-          startAngle = Math.atan2(clientY - cy, clientX - cx) - (s.rotation || 0) * Math.PI / 180;
-        }
-        return;
-      } else if (tool === 'text') {
-        const text = prompt("Entrez l'annotation:");
-        if (text) {
-          shapes.push({ type: 'text', x: clientX, y: clientY, text: text, layer: 'annot' });
-          redraw();
-          buildExplorer();
-        }
-        return;
-      }
+      };
 
-      drawing = true;
-      const layer = tool === 'bend' ? 'bend' : 'cut';
-      if (tool === 'rect' || tool === 'triangle') {
-        currentShape = { type: tool, x: clientX, y: clientY, w: 0, h: 0, rotation: 0, layer };
-        shapes.push(currentShape);
-      } else if (tool === 'circle') {
-        currentShape = { type: 'circle', x: clientX, y: clientY, r: 0, layer };
-        shapes.push(currentShape);
-      } else if (tool === 'line' || tool === 'bend') {
-        currentShape = { type: tool === 'bend' ? 'bend' : 'line', x: clientX, y: clientY, x2: clientX, y2: clientY, layer };
-        shapes.push(currentShape);
-      }
-      redraw();
-    });
+      window.createNewGroup = function() {
+        const nameInput = document.getElementById('groupName');
+        const descInput = document.getElementById('groupDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
 
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      let clientX = (e.clientX - rect.left) / zoomFactor;
-      let clientY = (e.clientY - rect.top) / zoomFactor;
-      if (snapToggle.checked) {
-        clientX = Math.round(clientX / snapDistance) * snapDistance;
-        clientY = Math.round(clientY / snapDistance) * snapDistance;
-      }
-
-      if (dragging && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        const newX = clientX - dragOffsetX;
-        const newY = clientY - dragOffsetY;
-        const dx = newX - (s.x || s.points[0].x);
-        const dy = newY - (s.y || s.points[0].y);
-        if (s.type === 'rect' || s.type === 'triangle' || s.type === 'circle' || s.type === 'text') {
-          s.x += dx;
-          s.y += dy;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          s.x += dx;
-          s.y += dy;
-          s.x2 += dx;
-          s.y2 += dy;
+        if (!name) {
+          showNotification('Le nom du groupe est requis', 'error');
+          nameInput.focus();
+          return;
         }
-        clampShapeToSheet(s);
-        redraw();
-        updateStatus('Déplacement de la forme');
-      } else if (resizing && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        handleResize(s, clientX, clientY, resizeHandle);
-        clampShapeToSheet(s);
-        redraw();
-        updateStatus('Redimensionnement de la forme');
-      } else if (rotating && selectedShape !== null) {
-        const s = shapes[selectedShape];
-        const cx = s.x + (s.w || 0) / 2;
-        const cy = s.y + (s.h || 0) / 2;
-        s.rotation = (Math.atan2(clientY - cy, clientX - cx) - startAngle) * 180 / Math.PI;
-        redraw();
-        updateStatus('Rotation de la forme');
-      } else if (drawing && currentShape) {
-        let mx = clientX, my = clientY;
-        if (currentShape.type === 'rect' || currentShape.type === 'triangle') {
-          if (e.shiftKey) {
-            const size = Math.max(Math.abs(mx - currentShape.x), Math.abs(my - currentShape.y));
-            currentShape.w = mx > currentShape.x ? size : -size;
-            currentShape.h = my > currentShape.y ? size : -size;
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createGroupModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('groups').add({
+          name: name,
+          description: desc || 'Aucune description',
+          ownerId: user.uid,
+          ownerName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          members: [user.uid],
+          memberNames: [user.displayName || user.email?.split('@')[0] || 'Utilisateur'],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadGroups(user.uid);
+          showNotification('Groupe créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createGroup:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-users"></i> Créer le groupe';
+          }
+        });
+      };
+
+      window.loadGroups = function(userId) {
+        const container = document.getElementById('group-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('groups')
+          .where('members', 'array-contains', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-groups"><i class="fas fa-layer-group"></i><br>Aucun groupe pour le moment.<br><small>Créez ou rejoignez un groupe !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'group';
+              
+              const isOwner = data.ownerId === userId;
+              const memberCount = data.members ? data.members.length : 1;
+              
+              div.innerHTML = `
+                <i class="fas fa-layer-group" style="color: var(--info); margin-right: 8px;"></i>
+                <div class="group-info">
+                  <div class="group-name">${data.name}</div>
+                  <div class="group-members">${memberCount} membre${memberCount > 1 ? 's' : ''}</div>
+                </div>
+                ${isOwner 
+                  ? `<i class="fas fa-crown" style="color: var(--warning); margin-right: 8px;" title="Propriétaire"></i>`
+                  : ''
+                }
+                <i class="fas fa-sign-out-alt leave-group" onclick="leaveGroup('${doc.id}', '${isOwner}')" title="${isOwner ? 'Supprimer le groupe' : 'Quitter le groupe'}"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadGroups:', err);
+            container.innerHTML = '<div class="no-groups" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.leaveGroup = function(groupId, isOwner) {
+        const confirmMessage = isOwner === 'true' 
+          ? 'Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.'
+          : 'Êtes-vous sûr de vouloir quitter ce groupe ?';
+          
+        if (confirm(confirmMessage)) {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          if (isOwner === 'true') {
+            // Supprimer le groupe
+            db.collection('groups').doc(groupId).delete()
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Groupe supprimé', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur deleteGroup:', err);
+                showNotification('Erreur lors de la suppression', 'error');
+              });
           } else {
-            currentShape.w = mx - currentShape.x;
-            currentShape.h = my - currentShape.y;
+            // Quitter le groupe
+            db.collection('groups').doc(groupId).update({
+              members: firebase.firestore.FieldValue.arrayRemove(user.uid),
+              memberNames: firebase.firestore.FieldValue.arrayRemove(user.displayName || user.email?.split('@')[0] || 'Utilisateur')
+            })
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Vous avez quitté le groupe', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur leaveGroup:', err);
+                showNotification('Erreur lors de la sortie du groupe', 'error');
+              });
           }
-          normalizeShapeWH(currentShape);
-        } else if (currentShape.type === 'circle') {
-          currentShape.r = Math.hypot(mx - currentShape.x, my - currentShape.y);
-        } else if (currentShape.type === 'line' || currentShape.type === 'bend') {
-          currentShape.x2 = mx;
-          currentShape.y2 = my;
         }
-        clampShapeToSheet(currentShape);
-        redraw();
-        updateStatus(`Dessin : ${currentShape.type} (${Math.round(Math.abs(currentShape.w) / sheet.scale || currentShape.r / sheet.scale || 0)} mm)`);
-      } else if (tool === 'select' && !drawing && !dragging && !panning) {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          const handle = getResizeHandle(shapes[idx], clientX, clientY);
-          canvas.style.cursor = handle ? handle.cursor : 'grab';
+      };
+
+      window.openCreateModal = function() {
+        const modal = document.getElementById('createModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('projectName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.closeModal = function() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          modal.style.display = 'none';
+        });
+        
+        // Réinitialiser les champs
+        const inputs = document.querySelectorAll('.modal input');
+        inputs.forEach(input => input.value = '');
+      };
+
+      window.createNewProject = function() {
+        const nameInput = document.getElementById('projectName');
+        const descInput = document.getElementById('projectDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du projet est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('projects').add({
+          name: name,
+          desc: desc || 'Aucune description',
+          userId: user.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastModified: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadProjects(user.uid);
+          showNotification('Projet créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createProject:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-rocket"></i> Créer le projet';
+          }
+        });
+      };
+
+      window.loadProjects = function(userId) {
+        const container = document.getElementById('projects-list');
+        if (!container) return;
+        
+        const totalProjects = document.getElementById('total-projects');
+        const lastProject = document.getElementById('last-project');
+        const sharedProjects = document.getElementById('shared-projects');
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Chargement des projets...</div>';
+        
+        db.collection('projects')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            // Mise à jour des statistiques
+            if (totalProjects) totalProjects.innerText = snapshot.size;
+            if (sharedProjects) sharedProjects.innerText = '0'; // TODO: logique pour projets partagés
+            
+            if (snapshot.size > 0 && lastProject) {
+              const latestProject = snapshot.docs[0].data();
+              lastProject.innerText = latestProject.name;
+              lastProject.style.fontSize = '16px';
+            } else if (lastProject) {
+              lastProject.innerText = 'Aucun';
+              lastProject.style.fontSize = '16px';
+            }
+            
+            container.innerHTML = '';
+            
+            if (snapshot.empty) {
+              container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                  <i class="fas fa-folder-open fa-4x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                  <h3>Pas encore de projet</h3>
+                  <p>Créez votre premier projet pour commencer !</p>
+                </div>
+              `;
+              return;
+            }
+            
+            snapshot.forEach((doc, index) => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'project-item';
+              div.style.animation = 'fadeInUp 0.5s';
+              div.style.animationDelay = `${index * 0.1}s`;
+              
+              // Format de la date
+              let dateStr = 'Date inconnue';
+              if (data.createdAt && data.createdAt.toDate) {
+                const date = data.createdAt.toDate();
+                dateStr = date.toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+              }
+              
+              div.innerHTML = `
+                <div class="project-name">${data.name}</div>
+                <div class="project-desc">${data.desc || 'Aucune description'}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">
+                  <i class="fas fa-calendar-alt"></i> Créé le ${dateStr}
+                </div>
+                <div class="project-actions">
+                  <button class="action-btn" onclick="openProject('${doc.id}')">
+                    <i class="fas fa-external-link-alt"></i> Ouvrir
+                  </button>
+                  <button class="action-btn delete" onclick="deleteProject('${doc.id}')">
+                    <i class="fas fa-trash-alt"></i> Supprimer
+                  </button>
+                </div>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadProjects:', err);
+            container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 40px;"><i class="fas fa-exclamation-triangle fa-2x"></i><br><br>Erreur de chargement des projets</div>';
+          });
+      };
+
+      window.searchProjects = function(query) {
+        const items = document.querySelectorAll('.project-item');
+        const searchQuery = query.toLowerCase().trim();
+        
+        items.forEach(item => {
+          const nameEl = item.querySelector('.project-name');
+          const descEl = item.querySelector('.project-desc');
+          
+          if (!nameEl) return;
+          
+          const name = nameEl.innerText.toLowerCase();
+          const desc = descEl ? descEl.innerText.toLowerCase() : '';
+          
+          const matches = name.includes(searchQuery) || desc.includes(searchQuery);
+          
+          item.style.display = matches || searchQuery === '' ? 'block' : 'none';
+          
+          if (matches && searchQuery !== '') {
+            item.style.animation = 'fadeInUp 0.3s ease';
+          }
+        });
+        
+        // Afficher un message si aucun résultat
+        const container = document.getElementById('projects-list');
+        const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+        
+        if (visibleItems.length === 0 && searchQuery !== '' && items.length > 0) {
+          const noResults = document.createElement('div');
+          noResults.id = 'no-results';
+          noResults.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--text-secondary);';
+          noResults.innerHTML = `
+            <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+            <h3>Aucun projet trouvé</h3>
+            <p>Essayez avec d'autres mots-clés</p>
+          `;
+          container.appendChild(noResults);
         } else {
-          canvas.style.cursor = 'grab';
+          const existingNoResults = document.getElementById('no-results');
+          if (existingNoResults) existingNoResults.remove();
         }
-      } else if (tool === 'rotate' && !rotating) {
-        const idx = findShapeIndexAt(clientX, clientY);
-        if (idx !== -1) {
-          canvas.style.cursor = 'crosshair';
-        } else {
-          canvas.style.cursor = 'default';
+      };
+
+      window.openProject = function(id) {
+        showNotification('Ouverture du projet...', 'info');
+        setTimeout(() => {
+          alert(`Projet ${id} ouvert (fonctionnalité à implémenter)`);
+        }, 1000);
+      };
+
+      window.deleteProject = function(id) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
+          db.collection('projects').doc(id).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) {
+                loadProjects(user.uid);
+                showNotification('Projet supprimé', 'success');
+              }
+            })
+            .catch(err => {
+              console.error('Erreur deleteProject:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
         }
-      }
-    });
+      };
 
-    canvas.addEventListener('mouseup', (e) => {
-      const wasDrawing = drawing;
-      const wasDraggingOrResizing = dragging || resizing || rotating;
-      drawing = false;
-      dragging = false;
-      panning = false;
-      resizing = false;
-      rotating = false;
-      canvas.style.cursor = tool === 'select' ? 'grab' : 'crosshair';
-      if (currentShape) {
-        clampShapeToSheet(currentShape);
-        normalizeShapeWH(currentShape); // Normalize only on release
-        saveHistory();
-        buildExplorer();
-        currentShape = null;
-      } else if (wasDraggingOrResizing) {
-        saveHistory();
-        buildExplorer();
-      }
-      redraw();
-      updateStatus('Prêt');
-    });
-
-    canvas.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
-
-    /* Keyboard shortcuts */
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      switch (e.key.toLowerCase()) {
-        case 's': selectTool('select'); break;
-        case 'r': selectTool('rect'); break;
-        case 'c': selectTool('circle'); break;
-        case 'l': selectTool('line'); break;
-        case 't': selectTool('triangle'); break;
-        case 'b': selectTool('bend'); break;
-        case 'a': selectTool('text'); break;
-        case 'o': selectTool('rotate'); break;
-        case 'z': if (e.ctrlKey) undo(); break;
-        case 'y': if (e.ctrlKey) redo(); break;
-        case 'delete': if (selectedShape !== null) { shapes.splice(selectedShape, 1); selectedShape = null; saveHistory(); redraw(); buildExplorer(); updateStatus('Forme supprimée'); } break;
-      }
-    });
-
-    function normalizeShapeWH(s) {
-      if ((s.type === 'rect' || s.type === 'triangle') && (s.w < 0 || s.h < 0)) {
-        if (s.w < 0) { s.x += s.w; s.w = -s.w; }
-        if (s.h < 0) { s.y += s.h; s.h = -s.h; }
-      }
-    }
-
-    function getResizeHandle(s, x, y) {
-      if (s.type !== 'rect' && s.type !== 'triangle') return null;
-      const handles = [
-        { x: s.x + s.w, y: s.y + s.h, cursor: 'se-resize', type: 'bottom-right' },
-        { x: s.x, y: s.y + s.h, cursor: 'sw-resize', type: 'bottom-left' },
-        { x: s.x + s.w, y: s.y, cursor: 'ne-resize', type: 'top-right' },
-        { x: s.x, y: s.y, cursor: 'nw-resize', type: 'top-left' }
-      ];
-      for (const h of handles) {
-        if (Math.hypot(x - h.x, y - h.y) < 10) return h;
-      }
-      return null;
-    }
-
-    function handleResize(s, x, y, handle) {
-      if (s.type === 'rect' || s.type === 'triangle') {
-        if (handle.type === 'bottom-right') {
-          s.w = x - s.x;
-          s.h = y - s.y;
-        } else if (handle.type === 'bottom-left') {
-          s.w = s.x + s.w - x;
-          s.x = x;
-          s.h = y - s.y;
-        } else if (handle.type === 'top-right') {
-          s.w = x - s.x;
-          s.h = s.y + s.h - y;
-          s.y = y;
-        } else if (handle.type === 'top-left') {
-          s.w = s.x + s.w - x;
-          s.x = x;
-          s.h = s.y + s.h - y;
-          s.y = y;
-        }
-        normalizeShapeWH(s);
-      }
-    }
-
-    /* Drawing functions */
-    function redraw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
-
-      // Draw sheet
-      ctx.fillStyle = darkMode ? '#1e293b' : '#ffffff';
-      ctx.strokeStyle = darkMode ? '#f8fafc' : '#1e293b';
-      ctx.lineWidth = 2;
-      ctx.fillRect(sheet.x, sheet.y, sheet.width * sheet.scale, sheet.height * sheet.scale);
-      ctx.strokeRect(sheet.x, sheet.y, sheet.width * sheet.scale, sheet.height * sheet.scale);
-
-      // Sheet grid adaptive
-      if (gridToggle.checked) drawSheetGrid();
-
-      // Center lines
-      ctx.save();
-      ctx.strokeStyle = 'rgba(34,197,94,0.6)';
-      ctx.setLineDash([5, 5]);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(sheet.x + (sheet.width * sheet.scale) / 2, sheet.y);
-      ctx.lineTo(sheet.x + (sheet.width * sheet.scale) / 2, sheet.y + sheet.height * sheet.scale);
-      ctx.moveTo(sheet.x, sheet.y + (sheet.height * sheet.scale) / 2);
-      ctx.lineTo(sheet.x + sheet.width * sheet.scale, sheet.y + (sheet.height * sheet.scale) / 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // Draw shapes
-      shapes.forEach((s, idx) => {
-        if (!shouldDrawLayer(s.layer)) return;
-        drawShape(s, idx === selectedShape);
-      });
-
-      // Draw resize handles
-      if (selectedShape !== null && (shapes[selectedShape].type === 'rect' || shapes[selectedShape].type === 'triangle')) {
-        drawResizeHandles(shapes[selectedShape]);
-      }
-
-      updateStats();
-      buildExplorer();
-    }
-
-    function drawGrid() {
-      const step = 25;
-      ctx.save();
-      ctx.fillStyle = darkMode ? '#0f172a' : '#f1f5f9';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = darkMode ? '#475569' : '#e2e8f0';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x < canvas.width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function drawSheetGrid() {
-      const numDivs = 10;
-      const stepX = (sheet.width * sheet.scale) / numDivs;
-      const stepY = (sheet.height * sheet.scale) / numDivs;
-      ctx.save();
-      ctx.strokeStyle = darkMode ? '#475569' : '#e2e8f0';
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= numDivs; i++) {
-        const gx = sheet.x + i * stepX;
-        ctx.beginPath();
-        ctx.moveTo(gx, sheet.y);
-        ctx.lineTo(gx, sheet.y + sheet.height * sheet.scale);
-        ctx.stroke();
-      }
-      for (let i = 0; i <= numDivs; i++) {
-        const gy = sheet.y + i * stepY;
-        ctx.beginPath();
-        ctx.moveTo(sheet.x, gy);
-        ctx.lineTo(sheet.x + sheet.width * sheet.scale, gy);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function drawShape(s, highlight = false) {
-      ctx.save();
-      ctx.lineWidth = highlight ? 3 : 2;
-      ctx.strokeStyle = highlight ? '#f59e0b' : (s.layer === 'bend' ? '#ef4444' : '#475569');
-      ctx.fillStyle = defaultColors[s.type] || 'rgba(148,163,184,0.2)';
-      ctx.beginPath();
-
-      let tempS = JSON.parse(JSON.stringify(s)); // Temp copy for normalize
-      normalizeShapeWH(tempS); // Normalize for drawing
-
-      if (tempS.type === 'rect' || tempS.type === 'triangle') {
-        ctx.translate(tempS.x + tempS.w / 2, tempS.y + tempS.h / 2);
-        ctx.rotate(tempS.rotation * Math.PI / 180);
-        if (tempS.type === 'rect') {
-          ctx.fillRect(-tempS.w / 2, -tempS.h / 2, tempS.w, tempS.h);
-          ctx.strokeRect(-tempS.w / 2, -tempS.h / 2, tempS.w, tempS.h);
-        } else {
-          ctx.moveTo(-tempS.w / 2, tempS.h / 2);
-          ctx.lineTo(-tempS.w / 2, -tempS.h / 2);
-          ctx.lineTo(tempS.w / 2, tempS.h / 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.resetTransform();
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`${Math.round(Math.abs(s.w) / sheet.scale)}×${Math.round(Math.abs(s.h) / sheet.scale)}mm`, tempS.x + 4, tempS.y + 14);
-      } else if (s.type === 'circle') {
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`Ø${Math.round(2 * s.r / sheet.scale)}mm`, s.x - s.r, s.y + 4);
-      } else if (s.type === 'line' || s.type === 'bend') {
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(s.x2, s.y2);
-        ctx.stroke();
-        const len = Math.hypot(s.x2 - s.x, s.y2 - s.y) / sheet.scale;
-        ctx.fillStyle = darkMode ? '#f8fafc' : '#0f172a';
-        ctx.font = '11px Inter';
-        ctx.fillText(`${Math.round(len)}mm`, (s.x + s.x2) / 2 + 4, (s.y + s.y2) / 2 + 4);
-      } else if (s.type === 'text') {
-        ctx.fillStyle = darkMode ? '#f8fafc' : defaultColors.text;
-        ctx.font = '12px Inter';
-        ctx.fillText(s.text, s.x, s.y);
-      }
-
-      if (highlight) {
-        ctx.globalCompositeOperation = 'xor';
-        ctx.stroke();
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
-      ctx.restore();
-    }
-
-    function drawResizeHandles(s) {
-      const handles = [
-        { x: s.x + s.w, y: s.y + s.h },
-        { x: s.x, y: s.y + s.h },
-        { x: s.x + s.w, y: s.y },
-        { x: s.x, y: s.y }
-      ];
-      ctx.save();
-      ctx.fillStyle = '#f59e0b';
-      for (const h of handles) {
-        ctx.beginPath();
-        ctx.arc(h.x, h.y, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    /* Layer visibility */
-    function shouldDrawLayer(layer) {
-      const cb = $id(`layer_${layer}`);
-      return cb ? cb.checked : true;
-    }
-
-    /* Hit test utilities */
-    function pointInSheet(x, y) {
-      return x >= sheet.x && x <= sheet.x + sheet.width * sheet.scale && y >= sheet.y && y <= sheet.y + sheet.height * sheet.scale;
-    }
-
-    function findShapeIndexAt(x, y) {
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const s = shapes[i];
-        if (!shouldDrawLayer(s.layer)) continue;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          const absW = Math.abs(s.w);
-          const absH = Math.abs(s.h);
-          const cos = Math.cos(-s.rotation * Math.PI / 180);
-          const sin = Math.sin(-s.rotation * Math.PI / 180);
-          const cx = x - (s.x + s.w / 2);
-          const cy = y - (s.y + s.h / 2);
-          const rx = cx * cos - cy * sin;
-          const ry = cx * sin + cy * cos;
-          if (Math.abs(rx) <= absW / 2 && Math.abs(ry) <= absH / 2) return i;
-        } else if (s.type === 'circle') {
-          if (Math.hypot(x - s.x, y - s.y) <= s.r) return i;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          const d = pointToSegmentDistance(x, y, s.x, s.y, s.x2, s.y2);
-          if (d < 6) return i;
-        } else if (s.type === 'text') {
-          ctx.font = '12px Inter';
-          const width = ctx.measureText(s.text).width;
-          if (x >= s.x && x <= s.x + width && y >= s.y - 12 && y <= s.y) return i;
-        }
-      }
-      return -1;
-    }
-
-    function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
-      const A = px - x1, B = py - y1;
-      const C = x2 - x1, D = y2 - y1;
-      const len2 = C * C + D * D;
-      let param = len2 !== 0 ? (A * C + B * D) / len2 : -1;
-      let xx, yy;
-      if (param < 0) { xx = x1; yy = y1; }
-      else if (param > 1) { xx = x2; yy = y2; }
-      else { xx = x1 + param * C; yy = y1 + param * D; }
-      return Math.hypot(px - xx, py - yy);
-    }
-
-    /* Clamp shape to sheet */
-    function clampShapeToSheet(shape) {
-      const xMin = sheet.x, yMin = sheet.y;
-      const xMax = sheet.x + sheet.width * sheet.scale;
-      const yMax = sheet.y + sheet.height * sheet.scale;
-
-      if (shape.type === 'rect' || shape.type === 'triangle') {
-        let left = Math.min(shape.x, shape.x + shape.w);
-        let right = Math.max(shape.x, shape.x + shape.w);
-        let top = Math.min(shape.y, shape.y + shape.h);
-        let bottom = Math.max(shape.y, shape.y + shape.h);
-
-        left = Math.max(xMin, left);
-        right = Math.min(xMax, right);
-        top = Math.max(yMin, top);
-        bottom = Math.min(yMax, bottom);
-
-        if (left < right && top < bottom) {
-          shape.x = left;
-          shape.w = right - left;
-          shape.y = top;
-          shape.h = bottom - top;
-        } else {
-          shape.w = 0;
-          shape.h = 0;
-        }
-      } else if (shape.type === 'circle') {
-        if (shape.r < 0) shape.r = 0;
-        shape.x = Math.max(xMin + shape.r, Math.min(shape.x, xMax - shape.r));
-        shape.y = Math.max(yMin + shape.r, Math.min(shape.y, yMax - shape.r));
-      } else if (shape.type === 'line' || shape.type === 'bend') {
-        shape.x = Math.max(xMin, Math.min(shape.x, xMax));
-        shape.y = Math.max(yMin, Math.min(shape.y, yMax));
-        shape.x2 = Math.max(xMin, Math.min(shape.x2, xMax));
-        shape.y2 = Math.max(yMin, Math.min(shape.y2, yMax));
-      } else if (shape.type === 'text') {
-        shape.x = Math.max(xMin, Math.min(shape.x, xMax));
-        shape.y = Math.max(yMin, Math.min(shape.y, yMax));
-      }
-      if (!pointInSheet(shape.x || shape.points[0].x, shape.y || shape.points[0].y)) {
-        if (pedagoMode.checked) pedagoAlert('Attention : Forme placée hors de la tôle.');
-      }
-    }
-
-    /* Stats & Explorer */
-    function updateStats() {
-      const sheetArea = sheet.width * sheet.height;
-      $id('stat_sheetArea').innerText = `${sheetArea.toLocaleString()} mm²`;
-      $id('stat_dims').innerText = `Tôle: ${sheet.width} x ${sheet.height} mm • Ép.: ${sheet.thickness} mm • Mat.: ${materialsDB[sheet.material].name}`;
-
-      let cutAreaPx = 0;
-      shapes.forEach(s => {
-        if (!shouldDrawLayer(s.layer) || s.layer === 'bend' || s.type === 'text') return;
-        if (s.type === 'rect') cutAreaPx += Math.abs(s.w / sheet.scale) * Math.abs(s.h / sheet.scale);
-        else if (s.type === 'circle') cutAreaPx += Math.PI * Math.pow(s.r / sheet.scale, 2);
-        else if (s.type === 'triangle') cutAreaPx += 0.5 * Math.abs(s.w / sheet.scale) * Math.abs(s.h / sheet.scale);
-      });
-      const utilization = Math.min(100, Math.round(cutAreaPx / sheetArea * 100));
-      const waste = 100 - utilization;
-
-      $id('stat_cutArea').innerText = `${Math.round(cutAreaPx).toLocaleString()} mm²`;
-      $id('stat_util').innerText = `${utilization}%`;
-      $id('stat_waste').innerText = `${waste}%`;
-
-      const density = materialsDB[sheet.material].density;
-      let totalVolume_m3 = (cutAreaPx * sheet.thickness) / 1e9;
-      let totalMass_kg = totalVolume_m3 * density;
-      let pricePerKg = materialsDB[sheet.material].price;
-      let cost = totalMass_kg * pricePerKg;
-
-      $id('stat_weight').innerText = `${totalMass_kg.toFixed(3)} kg`;
-      $id('stat_cost').innerText = `${cost.toFixed(2)} €`;
-    }
-
-    function getTypeColor(type) {
-      const color = defaultColors[type] || 'rgba(148,163,184,1)';
-      return color.replace(/0\.[0-9]+/, '1');
-    }
-
-    function buildExplorer() {
-      const container = $id('properties');
-      openDetails.clear();
-      container.querySelectorAll('details').forEach(d => {
-        if (d.open) openDetails.add(parseInt(d.dataset.i));
-      });
-      container.innerHTML = '';
-      shapes.forEach((s, i) => {
-        if (!shouldDrawLayer(s.layer)) return;
-        const details = document.createElement('details');
-        details.className = 'property-panel tooltip';
-        details.dataset.i = i;
-        const summary = document.createElement('summary');
-        summary.innerHTML = `<span style="color: ${getTypeColor(s.type)};">${typeIcons[s.type] || ''} <b>${i + 1}. ${s.type.toUpperCase()} (${s.layer})</b></span> <small style="float:right;color:var(--text-secondary);">Clic pour éditer</small>`;
-        const content = document.createElement('div');
-        content.style.padding = '8px 0 0 0';
-        let html = `<div class="row"><label>X (mm):</label><input type="number" value="${Math.round((Math.abs(s.x) || Math.abs(s.points[0].x)) / sheet.scale)}" onchange="updateProp(${i},'x',this.value)"></div>`;
-        html += `<div class="row"><label>Y (mm):</label><input type="number" value="${Math.round((Math.abs(s.y) || Math.abs(s.points[0].y)) / sheet.scale)}" onchange="updateProp(${i},'y',this.value)"></div>`;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          html += `<div class="row"><label>Largeur (mm):</label><input type="number" value="${Math.round(Math.abs(s.w) / sheet.scale)}" onchange="updateProp(${i},'w',this.value)">`;
-          html += `<label>Hauteur (mm):</label><input type="number" value="${Math.round(Math.abs(s.h) / sheet.scale)}" onchange="updateProp(${i},'h',this.value)"></div>`;
-          html += `<div class="row"><label>Rotation (°):</label><input type="number" value="${s.rotation || 0}" onchange="updateProp(${i},'rotation',this.value)"></div>`;
-        } else if (s.type === 'circle') {
-          html += `<div class="row"><label>Rayon (mm):</label><input type="number" value="${Math.round(s.r / sheet.scale)}" onchange="updateProp(${i},'r',this.value)"></div>`;
-        } else if (s.type === 'line' || s.type === 'bend') {
-          html += `<div class="row"><label>X2 (mm):</label><input type="number" value="${Math.round(s.x2 / sheet.scale)}" onchange="updateProp(${i},'x2',this.value)">`;
-          html += `<label>Y2 (mm):</label><input type="number" value="${Math.round(s.y2 / sheet.scale)}" onchange="updateProp(${i},'y2',this.value)"></div>`;
-        } else if (s.type === 'text') {
-          html += `<div class="row"><label>Texte:</label><input type="text" value="${s.text}" onchange="updateProp(${i},'text',this.value)"></div>`;
-        }
-        html += `<div class="btn-group" style="margin-top:8px;"><button class="small" onclick="deleteShape(${i})">Supprimer</button><button class="small" onclick="copyShape(${i})">Dupliquer</button></div>`;
-        content.innerHTML = html;
-        details.appendChild(summary);
-        details.appendChild(content);
-        if (pedagoMode.checked) details.title = `Éditez ${s.type} : drag sur canvas pour déplacer ou redimensionner.`;
-        if (openDetails.has(i)) details.open = true;
-        const listener = () => {
-          if (details.open) {
-            setTimeout(() => selectShape(i), 0);
-          }
-        };
-        details.addEventListener('toggle', listener);
-        container.appendChild(details);
-      });
-      if (selectedShape !== null) {
-        const d = container.querySelector(`details[data-i="${selectedShape}"]`);
-        if (d && !d.open) d.open = true;
-      }
-    }
-
-    function updateProp(index, prop, value) {
-      saveHistory();
-      const val = (prop === 'text') ? value : parseFloat(value) * sheet.scale;
-      if (prop !== 'text' && isNaN(val)) return;
-      const s = shapes[index];
-      if (prop === 'x' || prop === 'y') {
-        const dx = val - (s.x || s.points[0].x);
-        const dy = prop === 'x' ? 0 : val - (s.y || s.points[0].y);
-        if (s.type === 'polygon') {
-          s.points.forEach(p => { if (prop === 'x') p.x += dx; else p.y += dy; });
-        } else {
-          s[prop] = val;
-          if (s.type === 'line' || s.type === 'bend') {
-            if (prop === 'x') s.x2 += dx;
-            if (prop === 'y') s.y2 += dy;
-          }
-        }
-      } else {
-        s[prop] = val;
-      }
-      clampShapeToSheet(s);
-      redraw();
-      buildExplorer();
-      updateStatus(`Propriété ${prop} mise à jour`);
-    }
-
-    function deleteShape(i) {
-      saveHistory();
-      shapes.splice(i, 1);
-      if (selectedShape === i) selectedShape = null;
-      redraw();
-      buildExplorer();
-      updateStatus('Forme supprimée');
-    }
-
-    function copyShape(i) {
-      saveHistory();
-      const s = JSON.parse(JSON.stringify(shapes[i]));
-      const offsetPx = 10 * sheet.scale;
-      s.x = (s.x || s.points[0].x) + offsetPx;
-      s.y = (s.y || s.points[0].y) + offsetPx;
-      if (s.type === 'line' || s.type === 'bend') {
-        s.x2 += offsetPx;
-        s.y2 += offsetPx;
-      }
-      shapes.push(s);
-      redraw();
-      buildExplorer();
-      updateStatus('Forme dupliquée');
-    }
-
-    function selectShape(i) {
-      selectedShape = i;
-      redraw();
-      buildExplorer();
-      updateStatus(selectedShape !== null ? `Forme ${selectedShape + 1} sélectionnée` : 'Aucune forme sélectionnée');
-    }
-
-    /* Nesting optimization */
-    function optimizeLayout() {
-      saveHistory();
-      const algo = nestAlgoSelect.value;
-      if (shapes.length === 0) {
-        updateStatus('Aucune pièce à optimiser');
-        return pedagoAlert('Ajoutez des formes avant d\'optimiser.');
-      }
-      let pieces = shapes.filter(s => s.layer !== 'bend' && s.type !== 'text').map((s, idx) => {
-        let w_mm = 0, h_mm = 0;
-        if (s.type === 'rect' || s.type === 'triangle') {
-          w_mm = Math.abs(s.w) / sheet.scale;
-          h_mm = Math.abs(s.h) / sheet.scale;
-        } else if (s.type === 'circle') {
-          w_mm = h_mm = 2 * (s.r / sheet.scale);
-        } else if (s.type === 'line') {
-          w_mm = Math.abs(s.x2 - s.x) / sheet.scale;
-          h_mm = Math.abs(s.y2 - s.y) / sheet.scale;
-        }
-        return { idx, w_mm, h_mm, area: w_mm * h_mm, s };
-      }).sort((a, b) => b.area - a.area);
-
-      const sheetWmm = sheet.width;
-      const sheetHmm = sheet.height;
-      const kerf = parseFloat(kerfInput.value) || 1;
-      let placements = [];
-
-      function collides(x_mm, y_mm, w_mm, h_mm, placed) {
-        for (const p of placed) {
-          const dx = Math.abs((x_mm + w_mm / 2) - (p.x + p.w / 2));
-          const dy = Math.abs((y_mm + h_mm / 2) - (p.y + p.h / 2));
-          const w_sum = (w_mm + p.w) / 2 + kerf;
-          const h_sum = (h_mm + p.h) / 2 + kerf;
-          if (dx < w_sum && dy < h_sum) return true;
-        }
-        return false;
-      }
-
-      if (algo === 'first-fit') {
-        let cursorY = 0, currentX = 0, shelfH = 0;
-        for (const p of pieces) {
-          const pw = p.w_mm, ph = p.h_mm;
-          if (currentX + pw > sheetWmm) {
-            cursorY += shelfH + kerf;
-            currentX = 0;
-            shelfH = 0;
-          }
-          if (cursorY + ph > sheetHmm) {
-            pedagoAlert(`Impossible de placer toutes les pièces avec ${algo}.`);
-            updateStatus('Optimisation incomplète');
-            break;
-          }
-          if (!collides(currentX, cursorY, pw, ph, placements)) {
-            placements.push({ idx: p.idx, x_mm: currentX, y_mm: cursorY });
-            currentX += pw + kerf;
-            shelfH = Math.max(shelfH, ph);
-          }
-        }
-      } else if (algo === 'best-fit') {
-        let placed = [];
-        for (const p of pieces) {
-          let bestX = 0, bestY = 0, minWaste = Infinity;
-          for (let ty = 0; ty <= sheetHmm - p.h_mm; ty += 5) {
-            for (let tx = 0; tx <= sheetWmm - p.w_mm; tx += 5) {
-              if (!collides(tx, ty, p.w_mm, p.h_mm, placed)) {
-                let waste = estimateWasteAt(tx, ty, placed, p.w_mm, p.h_mm);
-                if (waste < minWaste) {
-                  minWaste = waste;
-                  bestX = tx;
-                  bestY = ty;
+      window.loadActivityChart = function(userId) {
+        const ctxEl = document.getElementById('activityChart');
+        if (!ctxEl) return;
+        
+        const ctx = ctxEl.getContext('2d');
+        
+        // Données d'exemple - à remplacer par de vraies données de Firebase
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'];
+        const projectsData = [2, 4, 1, 6, 3, 5];
+        
+        window.activityChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Projets créés',
+              data: projectsData,
+              borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              backgroundColor: 'rgba(30, 64, 175, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 20,
+                  font: {
+                    size: 14,
+                    weight: 500
+                  }
                 }
               }
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: {
+                    size: 12,
+                    weight: 500
+                  }
+                }
+              },
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0,0,0,0.05)'
+                },
+                ticks: {
+                  stepSize: 1,
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 2000,
+              easing: 'easeInOutQuart'
+            },
+            interaction: {
+              intersect: false,
+              mode: 'index'
             }
           }
-          if (minWaste < Infinity) {
-            placements.push({ idx: p.idx, x_mm: bestX, y_mm: bestY });
-            placed.push({ x: bestX, y: bestY, w: p.w_mm, h: p.h_mm });
-          }
-        }
-      }
-
-      placements.forEach(pl => {
-        const s = shapes[pl.idx];
-        const px = sheet.x + pl.x_mm * sheet.scale;
-        const py = sheet.y + pl.y_mm * sheet.scale;
-        s.x = px;
-        s.y = py;
-        if (s.type === 'circle') {
-          s.x += (s.r);
-          s.y += (s.r);
-        } else if (s.type === 'line' || s.type === 'bend') {
-          const dx = s.x2 - s.x;
-          const dy = s.y2 - s.y;
-          s.x2 = px + dx;
-          s.y2 = py + dy;
-        }
-      });
-
-      redraw();
-      buildExplorer();
-      updateStatus(`${algo} appliqué`);
-    }
-
-    function estimateWasteAt(tx, ty, placed, pw, ph) {
-      let overlapArea = 0;
-      for (const p of placed) {
-        const x1 = Math.max(tx, p.x);
-        const y1 = Math.max(ty, p.y);
-        const x2 = Math.min(tx + pw, p.x + p.w);
-        const y2 = Math.min(ty + ph, p.y + p.h);
-        if (x1 < x2 && y1 < y2) {
-          overlapArea += (x2 - x1) * (y2 - y1);
-        }
-      }
-      return overlapArea;
-    }
-
-    /* Simulation */
-    function simulateTrajectory() {
-      if (shapes.length === 0) {
-        updateStatus('Aucune forme à simuler');
-        return pedagoAlert('Ajoutez des formes pour simuler la trajectoire.');
-      }
-      ctx.save();
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      let i = 0;
-      const sim = () => {
-        if (i < shapes.length && shouldDrawLayer(shapes[i].layer) && shapes[i].layer !== 'bend') {
-          const s = shapes[i];
-          ctx.beginPath();
-          if (s.type === 'rect') {
-            ctx.strokeRect(s.x, s.y, s.w, s.h);
-          } else if (s.type === 'circle') {
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.stroke();
-          } else if (s.type === 'line') {
-            ctx.moveTo(s.x, s.y);
-            ctx.lineTo(s.x2, s.y2);
-            ctx.stroke();
-          } else if (s.type === 'triangle') {
-            let tempS = JSON.parse(JSON.stringify(s));
-            normalizeShapeWH(tempS);
-            ctx.translate(tempS.x + tempS.w / 2, tempS.y + tempS.h / 2);
-            ctx.rotate(tempS.rotation * Math.PI / 180);
-            ctx.moveTo(-tempS.w / 2, tempS.h / 2);
-            ctx.lineTo(-tempS.w / 2, -tempS.h / 2);
-            ctx.lineTo(tempS.w / 2, tempS.h / 2);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.resetTransform();
-          }
-          i++;
-          updateStatus(`Simulation : forme ${i}/${shapes.length}`);
-          setTimeout(sim, 500);
-        } else {
-          ctx.restore();
-          redraw();
-          updateStatus('Simulation terminée');
-        }
+        });
       };
-      sim();
-    }
 
-    /* Exports */
-    function download(content, filename, mime = 'text/plain') {
-      const blob = new Blob([content], { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function saveProject() {
-      const data = JSON.stringify({ sheet, shapes });
-      download(data, 'project.sketch', 'application/json');
-    }
-
-    function loadProject(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const data = JSON.parse(ev.target.result);
-        sheet = data.sheet;
-        shapes = data.shapes;
-        applySheetConfig();
-        redraw();
-        buildExplorer();
+      window.showNotification = function(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.classList.add('notification', type);
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'notificationOut 0.3s ease forwards';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
       };
-      reader.readAsText(file);
-    }
 
-    function exportDXF() {
-      let dxf = `0
-SECTION
-2
-ENTITIES
-`;
-      shapes.forEach(s => {
-        let tempS = JSON.parse(JSON.stringify(s));
-        normalizeShapeWH(tempS);
-        if (tempS.layer === 'bend' || tempS.type === 'text') return;
-        if (tempS.type === 'rect') {
-          const points = [
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          for (let i = 0; i < 4; i++) {
-            const p1 = points[i];
-            const p2 = points[(i + 1) % 4];
-            dxf += `0
-LINE
-8
-0
-10
-${(p1.x / sheet.scale).toFixed(2)}
-20
-${(p1.y / sheet.scale).toFixed(2)}
-11
-${(p2.x / sheet.scale).toFixed(2)}
-21
-${(p2.y / sheet.scale).toFixed(2)}
-`;
-          }
-        } else if (tempS.type === 'circle') {
-          dxf += `0
-CIRCLE
-8
-0
-10
-${(tempS.x / sheet.scale).toFixed(2)}
-20
-${(tempS.y / sheet.scale).toFixed(2)}
-40
-${(tempS.r / sheet.scale).toFixed(2)}
-`;
-        } else if (tempS.type === 'line') {
-          dxf += `0
-LINE
-8
-0
-10
-${(tempS.x / sheet.scale).toFixed(2)}
-20
-${(tempS.y / sheet.scale).toFixed(2)}
-11
-${(tempS.x2 / sheet.scale).toFixed(2)}
-21
-${(tempS.y2 / sheet.scale).toFixed(2)}
-`;
-        } else if (tempS.type === 'triangle') {
-          const points = [
-            { x: tempS.x, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          for (let i = 0; i < 3; i++) {
-            const p1 = points[i];
-            const p2 = points[(i + 1) % 3];
-            dxf += `0
-LINE
-8
-0
-10
-${(p1.x / sheet.scale).toFixed(2)}
-20
-${(p1.y / sheet.scale).toFixed(2)}
-11
-${(p2.x / sheet.scale).toFixed(2)}
-21
-${(p2.y / sheet.scale).toFixed(2)}
-`;
-          }
+      // Style pour notifications
+      const notifStyle = document.createElement('style');
+      notifStyle.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 15px 25px;
+          border-radius: 8px;
+          box-shadow: var(--shadow-md);
+          z-index: 3000;
+          animation: notificationIn 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 250px;
+          font-weight: 500;
         }
-      });
-      dxf += `0
-ENDSEC
-0
-EOF
-`;
-      download(dxf, 'design.dxf', 'text/plain');
-      updateStatus('Export DXF effectué');
-    }
 
-    function exportGCode() {
-      let gcode = '; G-code généré par SteelSketch v2.0\nG21 ; mm\nG90 ; abs\nM3 ; spindle on\n';
-      const kerf = parseFloat(kerfInput.value) || 1;
-      shapes.forEach(s => {
-        let tempS = JSON.parse(JSON.stringify(s));
-        normalizeShapeWH(tempS);
-        if (tempS.layer === 'bend' || tempS.type === 'text') return;
-        if (tempS.type === 'rect') {
-          const points = [
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          gcode += `G0 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          for (let i = 1; i < points.length; i++) {
-            gcode += `G1 X${(points[i].x / sheet.scale).toFixed(2)} Y${(points[i].y / sheet.scale).toFixed(2)}\n`;
-          }
-          gcode += `G1 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'circle') {
-          gcode += `G0 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          gcode += `G2 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)} R${(tempS.r / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'line') {
-          gcode += `G0 X${(tempS.x / sheet.scale).toFixed(2)} Y${(tempS.y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          gcode += `G1 X${(tempS.x2 / sheet.scale).toFixed(2)} Y${(tempS.y2 / sheet.scale).toFixed(2)}\nG0 Z1\n`;
-        } else if (tempS.type === 'triangle') {
-          const points = [
-            { x: tempS.x, y: tempS.y + tempS.h },
-            { x: tempS.x, y: tempS.y },
-            { x: tempS.x + tempS.w, y: tempS.y + tempS.h }
-          ];
-          if (tempS.rotation) {
-            const cx = tempS.x + tempS.w / 2;
-            const cy = tempS.y + tempS.h / 2;
-            const cos = Math.cos(tempS.rotation * Math.PI / 180);
-            const sin = Math.sin(tempS.rotation * Math.PI / 180);
-            points.forEach(p => {
-              const dx = p.x - cx;
-              const dy = p.y - cy;
-              p.x = cx + dx * cos - dy * sin;
-              p.y = cy + dx * sin + dy * cos;
-            });
-          }
-          gcode += `G0 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG1 Z-1\n`;
-          for (let i = 1; i < points.length; i++) {
-            gcode += `G1 X${(points[i].x / sheet.scale).toFixed(2)} Y${(points[i].y / sheet.scale).toFixed(2)}\n`;
-          }
-          gcode += `G1 X${(points[0].x / sheet.scale).toFixed(2)} Y${(points[0].y / sheet.scale).toFixed(2)}\nG0 Z1\n`;
+        .notification.success {
+          background: rgba(34, 197, 94, 0.1);
+          border: 1px solid var(--success);
+          color: var(--success);
         }
-      });
-      gcode += 'M5 ; spindle off\nM30 ; end\n';
-      download(gcode, 'design.gcode', 'text/plain');
-      updateStatus('Export G-code effectué');
-    }
 
-    async function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape' });
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 10, 10, 280, 190); // Adjust for A4 landscape
-      pdf.save('design.pdf');
-      updateStatus('Export PDF effectué');
-    }
+        .notification.error {
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid var(--danger);
+          color: var(--danger);
+        }
 
-    function generateFicheTechnique() {
-      const pdf = new jsPDF();
-      pdf.text("Fiche Technique - SteelSketch", 10, 10);
-      pdf.text(`Date: ${new Date().toLocaleDateString()}`, 10, 20);
-      pdf.text(`Tôle: ${sheet.width} x ${sheet.height} mm, Épaisseur: ${sheet.thickness} mm`, 10, 30);
-      pdf.text(`Matériau: ${materialsDB[sheet.material].name}`, 10, 40);
-      pdf.text(`Nombre de pièces: ${shapes.length}`, 10, 50);
-      pdf.text("Pièces:", 10, 60);
-      shapes.forEach((s, i) => {
-        pdf.text(`${i+1}. ${s.type} - Dimensions: ${getShapeDimensions(s)}`, 10, 70 + i*10);
-      });
-      pdf.save('fiche_technique.pdf');
-      updateStatus('Fiche technique générée');
-    }
+        .notification.info {
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid var(--info);
+          color: var(--info);
+        }
 
-    function getShapeDimensions(s) {
-      if (s.type === 'rect' || s.type === 'triangle') return `${Math.round(Math.abs(s.w)/sheet.scale)} x ${Math.round(Math.abs(s.h)/sheet.scale)} mm`;
-      if (s.type === 'circle') return `Rayon: ${Math.round(s.r/sheet.scale)} mm`;
-      if (s.type === 'line' || s.type === 'bend') return `Longueur: ${Math.round(Math.hypot(s.x2 - s.x, s.y2 - s.y)/sheet.scale)} mm`;
-      if (s.type === 'text') return s.text;
-      return '';
-    }
+        @keyframes notificationIn {
+          0% { opacity: 0; transform: translateY(-20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
 
-    function toggleMultiUser() {
-      multiUserMode = !multiUserMode;
-      updateStatus(multiUserMode ? 'Mode multi-utilisateurs activé (stub)' : 'Mode multi-utilisateurs désactivé');
-      // In real implementation, connect to server or use WebRTC
-    }
+        @keyframes notificationOut {
+          0% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-20px); }
+        }
+      `;
+      document.head.appendChild(notifStyle);
 
-    /* Initial setup */
-    updateZoom();
-    applySheetConfig();
-
-    window.addEventListener('resize', () => {
-      canvas.width = Math.max(800, window.innerWidth - (window.innerWidth > 1000 ? 600 : 0));
-      canvas.height = Math.max(600, window.innerHeight - 60);
-      applySheetConfig();
-      redraw();
-    });
+      // Initialiser le dashboard
+      initializeApp();
   </script>
+
 </body>
 </html>
