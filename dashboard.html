@@ -187,11 +187,14 @@
     .sidebar-tabs {
       display: flex;
       margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg);
     }
 
     .sidebar-tab {
       flex: 1;
-      padding: 8px 12px;
+      padding: 12px 8px;
       text-align: center;
       cursor: pointer;
       border: none;
@@ -200,7 +203,6 @@
       font-weight: 500;
       font-size: 14px;
       transition: all 0.3s ease;
-      border-radius: 6px;
     }
 
     .sidebar-tab.active {
@@ -209,7 +211,7 @@
     }
 
     .sidebar-tab:hover:not(.active) {
-      background: var(--bg);
+      background: rgba(30, 64, 175, 0.1);
       color: var(--text);
     }
 
@@ -297,7 +299,7 @@
 
     .create-group button {
       width: 100%;
-      padding: 10px 15px;
+      padding: 12px 15px;
       background: var(--success);
       color: white;
       border: none;
@@ -305,6 +307,10 @@
       cursor: pointer;
       font-weight: 500;
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .create-group button:hover {
@@ -327,6 +333,7 @@
       border-radius: 8px;
       transition: all 0.3s ease;
       cursor: pointer;
+      position: relative;
     }
 
     .friend:hover, .group:hover {
@@ -357,9 +364,31 @@
       border-left: 4px solid var(--info);
     }
 
+    .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
     .group-members {
       font-size: 12px;
       color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .remove-friend, .leave-group {
+      margin-left: auto;
+      cursor: pointer;
+      color: var(--danger);
+      opacity: 0.7;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-friend:hover, .leave-group:hover {
+      opacity: 1;
+      background: rgba(239, 68, 68, 0.1);
     }
 
     .no-friends, .no-groups {
@@ -368,6 +397,7 @@
       font-style: italic;
       margin-top: 20px;
       font-size: 14px;
+      padding: 20px;
     }
 
     .content {
@@ -700,7 +730,7 @@
     }
 
     .chart-container canvas {
-      height: 200px !important;
+      height: 220px !important;
     }
 
     .loading-screen {
@@ -914,9 +944,6 @@
   </div>
 
   <!-- Firebase + librairies -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 
   <script>
@@ -932,4 +959,912 @@
     }
 
     // Afficher message d'erreur
-    function showError(message)
+    function showError(message) {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.innerHTML = `
+          <i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger); margin-bottom: 20px;"></i>
+          <h2 style="margin: 10px 0; color: var(--text);">Erreur</h2>
+          <p style="color: var(--text-secondary); margin: 0 0 20px 0; text-align: center;">${message}</p>
+          <button onclick="location.reload()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Recharger la page</button>
+        `;
+      }
+    }
+
+    // Attendre que Firebase soit chargé
+    function initializeApp() {
+      console.log('Initializing app...');
+      
+      // Vérifier si Firebase est chargé
+      if (typeof firebase === 'undefined') {
+        console.error('Firebase n\'est pas chargé !');
+        showError('Firebase ne s\'est pas chargé correctement.<br>Vérifiez votre connexion internet.');
+        return;
+      }
+
+      console.log('Firebase detected, initializing...');
+
+      // Configuration Firebase - TA VRAIE CONFIG
+      const firebaseConfig = {
+        apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
+        authDomain: "steelsketch-b7264.firebaseapp.com",
+        projectId: "steelsketch-b7264",
+        storageBucket: "steelsketch-b7264.firebasestorage.app",
+        messagingSenderId: "424606073739",
+        appId: "1:424606073739:web:696f400e992a50d7bee58e",
+        measurementId: "G-TD79BYQ5P6"
+      };
+
+      try {
+        // Initialisation Firebase
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+          console.log('Firebase initialisé avec succès');
+        }
+        
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        // Maintenant on peut initialiser l'app
+        initializeDashboard();
+        
+      } catch (error) {
+        console.error('Erreur Firebase:', error);
+        showError('Erreur de configuration Firebase:<br>' + error.message + '<br><br>Vérifiez votre configuration.');
+      }
+    }
+
+    function initializeDashboard() {
+      console.log('Initializing dashboard...');
+      
+      let authInitialized = false;
+      let authTimeout;
+
+      // Fonction pour vérifier l'authentification
+      function checkAuth() {
+        console.log('Checking auth...');
+        
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          console.log('User found immediately:', currentUser.email);
+          initializeUserData(currentUser);
+          return;
+        }
+
+        console.log('No immediate user, waiting...');
+        
+        // Timeout de sécurité
+        authTimeout = setTimeout(() => {
+          console.log('Auth timeout - redirecting to login');
+          window.location.href = 'index.html';
+        }, 3000);
+      }
+
+      function initializeUserData(user) {
+        console.log('Initializing user data for:', user.email);
+        
+        if (authTimeout) {
+          clearTimeout(authTimeout);
+          authTimeout = null;
+        }
+        
+        authInitialized = true;
+        
+        // Masquer l'écran de chargement
+        hideLoadingScreen();
+        
+        // Afficher le nom d'utilisateur
+        const nameEl = document.getElementById('user-name');
+        if (nameEl) {
+          const displayName = user.displayName || 
+                             user.email?.split('@')[0] || 
+                             'Utilisateur';
+          nameEl.innerText = displayName;
+          console.log('Display name set to:', displayName);
+        }
+        
+        // Initialiser les données utilisateur
+        generateFriendCode(user.uid);
+        loadFriends(user.uid);
+        loadGroups(user.uid);
+        loadProjects(user.uid);
+        loadActivityChart(user.uid);
+      }
+
+      // Gestion de l'authentification
+      auth.onAuthStateChanged((user) => {
+        console.log('Auth state changed:', user ? `${user.email} (${user.uid.slice(0,8)}...)` : 'null');
+        
+        if (user) {
+          initializeUserData(user);
+        } else if (authInitialized) {
+          console.log('User signed out - redirecting');
+          window.location.href = 'index.html';
+        } else {
+          console.log('No user on initial load - checking auth in 1 second');
+          setTimeout(checkAuth, 1000);
+        }
+      });
+
+      // Déclarer toutes les fonctions globales
+      window.logout = function() {
+        if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+          console.log('Logging out...');
+          auth.signOut().then(() => {
+            console.log('User signed out successfully');
+            window.location.href = 'index.html';
+          }).catch(err => {
+            console.error('Erreur logout:', err);
+            alert('Erreur lors de la déconnexion: ' + err.message);
+          });
+        }
+      };
+
+      window.toggleSidebar = function() {
+        const isClosed = document.body.classList.contains('sidebar-closed');
+        document.body.classList.toggle('sidebar-closed', !isClosed);
+        
+        const toggleIcon = document.querySelector('.sidebar-toggle i');
+        if (toggleIcon) {
+          toggleIcon.className = isClosed ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+        }
+      };
+
+      window.switchTab = function(tab) {
+        // Désactiver tous les onglets
+        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activer l'onglet sélectionné
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        document.getElementById(`${tab}-tab`).classList.add('active');
+      };
+
+      window.generateFriendCode = function(uid) {
+        const code = uid.slice(0, 6).toUpperCase();
+        const fcEl = document.getElementById('friend-code');
+        if (fcEl) fcEl.innerText = code;
+      };
+
+      window.copyFriendCode = function() {
+        const code = document.getElementById('friend-code').innerText;
+        if (code && code !== 'Chargement...') {
+          navigator.clipboard.writeText(code).then(() => {
+            const copyIcon = document.querySelector('.friend-code i');
+            if (copyIcon) {
+              const originalClass = copyIcon.className;
+              const originalColor = copyIcon.style.color;
+              copyIcon.className = 'fas fa-check';
+              copyIcon.style.color = 'var(--success)';
+              setTimeout(() => {
+                copyIcon.className = originalClass;
+                copyIcon.style.color = originalColor;
+              }, 2000);
+            }
+            showNotification('Code copié dans le presse-papiers !', 'success');
+          }).catch(() => {
+            showNotification('Impossible de copier le code', 'error');
+          });
+        }
+      };
+
+      window.addFriend = function() {
+        const input = document.getElementById('add-friend-input');
+        if (!input) return;
+        
+        const code = input.value.toUpperCase().trim();
+        if (!code) {
+          showNotification('Veuillez entrer un code ami', 'error');
+          return;
+        }
+        
+        if (code.length !== 6) {
+          showNotification('Le code ami doit contenir 6 caractères', 'error');
+          return;
+        }
+        
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const ownCode = user.uid.slice(0, 6).toUpperCase();
+        if (code === ownCode) {
+          showNotification("Vous ne pouvez pas vous ajouter vous-même !", 'error');
+          return;
+        }
+
+        // Rechercher l'utilisateur avec ce code
+        db.collection('users')
+          .where('friendCode', '==', code)
+          .get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              showNotification('Aucun utilisateur trouvé avec ce code', 'error');
+              return;
+            }
+
+            const friendData = snapshot.docs[0].data();
+            const friendId = snapshot.docs[0].id;
+
+            // Vérifier si déjà ami
+            return db.collection('friends')
+              .where('userId', '==', user.uid)
+              .where('friendId', '==', friendId)
+              .get()
+              .then(friendSnapshot => {
+                if (!friendSnapshot.empty) {
+                  showNotification('Cet utilisateur est déjà dans votre liste d\'amis !', 'error');
+                  return;
+                }
+
+                // Ajouter l'ami
+                return db.collection('friends').add({
+                  userId: user.uid,
+                  friendId: friendId,
+                  friendCode: code,
+                  friendName: friendData.displayName || friendData.email?.split('@')[0] || 'Utilisateur',
+                  status: 'accepted',
+                  addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              });
+          })
+          .then(() => {
+            input.value = '';
+            loadFriends(user.uid);
+            showNotification('Ami ajouté avec succès !', 'success');
+          })
+          .catch(err => {
+            console.error('Erreur addFriend:', err);
+            showNotification('Erreur lors de l\'ajout : ' + err.message, 'error');
+          });
+      };
+
+      window.loadFriends = function(userId) {
+        const container = document.getElementById('friend-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('friends')
+          .where('userId', '==', userId)
+          .orderBy('addedAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-friends"><i class="fas fa-user-friends"></i><br>Aucun ami ajouté pour le moment.<br><small>Ajoutez des amis avec leur code !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'friend';
+              
+              const statuses = ['online', 'offline', 'idle', 'dnd'];
+              const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+              
+              div.innerHTML = `
+                <span class="status ${randomStatus}"></span>
+                <span class="friend-name">${data.friendName}</span>
+                <i class="fas fa-times remove-friend" onclick="removeFriend('${doc.id}')" title="Supprimer cet ami"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadFriends:', err);
+            container.innerHTML = '<div class="no-friends" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.removeFriend = function(friendId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet ami ?')) {
+          db.collection('friends').doc(friendId).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) loadFriends(user.uid);
+              showNotification('Ami supprimé', 'success');
+            })
+            .catch(err => {
+              console.error('Erreur removeFriend:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
+        }
+      };
+
+      window.openCreateGroupModal = function() {
+        const modal = document.getElementById('createGroupModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('groupName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.createNewGroup = function() {
+        const nameInput = document.getElementById('groupName');
+        const descInput = document.getElementById('groupDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du groupe est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createGroupModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('groups').add({
+          name: name,
+          description: desc || 'Aucune description',
+          ownerId: user.uid,
+          ownerName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          members: [user.uid],
+          memberNames: [user.displayName || user.email?.split('@')[0] || 'Utilisateur'],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadGroups(user.uid);
+          showNotification('Groupe créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createGroup:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-users"></i> Créer le groupe';
+          }
+        });
+      };
+
+      window.loadGroups = function(userId) {
+        const container = document.getElementById('group-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('groups')
+          .where('members', 'array-contains', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-groups"><i class="fas fa-layer-group"></i><br>Aucun groupe pour le moment.<br><small>Créez ou rejoignez un groupe !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'group';
+              
+              const isOwner = data.ownerId === userId;
+              const memberCount = data.members ? data.members.length : 1;
+              
+              div.innerHTML = `
+                <i class="fas fa-layer-group" style="color: var(--info); margin-right: 8px;"></i>
+                <div class="group-info">
+                  <div class="group-name">${data.name}</div>
+                  <div class="group-members">${memberCount} membre${memberCount > 1 ? 's' : ''}</div>
+                </div>
+                ${isOwner 
+                  ? `<i class="fas fa-crown" style="color: var(--warning); margin-right: 8px;" title="Propriétaire"></i>`
+                  : ''
+                }
+                <i class="fas fa-sign-out-alt leave-group" onclick="leaveGroup('${doc.id}', '${isOwner}')" title="${isOwner ? 'Supprimer le groupe' : 'Quitter le groupe'}"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadGroups:', err);
+            container.innerHTML = '<div class="no-groups" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.leaveGroup = function(groupId, isOwner) {
+        const confirmMessage = isOwner === 'true' 
+          ? 'Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.'
+          : 'Êtes-vous sûr de vouloir quitter ce groupe ?';
+          
+        if (confirm(confirmMessage)) {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          if (isOwner === 'true') {
+            // Supprimer le groupe
+            db.collection('groups').doc(groupId).delete()
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Groupe supprimé', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur deleteGroup:', err);
+                showNotification('Erreur lors de la suppression', 'error');
+              });
+          } else {
+            // Quitter le groupe
+            db.collection('groups').doc(groupId).update({
+              members: firebase.firestore.FieldValue.arrayRemove(user.uid),
+              memberNames: firebase.firestore.FieldValue.arrayRemove(user.displayName || user.email?.split('@')[0] || 'Utilisateur')
+            })
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Vous avez quitté le groupe', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur leaveGroup:', err);
+                showNotification('Erreur lors de la sortie du groupe', 'error');
+              });
+          }
+        }
+      };
+
+      window.openCreateModal = function() {
+        const modal = document.getElementById('createModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('projectName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.closeModal = function() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          modal.style.display = 'none';
+        });
+        
+        // Réinitialiser les champs
+        const inputs = document.querySelectorAll('.modal input');
+        inputs.forEach(input => input.value = '');
+      };
+
+      window.createNewProject = function() {
+        const nameInput = document.getElementById('projectName');
+        const descInput = document.getElementById('projectDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du projet est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('projects').add({
+          name: name,
+          desc: desc || 'Aucune description',
+          userId: user.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastModified: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadProjects(user.uid);
+          showNotification('Projet créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createProject:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-rocket"></i> Créer le projet';
+          }
+        });
+      };
+
+      window.loadProjects = function(userId) {
+        const container = document.getElementById('projects-list');
+        if (!container) return;
+        
+        const totalProjects = document.getElementById('total-projects');
+        const lastProject = document.getElementById('last-project');
+        const sharedProjects = document.getElementById('shared-projects');
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Chargement des projets...</div>';
+        
+        db.collection('projects')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            // Mise à jour des statistiques
+            if (totalProjects) totalProjects.innerText = snapshot.size;
+            if (sharedProjects) sharedProjects.innerText = '0'; // TODO: logique pour projets partagés
+            
+            if (snapshot.size > 0 && lastProject) {
+              const latestProject = snapshot.docs[0].data();
+              lastProject.innerText = latestProject.name;
+              lastProject.style.fontSize = '16px';
+            } else if (lastProject) {
+              lastProject.innerText = 'Aucun';
+              lastProject.style.fontSize = '16px';
+            }
+            
+            container.innerHTML = '';
+            
+            if (snapshot.empty) {
+              container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                  <i class="fas fa-folder-open fa-4x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                  <h3 style="margin: 20px 0 10px 0; font-weight: 600;">Aucun projet pour le moment</h3>
+                  <p style="margin: 0; font-size: 16px;">Créez votre premier projet pour commencer !</p>
+                </div>
+              `;
+              return;
+            }
+            
+            snapshot.forEach((doc, index) => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'project-item';
+              div.style.animationDelay = `${index * 0.1}s`;
+              div.style.animation = 'fadeInUp 0.5s ease forwards';
+              
+              // Format de la date
+              let dateStr = 'Date inconnue';
+              if (data.createdAt && data.createdAt.toDate) {
+                const date = data.createdAt.toDate();
+                dateStr = date.toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+              }
+              
+              div.innerHTML = `
+                <div class="project-name">${data.name}</div>
+                <div class="project-desc">${data.desc || 'Aucune description'}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">
+                  <i class="fas fa-calendar-alt"></i> Créé le ${dateStr}
+                </div>
+                <div class="project-actions">
+                  <button class="action-btn" onclick="openProject('${doc.id}')">
+                    <i class="fas fa-external-link-alt"></i> Ouvrir
+                  </button>
+                  <button class="action-btn delete" onclick="deleteProject('${doc.id}')">
+                    <i class="fas fa-trash-alt"></i> Supprimer
+                  </button>
+                </div>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadProjects:', err);
+            container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 40px;"><i class="fas fa-exclamation-triangle fa-2x"></i><br><br>Erreur de chargement des projets</div>';
+          });
+      };
+
+      window.searchProjects = function(query) {
+        const items = document.querySelectorAll('.project-item');
+        const searchQuery = query.toLowerCase().trim();
+        
+        items.forEach(item => {
+          const nameEl = item.querySelector('.project-name');
+          const descEl = item.querySelector('.project-desc');
+          
+          if (!nameEl) return;
+          
+          const name = nameEl.innerText.toLowerCase();
+          const desc = descEl ? descEl.innerText.toLowerCase() : '';
+          
+          const matches = name.includes(searchQuery) || desc.includes(searchQuery);
+          
+          item.style.display = matches || searchQuery === '' ? 'block' : 'none';
+          
+          if (matches && searchQuery !== '') {
+            item.style.animation = 'fadeInUp 0.3s ease';
+          }
+        });
+        
+        // Afficher un message si aucun résultat
+        const container = document.getElementById('projects-list');
+        const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+        
+        if (visibleItems.length === 0 && searchQuery !== '' && items.length > 0) {
+          const noResults = document.createElement('div');
+          noResults.id = 'no-results';
+          noResults.style.cssText = 'text-align: center; padding: 40px; color: var(--text-secondary);';
+          noResults.innerHTML = `
+            <i class="fas fa-search fa-2x" style="margin-bottom: 15px; opacity: 0.5;"></i>
+            <h3>Aucun projet trouvé</h3>
+            <p>Essayez avec d'autres mots-clés</p>
+          `;
+          container.appendChild(noResults);
+        } else {
+          const existingNoResults = document.getElementById('no-results');
+          if (existingNoResults) existingNoResults.remove();
+        }
+      };
+
+      window.openProject = function(id) {
+        showNotification('Ouverture du projet...', 'info');
+        setTimeout(() => {
+          alert(`Projet ${id} ouvert (fonctionnalité à implémenter)`);
+        }, 1000);
+      };
+
+      window.deleteProject = function(id) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')) {
+          db.collection('projects').doc(id).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) {
+                loadProjects(user.uid);
+                showNotification('Projet supprimé', 'success');
+              }
+            })
+            .catch(err => {
+              console.error('Erreur deleteProject:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
+        }
+      };
+
+      window.loadActivityChart = function(userId) {
+        const ctxEl = document.getElementById('activityChart');
+        if (!ctxEl) return;
+        
+        const ctx = ctxEl.getContext('2d');
+        
+        // Données d'exemple - à remplacer par de vraies données de Firebase
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'];
+        const projectsData = [2, 4, 1, 6, 3, 5];
+        
+        window.activityChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Projets créés',
+              data: projectsData,
+              borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              backgroundColor: 'rgba(30, 64, 175, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 20,
+                  font: {
+                    size: 14,
+                    weight: 500
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: {
+                    size: 12,
+                    weight: 500
+                  }
+                }
+              },
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0,0,0,0.05)'
+                },
+                ticks: {
+                  stepSize: 1,
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 2000,
+              easing: 'easeInOutQuart'
+            },
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            }
+          }
+        });
+      };
+
+      window.showNotification = function(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 90px;
+          right: 20px;
+          padding: 15px 20px;
+          background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--info)'};
+          color: white;
+          border-radius: 8px;
+          box-shadow: var(--shadow-md);
+          z-index: 3000;
+          animation: slideIn 0.3s ease;
+          font-weight: 500;
+          max-width: 300px;
+        `;
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'}"></i> ${message}`;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideOut 0.3s ease forwards';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      };
+
+      // Gestion des événements clavier
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+
+      // Événements Enter pour les inputs
+      document.addEventListener('DOMContentLoaded', () => {
+        const addFriendInput = document.getElementById('add-friend-input');
+        if (addFriendInput) {
+          addFriendInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              addFriend();
+            }
+          });
+        }
+        
+        const projectNameInput = document.getElementById('projectName');
+        if (projectNameInput) {
+          projectNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              createNewProject();
+            }
+          });
+        }
+
+        const groupNameInput = document.getElementById('groupName');
+        if (groupNameInput) {
+          groupNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              createNewGroup();
+            }
+          });
+        }
+        
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            searchProjects(e.target.value);
+          });
+        }
+      });
+
+      // Gestion des clics en dehors des modales
+      document.addEventListener('click', (e) => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+      });
+
+      // Initialiser les utilisateurs dans Firebase si nécessaire
+      function initializeUserInFirebase(user) {
+        const userDocRef = db.collection('users').doc(user.uid);
+        
+        userDocRef.get().then(doc => {
+          if (!doc.exists) {
+            // Créer le document utilisateur
+            userDocRef.set({
+              email: user.email,
+              displayName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+              friendCode: user.uid.slice(0, 6).toUpperCase(),
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+              console.log('User document created in Firebase');
+            }).catch(err => {
+              console.error('Error creating user document:', err);
+            });
+          } else {
+            // Mettre à jour la dernière activité
+            userDocRef.update({
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+              console.error('Error updating last active:', err);
+            });
+          }
+        }).catch(err => {
+          console.error('Error checking user document:', err);
+        });
+      }
+
+      // Modifier la fonction initializeUserData pour inclure l'initialisation Firebase
+      const originalInitializeUserData = initializeUserData;
+      initializeUserData = function(user) {
+        initializeUserInFirebase(user);
+        originalInitializeUserData(user);
+      };
+
+      console.log('Dashboard initialized successfully');
+    }
+
+    // Style pour le pulse de l'icône de chargement
+    const pulseStyle = document.createElement('style');
+    pulseStyle.textContent = `
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(pulseStyle);
+
+    // Attendre que tout soit chargé avant d'initialiser
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      // Si le DOM est déjà chargé, attendre un peu pour les scripts Firebase
+      setTimeout(initializeApp, 500);
+    }
+  </script>
+
+</body>
+</html>://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https
