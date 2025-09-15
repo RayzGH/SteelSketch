@@ -2,13 +2,14 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>SteelSketch - Login</title>
+  <title>SteelSketch - Connexion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Firebase (CDN) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
     body {
@@ -51,6 +52,11 @@
       z-index: -1;
     }
 
+    @keyframes wave {
+      0% { background-position-x: 0%; }
+      100% { background-position-x: 200%; }
+    }
+
     header {
       width: 100%;
       padding: 20px 40px;
@@ -64,12 +70,16 @@
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(8px);
       z-index: 10;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .logo {
       font-size: 24px;
-      font-weight: 600;
+      font-weight: 700;
       color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .header-buttons {
@@ -78,23 +88,33 @@
     }
 
     .header-buttons button {
-      background: #1e40af;
+      background: rgba(30, 64, 175, 0.8);
       color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 20px;
+      border-radius: 25px;
       cursor: pointer;
       font-size: 14px;
-      transition: 0.2s;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
     }
 
     .header-buttons button:hover {
-      background: #1d4ed8;
+      background: rgba(30, 64, 175, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.4);
     }
 
-    .header-buttons .white-btn {
-      background: white;
-      color: #1e40af;
+    .header-buttons .teacher-btn {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .header-buttons .teacher-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
     }
 
     .main-content {
@@ -102,59 +122,396 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      padding: 0 20px;
     }
 
     .card {
-      background: white;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
       text-align: center;
       z-index: 1;
-      width: 400px;
+      width: 100%;
+      max-width: 450px;
       margin-top: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: slideInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes slideInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .signup-card {
+      max-width: 500px;
+      text-align: left;
     }
 
     h1 {
       font-size: 28px;
       margin-bottom: 10px;
+      font-weight: 700;
+      color: #1e40af;
     }
 
     p {
       font-size: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       color: #64748b;
+      line-height: 1.5;
     }
 
-    .card button {
-      padding: 10px 20px;
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .primary-btn {
+      padding: 15px 25px;
       width: 100%;
-      background: #1e40af;
+      background: linear-gradient(135deg, #1e40af, #0ea5e9);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 16px;
-      transition: 0.2s;
+      font-weight: 600;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+      position: relative;
+      overflow: hidden;
     }
 
-    .card button:hover {
-      background: #1d4ed8;
+    .primary-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
+    }
+
+    .primary-btn:hover::before {
+      left: 100%;
+    }
+
+    .primary-btn:active {
+      transform: translateY(-1px) scale(0.98);
+      transition: all 0.1s ease;
+    }
+
+    .primary-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+      transform: none !important;
+    }
+
+    .secondary-btn {
+      padding: 15px 25px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      color: #1e40af;
+      border: 2px solid rgba(30, 64, 175, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .secondary-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(135deg, #1e40af, #0ea5e9);
+      transition: width 0.3s ease;
+      z-index: -1;
+    }
+
+    .secondary-btn:hover {
+      background: white;
+      color: white;
+      border-color: #1e40af;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.3);
+    }
+
+    .secondary-btn:hover::before {
+      width: 100%;
+    }
+
+    .secondary-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Formulaire d'inscription */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 12px 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #1e40af;
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+      transform: translateY(-1px);
+      background: white;
+    }
+
+    .form-group .optional {
+      color: #9ca3af;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .interests-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .interest-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      background: rgba(255, 255, 255, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .interest-option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(30, 64, 175, 0.1), transparent);
+      transition: left 0.4s ease;
+    }
+
+    .interest-option:hover {
+      border-color: #1e40af;
+      background: rgba(30, 64, 175, 0.05);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+    }
+
+    .interest-option:hover::before {
+      left: 100%;
+    }
+
+    .interest-option.selected {
+      border-color: #1e40af;
+      background: rgba(30, 64, 175, 0.1);
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+    }
+
+    .interest-option input[type="radio"] {
+      margin: 0;
+      accent-color: #1e40af;
+    }
+
+    .interest-option label {
+      margin: 0;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1) rotate(-5deg);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .back-btn:active {
+      transform: scale(0.9);
+    }
+
+    .loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #dc2626;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      border: 1px solid #fecaca;
+      animation: slideInDown 0.3s ease;
+      font-weight: 500;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #16a34a;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      border: 1px solid #bbf7d0;
+      animation: slideInDown 0.3s ease;
+      font-weight: 500;
+    }
+
+    @keyframes slideInDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-transition {
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
     }
 
     @media (max-width: 600px) {
       .card {
-        width: 90%;
+        width: 95%;
+        padding: 30px 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .interests-grid {
+        grid-template-columns: 1fr;
       }
 
       header {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        padding: 15px 20px;
       }
 
       .header-buttons {
         flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      h1 {
+        font-size: 24px;
       }
     }
   </style>
@@ -169,25 +526,133 @@
 
   <!-- Barre supérieure -->
   <header>
-    <div class="logo">SteelSketch</div>
+    <div class="logo">
+      <i class="fas fa-cube"></i>
+      SteelSketch
+    </div>
     <div class="header-buttons">
-      <button onclick="alert('Téléchargement à venir !')">Installer</button>
-      <button class="white-btn" onclick="alert('Pas encore de compte ? Utilise Google pour t’inscrire')">Pas de compte ?</button>
+      <button onclick="showTeacherInfo()">Vous êtes profs ?</button>
+      <button onclick="downloadApp()" class="teacher-btn">
+        <i class="fas fa-download"></i> Installer
+      </button>
     </div>
   </header>
 
   <!-- Zone de connexion -->
   <div class="main-content">
-    <div class="card">
-      <h1>Connectez-vous à SteelSketch</h1>
-      <p>Accédez à vos projets et collaborez en temps réel.</p>
-      <button onclick="loginWithGoogle()">Se connecter avec Google</button>
+    <!-- Écran de connexion -->
+    <div class="card" id="login-screen">
+      <h1>Bienvenue sur SteelSketch</h1>
+      <p>Créez, collaborez et donnez vie à vos idées en temps réel.</p>
+      
+      <div class="button-group">
+        <button class="primary-btn" onclick="loginWithGoogle()">
+          <i class="fas fa-user-circle"></i>
+          Se connecter
+        </button>
+        
+        <button class="secondary-btn" onclick="showSignupForm()">
+          <i class="fas fa-user-plus"></i>
+          S'inscrire
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulaire d'inscription -->
+    <div class="card signup-card hidden fade-transition" id="signup-screen">
+      <button class="back-btn" onclick="showLoginForm()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      
+      <h1 style="text-align: center; margin-bottom: 30px;">Créer un compte</h1>
+      
+      <div id="error-container"></div>
+      
+      <form id="signup-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="firstName">Prénom *</label>
+            <input type="text" id="firstName" required maxlength="30">
+          </div>
+          
+          <div class="form-group">
+            <label for="lastName">Nom *</label>
+            <input type="text" id="lastName" required maxlength="30">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe *</label>
+          <input type="password" id="password" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label for="pseudo">Pseudo *</label>
+          <input type="text" id="pseudo" required maxlength="20" placeholder="Nom d'utilisateur unique">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="phone">Téléphone <span class="optional">(optionnel)</span></label>
+            <input type="tel" id="phone" placeholder="06 12 34 56 78">
+          </div>
+          
+          <div class="form-group">
+            <label for="birthdate">Date de naissance *</label>
+            <input type="date" id="birthdate" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Centre d'intérêt *</label>
+          <div class="interests-grid">
+            <div class="interest-option" onclick="selectInterest('scolaire')">
+              <input type="radio" name="interest" value="scolaire" id="int-scolaire">
+              <label for="int-scolaire">🎓 Scolaire</label>
+            </div>
+            
+            <div class="interest-option" onclick="selectInterest('entreprise')">
+              <input type="radio" name="interest" value="entreprise" id="int-entreprise">
+              <label for="int-entreprise">🏢 Entreprise</label>
+            </div>
+            
+            <div class="interest-option" onclick="selectInterest('professionnel')">
+              <input type="radio" name="interest" value="professionnel" id="int-professionnel">
+              <label for="int-professionnel">💼 Professionnel</label>
+            </div>
+            
+            <div class="interest-option" onclick="selectInterest('personnel')">
+              <input type="radio" name="interest" value="personnel" id="int-personnel">
+              <label for="int-personnel">🏠 Personnel</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="primary-btn" style="margin-top: 20px;">
+          <span class="normal-text">
+            <i class="fas fa-rocket"></i>
+            Créer mon compte
+          </span>
+          <span class="loading">
+            <div class="spinner"></div>
+            Création en cours...
+          </span>
+        </button>
+      </form>
     </div>
   </div>
 
+  <!-- Font Awesome -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
   <!-- Firebase Config + Login -->
   <script>
-    // ✅ Configuration Firebase (tu l’avais donnée)
+    // Configuration Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
       authDomain: "steelsketch-b7264.firebaseapp.com",
@@ -200,23 +665,175 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
+    // Navigation entre écrans
+    function showSignupForm() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('signup-screen').classList.remove('hidden');
+    }
+
+    function showLoginForm() {
+      document.getElementById('signup-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      clearErrors();
+    }
+
+    // Connexion avec Google
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then((result) => {
           const user = result.user;
-          // Enregistrement local
+          console.log('Connexion réussie:', user.email);
           localStorage.setItem('loggedIn', true);
           localStorage.setItem('userEmail', user.email);
           localStorage.setItem('userName', user.displayName);
-          // Redirection
           window.location.href = 'dashboard.html';
         })
         .catch((error) => {
-          alert("Erreur lors de la connexion : " + error.message);
+          console.error('Erreur connexion:', error);
+          showError("Erreur lors de la connexion : " + error.message);
         });
     }
+
+    // Sélection d'intérêt
+    function selectInterest(interest) {
+      document.querySelectorAll('.interest-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      document.querySelector(`#int-${interest}`).closest('.interest-option').classList.add('selected');
+      document.querySelector(`#int-${interest}`).checked = true;
+    }
+
+    // Inscription
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const button = e.target.querySelector('.primary-btn');
+      const normalText = button.querySelector('.normal-text');
+      const loadingText = button.querySelector('.loading');
+      
+      normalText.style.display = 'none';
+      loadingText.style.display = 'flex';
+      button.disabled = true;
+      clearErrors();
+      
+      const formData = {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        pseudo: document.getElementById('pseudo').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        birthdate: document.getElementById('birthdate').value,
+        interest: document.querySelector('input[name="interest"]:checked')?.value
+      };
+      
+      if (!formData.interest) {
+        showError('Veuillez sélectionner un centre d\'intérêt');
+        resetButton(button, normalText, loadingText);
+        return;
+      }
+      
+      if (formData.password.length < 6) {
+        showError('Le mot de passe doit contenir au moins 6 caractères');
+        resetButton(button, normalText, loadingText);
+        return;
+      }
+
+      const today = new Date();
+      const birthDate = new Date(formData.birthdate);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      
+      if (age < 13) {
+        showError('Vous devez avoir au moins 13 ans pour créer un compte');
+        resetButton(button, normalText, loadingText);
+        return;
+      }
+
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(formData.email, formData.password);
+        const user = userCredential.user;
+        
+        await user.updateProfile({
+          displayName: `${formData.firstName} ${formData.lastName}`
+        });
+        
+        await db.collection('users').doc(user.uid).set({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          pseudo: formData.pseudo,
+          phone: formData.phone || null,
+          birthdate: formData.birthdate,
+          interest: formData.interest,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log('Compte créé avec succès:', user.email);
+        showSuccess('Compte créé avec succès ! Redirection...');
+        
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Erreur inscription:', error);
+        let errorMessage = 'Erreur lors de la création du compte';
+        
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'Cette adresse email est déjà utilisée';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Adresse email invalide';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'Le mot de passe est trop faible';
+            break;
+          default:
+            errorMessage = error.message;
+        }
+        
+        showError(errorMessage);
+        resetButton(button, normalText, loadingText);
+      }
+    });
+
+    function resetButton(button, normalText, loadingText) {
+      normalText.style.display = 'flex';
+      loadingText.style.display = 'none';
+      button.disabled = false;
+    }
+
+    function showError(message) {
+      document.getElementById('error-container').innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+    }
+
+    function showSuccess(message) {
+      document.getElementById('error-container').innerHTML = `<div class="success-message"><i class="fas fa-check-circle"></i> ${message}</div>`;
+    }
+
+    function clearErrors() {
+      document.getElementById('error-container').innerHTML = '';
+    }
+
+    function showTeacherInfo() {
+      alert('🎓 Espace Professeurs\n\nBientôt disponible !\n\nVous pourrez :\n• Gérer vos classes\n• Créer des projets collaboratifs\n• Suivre les progrès des élèves\n• Accéder à des ressources pédagogiques');
+    }
+
+    function downloadApp() {
+      alert('📱 Application SteelSketch\n\nTéléchargement bientôt disponible pour :\n• Windows\n• macOS\n• Android\n• iOS\n\nEn attendant, utilisez la version web !');
+    }
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('Utilisateur déjà connecté, redirection...');
+        window.location.href = 'dashboard.html';
+      }
+    });
   </script>
 
   <!-- Particles.js -->
@@ -224,10 +841,10 @@
   <script>
     particlesJS('particles-js', {
       "particles": {
-        "number": { "value": 60, "density": { "enable": true, "value_area": 800 }},
+        "number": { "value": 80, "density": { "enable": true, "value_area": 800 }},
         "color": { "value": "#93c5fd" },
         "shape": { "type": "circle" },
-        "opacity": { "value": 0.5 },
+        "opacity": { "value": 0.5, "random": false },
         "size": { "value": 3, "random": true },
         "line_linked": {
           "enable": true,
@@ -236,7 +853,15 @@
           "opacity": 0.4,
           "width": 1
         },
-        "move": { "enable": true, "speed": 2, "out_mode": "out" }
+        "move": { 
+          "enable": true, 
+          "speed": 2, 
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false
+        }
       },
       "interactivity": {
         "detect_on": "canvas",
