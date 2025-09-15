@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>SteelSketch - Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
   <style>
@@ -285,12 +284,11 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.3s;
     }
 
     .add-friend button:hover {
       background: var(--primary-hover);
-      transform: translateY(-1px);
     }
 
     .create-group {
@@ -322,6 +320,9 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      padding-right: 10px;
     }
 
     .friend, .group {
@@ -334,25 +335,42 @@
       transition: all 0.3s ease;
       cursor: pointer;
       position: relative;
+      overflow: hidden;
+    }
+
+    .friend::before, .group::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .friend:hover::before, .group:hover::before {
+      transform: translateX(100%);
     }
 
     .friend:hover, .group:hover {
-      transform: translateX(5px);
-      box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .status {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
       flex-shrink: 0;
     }
 
     .online { background: var(--success); }
     .idle { background: var(--warning); }
     .dnd { background: var(--danger); }
-    .offline { background: var(--secondary); }
+    .offline { background: var(--secondary-text); }
 
     .friend-name, .group-name {
       font-weight: 500;
@@ -398,6 +416,10 @@
       margin-top: 20px;
       font-size: 14px;
       padding: 20px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      animation: fadeIn 0.5s ease;
     }
 
     .content {
@@ -525,9 +547,7 @@
 
     .new-project-btn:hover {
       transform: translateY(-3px) scale(1.02);
-      box-shadow: 
-        0 0 20px 5px rgba(102, 126, 234, 0.4),
-        0 8px 25px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 0 20px 5px rgba(102, 126, 234, 0.4), 0 8px 25px rgba(102, 126, 234, 0.3);
     }
 
     .new-project-btn:hover::before {
@@ -670,7 +690,7 @@
     }
 
     .modal h2 {
-      margin: 0 0 25px 0;
+      margin-bottom: 25px;
       font-size: 24px;
       font-weight: 600;
       color: var(--text);
@@ -808,8 +828,9 @@
   </style>
 </head>
 <body>
+
   <!-- Loading Screen -->
-  <div id="loading-screen" class="loading-screen">
+  <div class="loading-screen" id="loading-screen">
     <i class="fas fa-cube fa-3x" style="color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite;"></i>
     <h2 style="margin: 10px 0; color: var(--text);">SteelSketch</h2>
     <p style="color: var(--text-secondary); margin: 0;">Chargement...</p>
@@ -1097,34 +1118,30 @@
             console.log('User signed out successfully');
             window.location.href = 'index.html';
           }).catch(err => {
-            console.error('Erreur logout:', err);
-            alert('Erreur lors de la déconnexion: ' + err.message);
+            console.error('Error signing out:', err);
+            showNotification('Erreur lors de la déconnexion', 'error');
           });
         }
       };
 
       window.toggleSidebar = function() {
-        const isClosed = document.body.classList.contains('sidebar-closed');
-        document.body.classList.toggle('sidebar-closed', !isClosed);
-        
-        const toggleIcon = document.querySelector('.sidebar-toggle i');
-        if (toggleIcon) {
-          toggleIcon.className = isClosed ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
-        }
+        sidebarOpen = !sidebarOpen;
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
+        document.querySelector('.content').style.marginLeft = sidebarOpen ? 'var(--sidebar-w)' : '0';
+        document.querySelector('.sidebar-toggle i').className = sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
       };
 
       window.switchTab = function(tab) {
-        // Désactiver tous les onglets
         document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Activer l'onglet sélectionné
         document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
         document.getElementById(`${tab}-tab`).classList.add('active');
       };
 
       window.generateFriendCode = function(uid) {
-        const code = uid.slice(0, 6).toUpperCase();
+        const code = uid.slice(0,6).toUpperCase();
         const fcEl = document.getElementById('friend-code');
         if (fcEl) fcEl.innerText = code;
       };
@@ -1133,18 +1150,7 @@
         const code = document.getElementById('friend-code').innerText;
         if (code && code !== 'Chargement...') {
           navigator.clipboard.writeText(code).then(() => {
-            const copyIcon = document.querySelector('.friend-code i');
-            if (copyIcon) {
-              const originalClass = copyIcon.className;
-              const originalColor = copyIcon.style.color;
-              copyIcon.className = 'fas fa-check';
-              copyIcon.style.color = 'var(--success)';
-              setTimeout(() => {
-                copyIcon.className = originalClass;
-                copyIcon.style.color = originalColor;
-              }, 2000);
-            }
-            showNotification('Code copié dans le presse-papiers !', 'success');
+            showNotification('Code copié !', 'success');
           }).catch(() => {
             showNotification('Impossible de copier le code', 'error');
           });
@@ -1169,7 +1175,7 @@
         const user = auth.currentUser;
         if (!user) return;
 
-        const ownCode = user.uid.slice(0, 6).toUpperCase();
+        const ownCode = user.uid.slice(0,6).toUpperCase();
         if (code === ownCode) {
           showNotification("Vous ne pouvez pas vous ajouter vous-même !", 'error');
           return;
@@ -1600,9 +1606,9 @@
         if (visibleItems.length === 0 && searchQuery !== '' && items.length > 0) {
           const noResults = document.createElement('div');
           noResults.id = 'no-results';
-          noResults.style.cssText = 'text-align: center; padding: 40px; color: var(--text-secondary);';
+          noResults.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--text-secondary);';
           noResults.innerHTML = `
-            <i class="fas fa-search fa-2x" style="margin-bottom: 15px; opacity: 0.5;"></i>
+            <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
             <h3>Aucun projet trouvé</h3>
             <p>Essayez avec d'autres mots-clés</p>
           `;
@@ -1667,7 +1673,7 @@
             }]
           },
           options: {
-            responsive: true,
+            responsive: true;
             maintainAspectRatio: false,
             plugins: {
               legend: {
@@ -1722,26 +1728,13 @@
 
       window.showNotification = function(message, type = 'info') {
         const notification = document.createElement('div');
-        notification.style.cssText = `
-          position: fixed;
-          top: 90px;
-          right: 20px;
-          padding: 15px 20px;
-          background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--info)'};
-          color: white;
-          border-radius: 8px;
-          box-shadow: var(--shadow-md);
-          z-index: 3000;
-          animation: slideIn 0.3s ease;
-          font-weight: 500;
-          max-width: 300px;
-        `;
-        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'}"></i> ${message}`;
+        notification.classList.add('notification', type);
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
         
         document.body.appendChild(notification);
         
         setTimeout(() => {
-          notification.style.animation = 'slideOut 0.3s ease forwards';
+          notification.style.animation = 'notificationOut 0.3s ease forwards';
           setTimeout(() => notification.remove(), 300);
         }, 3000);
       };
