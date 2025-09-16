@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -80,13 +81,16 @@
       letter-spacing: -0.5px;
     }
 
-    .user-info {
+    .header-right {
       display: flex;
       align-items: center;
       gap: 15px;
-      flex: 1;
-      justify-content: center;
-      margin-left: -200px; /* Compense le bouton de déconnexion */
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .user-avatar {
@@ -180,11 +184,50 @@
       flex-shrink: 0;
     }
 
-    .sidebar-header h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0 0 15px 0;
+    .sidebar-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .sidebar-tab:hover:not(.active) {
+      background: rgba(30, 64, 175, 0.1);
       color: var(--text);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .friend-code {
@@ -216,6 +259,7 @@
     .add-friend {
       display: flex;
       gap: 8px;
+      margin-bottom: 20px;
     }
 
     .add-friend input {
@@ -249,20 +293,38 @@
       transform: translateY(-1px);
     }
 
-    .sidebar-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      overflow-x: hidden;
+    .create-group {
+      margin-bottom: 20px;
     }
 
-    .friend-list {
+    .create-group button {
+      width: 100%;
+      padding: 12px 15px;
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .create-group button:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .friend-list, .group-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    .friend {
+    .friend, .group {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -271,9 +333,10 @@
       border-radius: 8px;
       transition: all 0.3s ease;
       cursor: pointer;
+      position: relative;
     }
 
-    .friend:hover {
+    .friend:hover, .group:hover {
       transform: translateX(5px);
       box-shadow: var(--shadow-sm);
     }
@@ -291,17 +354,50 @@
     .dnd { background: var(--danger); }
     .offline { background: var(--secondary); }
 
-    .friend-name {
+    .friend-name, .group-name {
       font-weight: 500;
       font-size: 14px;
+      flex: 1;
     }
 
-    .no-friends {
+    .group {
+      border-left: 4px solid var(--info);
+    }
+
+    .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .group-members {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .remove-friend, .leave-group {
+      margin-left: auto;
+      cursor: pointer;
+      color: var(--danger);
+      opacity: 0.7;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-friend:hover, .leave-group:hover {
+      opacity: 1;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .no-friends, .no-groups {
       text-align: center;
       color: var(--text-secondary);
       font-style: italic;
       margin-top: 20px;
       font-size: 14px;
+      padding: 20px;
     }
 
     .content {
@@ -618,18 +714,23 @@
 
     .chart-container {
       margin-top: 40px;
-      padding: 25px;
+      padding: 20px;
       background: var(--card-bg);
       border-radius: 12px;
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border);
+      height: 300px;
     }
 
     .chart-container h3 {
-      margin: 0 0 20px 0;
-      font-size: 18px;
+      margin: 0 0 15px 0;
+      font-size: 16px;
       font-weight: 600;
       color: var(--text);
+    }
+
+    .chart-container canvas {
+      height: 220px !important;
     }
 
     .loading-screen {
@@ -665,7 +766,7 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
-    
+
     @keyframes slideOut {
       from { transform: translateX(0); opacity: 1; }
       to { transform: translateX(100%); opacity: 0; }
@@ -700,10 +801,6 @@
         grid-template-columns: 1fr;
       }
       
-      .user-info {
-        margin-left: 0;
-      }
-      
       .logo {
         font-size: 20px;
       }
@@ -723,14 +820,16 @@
     <div class="logo">
       <i class="fas fa-cube"></i> SteelSketch
     </div>
-    <div class="user-info">
-      <div class="user-avatar"><i class="fas fa-user"></i></div>
-      <span class="user-name" id="user-name">Chargement...</span>
+    <div class="header-right">
+      <div class="user-info">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <span class="user-name" id="user-name">Chargement...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> 
+        Déconnexion
+      </button>
     </div>
-    <button class="logout-btn" onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> 
-      Déconnexion
-    </button>
   </header>
 
   <!-- Sidebar -->
@@ -738,22 +837,44 @@
     <button class="sidebar-toggle" onclick="toggleSidebar()">
       <i class="fas fa-chevron-left"></i>
     </button>
-    
+
     <div class="sidebar-header">
-      <h2><i class="fas fa-users"></i> Amis</h2>
-      <div class="friend-code">
-        Code ami : <strong id="friend-code">Chargement...</strong> 
-        <i class="fas fa-copy" onclick="copyFriendCode()" title="Copier le code"></i>
-      </div>
-      <div class="add-friend">
-        <input type="text" id="add-friend-input" placeholder="Code ami..." maxlength="6">
-        <button onclick="addFriend()"><i class="fas fa-plus"></i></button>
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" onclick="switchTab('friends')">
+          <i class="fas fa-users"></i> Amis
+        </button>
+        <button class="sidebar-tab" onclick="switchTab('groups')">
+          <i class="fas fa-layer-group"></i> Groupes
+        </button>
       </div>
     </div>
-    
+
     <div class="sidebar-content">
-      <div class="friend-list" id="friend-list">
-        <!-- Amis listés ici -->
+      <!-- Onglet Amis -->
+      <div id="friends-tab" class="tab-content active">
+        <div class="friend-code">
+          Code ami : <strong id="friend-code">Chargement...</strong> 
+          <i class="fas fa-copy" onclick="copyFriendCode()" title="Copier le code"></i>
+        </div>
+        <div class="add-friend">
+          <input type="text" id="add-friend-input" placeholder="Code ami..." maxlength="6">
+          <button onclick="addFriend()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="friend-list" id="friend-list">
+          <!-- Amis listés ici -->
+        </div>
+      </div>
+
+      <!-- Onglet Groupes -->
+      <div id="groups-tab" class="tab-content">
+        <div class="create-group">
+          <button onclick="openCreateGroupModal()">
+            <i class="fas fa-plus"></i> Créer un groupe
+          </button>
+        </div>
+        <div class="group-list" id="group-list">
+          <!-- Groupes listés ici -->
+        </div>
       </div>
     </div>
   </div>
@@ -763,7 +884,7 @@
     <h1 style="animation: fadeInUp 0.5s; margin: 0 0 30px 0; font-size: 32px; font-weight: 700;">
       <i class="fas fa-folder-open"></i> Mes Projets
     </h1>
-    
+
     <div class="search-bar">
       <input class="search-input" type="text" placeholder="🔍 Rechercher un projet..." onkeyup="searchProjects(this.value)">
       <button class="new-project-btn" onclick="openCreateModal()">
@@ -809,10 +930,20 @@
     </div>
   </div>
 
+  <!-- Modal Créer Groupe -->
+  <div id="createGroupModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h2><i class="fas fa-layer-group"></i> Créer un nouveau groupe</h2>
+      <input id="groupName" type="text" placeholder="Nom du groupe" maxlength="50">
+      <input id="groupDesc" type="text" placeholder="Description (optionnel)" maxlength="200">
+      <button class="btn" onclick="createNewGroup()">
+        <i class="fas fa-users"></i> Créer le groupe
+      </button>
+    </div>
+  </div>
+
   <!-- Firebase + librairies -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 
   <script>
@@ -935,6 +1066,7 @@
         // Initialiser les données utilisateur
         generateFriendCode(user.uid);
         loadFriends(user.uid);
+        loadGroups(user.uid);
         loadProjects(user.uid);
         loadActivityChart(user.uid);
       }
@@ -976,6 +1108,16 @@
         if (toggleIcon) {
           toggleIcon.className = isClosed ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
         }
+      };
+
+      window.switchTab = function(tab) {
+        // Désactiver tous les onglets
+        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activer l'onglet sélectionné
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        document.getElementById(`${tab}-tab`).classList.add('active');
       };
 
       window.generateFriendCode = function(uid) {
@@ -1030,23 +1172,40 @@
           return;
         }
 
-        // Vérifier si déjà ajouté
-        db.collection('friends')
-          .where('userId', '==', user.uid)
+        // Rechercher l'utilisateur avec ce code
+        db.collection('users')
           .where('friendCode', '==', code)
           .get()
           .then(snapshot => {
-            if (!snapshot.empty) {
-              showNotification('Cet ami est déjà dans votre liste !', 'error');
+            if (snapshot.empty) {
+              showNotification('Aucun utilisateur trouvé avec ce code', 'error');
               return;
             }
-            
-            return db.collection('friends').add({
-              userId: user.uid,
-              friendCode: code,
-              status: 'pending',
-              addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+
+            const friendData = snapshot.docs[0].data();
+            const friendId = snapshot.docs[0].id;
+
+            // Vérifier si déjà ami
+            return db.collection('friends')
+              .where('userId', '==', user.uid)
+              .where('friendId', '==', friendId)
+              .get()
+              .then(friendSnapshot => {
+                if (!friendSnapshot.empty) {
+                  showNotification('Cet utilisateur est déjà dans votre liste d\'amis !', 'error');
+                  return;
+                }
+
+                // Ajouter l'ami
+                return db.collection('friends').add({
+                  userId: user.uid,
+                  friendId: friendId,
+                  friendCode: code,
+                  friendName: friendData.displayName || friendData.email?.split('@')[0] || 'Utilisateur',
+                  status: 'accepted',
+                  addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              });
           })
           .then(() => {
             input.value = '';
@@ -1086,8 +1245,8 @@
               
               div.innerHTML = `
                 <span class="status ${randomStatus}"></span>
-                <span class="friend-name">${data.friendCode}</span>
-                <i class="fas fa-times" style="margin-left: auto; cursor: pointer; color: var(--danger); opacity: 0.7; padding: 5px;" onclick="removeFriend('${doc.id}')" title="Supprimer cet ami"></i>
+                <span class="friend-name">${data.friendName}</span>
+                <i class="fas fa-times remove-friend" onclick="removeFriend('${doc.id}')" title="Supprimer cet ami"></i>
               `;
               container.appendChild(div);
             });
@@ -1113,6 +1272,150 @@
         }
       };
 
+      window.openCreateGroupModal = function() {
+        const modal = document.getElementById('createGroupModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('groupName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.createNewGroup = function() {
+        const nameInput = document.getElementById('groupName');
+        const descInput = document.getElementById('groupDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du groupe est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createGroupModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('groups').add({
+          name: name,
+          description: desc || 'Aucune description',
+          ownerId: user.uid,
+          ownerName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          members: [user.uid],
+          memberNames: [user.displayName || user.email?.split('@')[0] || 'Utilisateur'],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadGroups(user.uid);
+          showNotification('Groupe créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createGroup:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-users"></i> Créer le groupe';
+          }
+        });
+      };
+
+      window.loadGroups = function(userId) {
+        const container = document.getElementById('group-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('groups')
+          .where('members', 'array-contains', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-groups"><i class="fas fa-layer-group"></i><br>Aucun groupe pour le moment.<br><small>Créez ou rejoignez un groupe !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'group';
+              
+              const isOwner = data.ownerId === userId;
+              const memberCount = data.members ? data.members.length : 1;
+              
+              div.innerHTML = `
+                <i class="fas fa-layer-group" style="color: var(--info); margin-right: 8px;"></i>
+                <div class="group-info">
+                  <div class="group-name">${data.name}</div>
+                  <div class="group-members">${memberCount} membre${memberCount > 1 ? 's' : ''}</div>
+                </div>
+                ${isOwner 
+                  ? `<i class="fas fa-crown" style="color: var(--warning); margin-right: 8px;" title="Propriétaire"></i>`
+                  : ''
+                }
+                <i class="fas fa-sign-out-alt leave-group" onclick="leaveGroup('${doc.id}', '${isOwner}')" title="${isOwner ? 'Supprimer le groupe' : 'Quitter le groupe'}"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadGroups:', err);
+            container.innerHTML = '<div class="no-groups" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.leaveGroup = function(groupId, isOwner) {
+        const confirmMessage = isOwner === 'true' 
+          ? 'Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.'
+          : 'Êtes-vous sûr de vouloir quitter ce groupe ?';
+          
+        if (confirm(confirmMessage)) {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          if (isOwner === 'true') {
+            // Supprimer le groupe
+            db.collection('groups').doc(groupId).delete()
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Groupe supprimé', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur deleteGroup:', err);
+                showNotification('Erreur lors de la suppression', 'error');
+              });
+          } else {
+            // Quitter le groupe
+            db.collection('groups').doc(groupId).update({
+              members: firebase.firestore.FieldValue.arrayRemove(user.uid),
+              memberNames: firebase.firestore.FieldValue.arrayRemove(user.displayName || user.email?.split('@')[0] || 'Utilisateur')
+            })
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Vous avez quitté le groupe', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur leaveGroup:', err);
+                showNotification('Erreur lors de la sortie du groupe', 'error');
+              });
+          }
+        }
+      };
+
       window.openCreateModal = function() {
         const modal = document.getElementById('createModal');
         if (modal) {
@@ -1125,14 +1428,14 @@
       };
 
       window.closeModal = function() {
-        const modal = document.getElementById('createModal');
-        if (modal) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
           modal.style.display = 'none';
-          const nameInput = document.getElementById('projectName');
-          const descInput = document.getElementById('projectDesc');
-          if (nameInput) nameInput.value = '';
-          if (descInput) descInput.value = '';
-        }
+        });
+        
+        // Réinitialiser les champs
+        const inputs = document.querySelectorAll('.modal input');
+        inputs.forEach(input => input.value = '');
       };
 
       window.createNewProject = function() {
@@ -1155,7 +1458,7 @@
           return;
         }
 
-        const createBtn = document.querySelector('.modal .btn');
+        const createBtn = document.querySelector('#createModal .btn');
         if (createBtn) {
           createBtn.disabled = true;
           createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
@@ -1466,6 +1769,15 @@
             }
           });
         }
+
+        const groupNameInput = document.getElementById('groupName');
+        if (groupNameInput) {
+          groupNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              createNewGroup();
+            }
+          });
+        }
         
         const searchInput = document.querySelector('.search-input');
         if (searchInput) {
@@ -1474,6 +1786,54 @@
           });
         }
       });
+
+      // Gestion des clics en dehors des modales
+      document.addEventListener('click', (e) => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+      });
+
+      // Initialiser les utilisateurs dans Firebase si nécessaire
+      function initializeUserInFirebase(user) {
+        const userDocRef = db.collection('users').doc(user.uid);
+        
+        userDocRef.get().then(doc => {
+          if (!doc.exists) {
+            // Créer le document utilisateur
+            userDocRef.set({
+              email: user.email,
+              displayName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+              friendCode: user.uid.slice(0, 6).toUpperCase(),
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+              console.log('User document created in Firebase');
+            }).catch(err => {
+              console.error('Error creating user document:', err);
+            });
+          } else {
+            // Mettre à jour la dernière activité
+            userDocRef.update({
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+              console.error('Error updating last active:', err);
+            });
+          }
+        }).catch(err => {
+          console.error('Error checking user document:', err);
+        });
+      }
+
+      // Modifier la fonction initializeUserData pour inclure l'initialisation Firebase
+      const originalInitializeUserData = initializeUserData;
+      initializeUserData = function(user) {
+        initializeUserInFirebase(user);
+        originalInitializeUserData(user);
+      };
 
       console.log('Dashboard initialized successfully');
     }
@@ -1504,4 +1864,7 @@
   </script>
 
 </body>
-</html>
+</html>://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https
