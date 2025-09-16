@@ -1,8 +1,1516 @@
-Voici le script terminé. J'ai complété la fonction `getToolDisplayName`, ajouté les fonctions manquantes pour rendre l'application fonctionnelle (comme la gestion du déplacement, les notifications, l'historique, le thème, les modals, etc.), et implémenté une logique basique pour les outils "polygon" et "cut-curve" avec clics multiples (cliquez pour ajouter des points, double-cliquez pour terminer la forme). J'ai aussi ajouté la gestion du déplacement pour tous les types de formes, y compris les multi-points.
+'polygon': 'Polygone',
+        'cut-line': 'Découpe droite',
+        'cut-curve': 'Découpe courbe',
+        'drill': 'Perçage'
+      };
+      return names[tool] || tool;
+    }
 
-<xaiArtifact title="index.html" contentType="text/html">
-<![CDATA[
-<!DOCTYPE html>
+    function getShapeDisplayName(type) {
+      const names = {
+        'rectangle': 'Rectangle',
+        'circle': 'Cercle',
+        'line': 'Ligne',
+        'cut-line': 'Découpe',
+        'drill': 'Perçage'
+      };
+      return names[type] || type;
+    }
+
+    function updatePropertiesPanel() {
+      const panel = document.getElementById('properties-panel');
+      
+      if (!selectedElement) {
+        panel.classList.add('hidden');
+        return;
+      }
+      
+      panel.classList.remove('hidden');
+      
+      const bounds = getShapeBounds(selectedElement);
+      document.getElementById('prop-x').value = Math.round(bounds.x * 10) / 10;
+      document.getElementById('prop-y').value = Math.round(bounds.y * 10) / 10;
+      document.getElementById('prop-width').value = Math.round(bounds.width * 10) / 10;
+      document.getElementById('prop-height').value = Math.round(bounds.height * 10) / 10;
+      document.getElementById('prop-color').value = selectedElement.color || '#1e40af';
+      document.getElementById('prop-rotation').value = selectedElement.rotation || 0;
+      document.getElementById('prop-thickness').value = selectedElement.thickness || sheetConfig.thickness;
+    }
+
+    function updateSelectedElement() {
+      if (!selectedElement) return;
+      
+      const newX = parseFloat(document.getElementById('prop-x').value);
+      const newY = parseFloat(document.getElementById('prop-y').value);
+      const newWidth = parseFloat(document.getElementById('prop-width').value);
+      const newHeight = parseFloat(document.getElementById('prop-height').value);
+      const newColor = document.getElementById('prop-color').value;
+      const newRotation = parseFloat(document.getElementById('prop-rotation').value);
+      const newThickness = parseFloat(document.getElementById('prop-thickness').value);
+      
+      selectedElement.color = newColor;
+      selectedElement.rotation = newRotation;
+      selectedElement.thickness = newThickness;
+      
+      if (selectedElement.type === 'rectangle') {
+        selectedElement.x = newX;
+        selectedElement.y = newY;
+        selectedElement.width = newWidth;
+        selectedElement.height = newHeight;
+      } else if (selectedElement.type === 'circle') {
+        selectedElement.x = newX;
+        selectedElement.y = newY;
+        selectedElement.radius = Math.min(newWidth, newHeight) / 2;
+      } else if (selectedElement.type === 'drill') {
+        selectedElement.x = newX;
+        selectedElement.y = newY;
+        selectedElement.radius = newWidth / 2;
+      }
+      
+      saveHistory();
+      redrawCanvas();
+      updateTreeView();
+    }
+
+    function generateId() {
+      return 'shape_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function saveHistory() {
+      history = history.slice(0, historyStep + 1);
+      history.push(JSON.parse(JSON.stringify(shapes)));
+      historyStep++;
+      
+      if (history.length > 50) {
+        history.shift();
+        historyStep--;
+      }
+    }
+
+    function undoAction() {
+      if (historyStep > 0) {
+        historyStep--;
+        shapes = JSON.parse(JSON.stringify(history[historyStep]));
+        selectedElement = null;
+        updatePropertiesPanel();
+        redrawCanvas();
+        updateTreeView();
+        console.error('Erreur sauvegarde:', err);
+        showNotification('Erreur lors de la sauvegarde', 'error');
+      });
+    }
+
+    function importProject() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const data = JSON.parse(e.target.result);
+              shapes = data.shapes || [];
+              sheetConfig = { ...sheetConfig, ...data.sheetConfig };
+              gridSize = data.gridSize || gridSize;
+              selectedElement = null;
+              updatePropertiesPanel();
+              resizeCanvas();
+              updateTreeView();
+              showNotification('Projet importé avec succès !', 'success');
+            } catch (err) {
+              showNotification('Erreur lors de l\'importation', 'error');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    }
+
+    function exportProject() {
+      const projectData = {
+        name: document.getElementById('project-name').textContent,
+        shapes: shapes,
+        sheetConfig: sheetConfig,
+        gridSize: gridSize,
+        exportDate: new Date().toISOString()
+      };
+      
+      const dataStr = JSON.stringify(projectData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(dataBlob);
+      link.download = `steelsketch_${projectData.name.replace(/\s+/g, '_')}.json`;
+      link.click();
+      
+      URL.revokeObjectURL(link.href);
+      showNotification('Projet exporté !', 'success');
+    }
+
+    function loadExampleShapes() {
+      // Charger quelques formes d'exemple pour la démonstration
+      setTimeout(() => {
+        shapes = [
+          {
+            id: generateId(),
+            type: 'rectangle',
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 60,
+            color: '#3b82f6',
+            rotation: 0,
+            thickness: 2
+          },
+          {
+            id: generateId(),
+            type: 'circle',
+            x: 200,
+            y: 80,
+            radius: 40,
+            color: '#ef4444',
+            rotation: 0,
+            thickness: 2
+          },
+          {
+            id: generateId(),
+            type: 'cut-line',
+            x: 300,
+            y: 100,
+            x2: 400,
+            y2: 120,
+            color: '#ef4444',
+            thickness: 0.1
+          }
+        ];
+        
+        saveHistory();
+        redrawCanvas();
+        updateTreeView();
+      }, 2000);
+    }
+
+    function handleKeyboard(e) {
+      // Éviter les conflits avec les champs de saisie
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      const toolKeys = {
+        's': 'select',
+        'm': 'move',
+        'r': 'rectangle', 
+        'c': 'circle',
+        'l': 'line',
+        'p': 'polygon',
+        'd': 'drill'
+      };
+
+      // Sélection d'outil
+      if (toolKeys[e.key.toLowerCase()] && !e.ctrlKey && !e.altKey) {
+        selectTool(toolKeys[e.key.toLowerCase()]);
+        e.preventDefault();
+        return;
+      }
+
+      // Raccourcis avec modificateurs
+      if (e.ctrlKey) {
+        switch (e.key.toLowerCase()) {
+          case 's':
+            e.preventDefault();
+            saveProject();
+            break;
+          case 'z':
+            e.preventDefault();
+            if (e.shiftKey) {
+              redoAction();
+            } else {
+              undoAction();
+            }
+            break;
+          case 'y':
+            e.preventDefault();
+            redoAction();
+            break;
+          case 'o':
+            e.preventDefault();
+            importProject();
+            break;
+          case 'e':
+            e.preventDefault();
+            exportProject();
+            break;
+          case 'd':
+            e.preventDefault();
+            if (selectedElement) {
+              duplicateSelected();
+            }
+            break;
+          case 'a':
+            e.preventDefault();
+            // Sélectionner tout (futur)
+            break;
+          case '+':
+          case '=':
+            e.preventDefault();
+            zoomIn();
+            break;
+          case '-':
+            e.preventDefault();
+            zoomOut();
+            break;
+          case '0':
+            e.preventDefault();
+            fitToScreen();
+            break;
+        }
+        return;
+      }
+
+      // Touches individuelles
+      switch (e.key) {
+        case 'Delete':
+        case 'Backspace':
+          if (selectedElement) {
+            deleteSelected();
+            e.preventDefault();
+          }
+          break;
+        case 'Escape':
+          selectedElement = null;
+          updatePropertiesPanel();
+          redrawCanvas();
+          e.preventDefault();
+          break;
+        case 'Tab':
+          e.preventDefault();
+          cycleSelection();
+          break;
+        case 'Enter':
+          if (currentTool === 'text') {
+            // Terminer la saisie de texte
+          }
+          break;
+      }
+    }
+
+    function cycleSelection() {
+      if (shapes.length === 0) return;
+      
+      let newIndex = selectedElement ? shapes.findIndex(s => s.id === selectedElement.id) + 1 : 0;
+      if (newIndex >= shapes.length) newIndex = 0;
+      
+      selectedElement = shapes[newIndex];
+      updatePropertiesPanel();
+      redrawCanvas();
+      updateTreeView();
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-triangle',
+        warning: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle'
+      };
+      
+      notification.innerHTML = `
+        <i class="${icons[type] || icons.info}" style="margin-right: 8px;"></i>
+        ${message}
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Animation de sortie
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Ajout du style d'animation de sortie
+    const slideOutStyle = `
+      @keyframes slideOut {
+        from { 
+          transform: translateX(0); 
+          opacity: 1; 
+        }
+        to { 
+          transform: translateX(100%); 
+          opacity: 0; 
+        }
+      }
+    `;
+    
+    if (!document.querySelector('#slideout-style')) {
+      const style = document.createElement('style');
+      style.id = 'slideout-style';
+      style.textContent = slideOutStyle;
+      document.head.appendChild(style);
+    }
+
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        showNotification('SteelSketch chargé avec succès !', 'success');
+        
+        // Afficher quelques conseils
+        setTimeout(() => {
+          showNotification('Raccourcis : S = Sélection, R = Rectangle, C = Cercle, L = Ligne', 'info');
+        }, 2000);
+        
+        setTimeout(() => {
+          showNotification('Ctrl+S pour sauvegarder, Ctrl+Z pour annuler', 'info');
+        }, 4000);
+        
+      }, 1000);
+    });
+
+    // Gestionnaire d'erreurs global
+    window.addEventListener('error', function(e) {
+      console.error('Erreur JavaScript:', e.error);
+      showNotification('Une erreur s\'est produite. Vérifiez la console.', 'error');
+    });
+
+    // Gestionnaire de fermeture
+    window.addEventListener('beforeunload', function(e) {
+      if (shapes.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter ?';
+        return e.returnValue;
+      }
+    });
+
+    // Auto-sauvegarde (optionnel)
+    setInterval(function() {
+      if (shapes.length > 0) {
+        localStorage.setItem('steelsketch_autosave', JSON.stringify({
+          shapes: shapes,
+          sheetConfig: sheetConfig,
+          timestamp: Date.now()
+        }));
+      }
+    }, 30000); // Toutes les 30 secondes
+
+    // Restauration auto-sauvegarde au démarrage
+    window.addEventListener('load', function() {
+      const autosave = localStorage.getItem('steelsketch_autosave');
+      if (autosave) {
+        try {
+          const data = JSON.parse(autosave);
+          const age = Date.now() - data.timestamp;
+          
+          // Si la sauvegarde a moins d'une heure
+          if (age < 3600000 && data.shapes && data.shapes.length > 0) {
+            if (confirm('Une sauvegarde automatique a été trouvée. Voulez-vous la restaurer ?')) {
+              shapes = data.shapes;
+              sheetConfig = { ...sheetConfig, ...data.sheetConfig };
+              redrawCanvas();
+              updateTreeView();
+              showNotification('Sauvegarde automatique restaurée', 'success');
+            }
+          }
+        } catch (e) {
+          console.warn('Erreur lors de la restauration de la sauvegarde automatique:', e);
+        }
+      }
+    });
+
+    console.log('SteelSketch initialisé avec succès !');
+
+  </script>
+</body>
+</html>Action annulée', 'info');
+      }
+    }
+
+    function redoAction() {
+      if (historyStep < history.length - 1) {
+        historyStep++;
+        shapes = JSON.parse(JSON.stringify(history[historyStep]));
+        selectedElement = null;
+        updatePropertiesPanel();
+        redrawCanvas();
+        updateTreeView();
+        showNotification('Action refaite', 'info');
+      }
+    }
+
+    function zoomIn() {
+      zoom = Math.min(zoom * 1.2, 5);
+      redrawCanvas();
+    }
+
+    function zoomOut() {
+      zoom = Math.max(zoom * 0.8, 0.1);
+      redrawCanvas();
+    }
+
+    function fitToScreen() {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+      resizeCanvas();
+      showNotification('Vue ajustée', 'info');
+    }
+
+    function duplicateSelected() {
+      if (!selectedElement) return;
+      
+      const duplicate = JSON.parse(JSON.stringify(selectedElement));
+      duplicate.id = generateId();
+      duplicate.x += 20; // Décalage
+      duplicate.y += 20;
+      
+      shapes.push(duplicate);
+      selectedElement = duplicate;
+      saveHistory();
+      updatePropertiesPanel();
+      redrawCanvas();
+      updateTreeView();
+      showNotification('Élément dupliqué', 'success');
+    }
+
+    function deleteSelected() {
+      if (!selectedElement) return;
+      
+      const index = shapes.findIndex(s => s.id === selectedElement.id);
+      if (index > -1) {
+        shapes.splice(index, 1);
+        selectedElement = null;
+        saveHistory();
+        updatePropertiesPanel();
+        redrawCanvas();
+        updateTreeView();
+        showNotification('Élément supprimé', 'success');
+      }
+    }
+
+    function newSheet() {
+      if (confirm('Créer une nouvelle tôle ? (Les modifications non sauvegardées seront perdues)')) {
+        shapes = [];
+        selectedElement = null;
+        history = [[]];
+        historyStep = 0;
+        updatePropertiesPanel();
+        redrawCanvas();
+        updateTreeView();
+        showNotification('Nouvelle tôle créée', 'success');
+      }
+    }
+
+    function openSheetSettings() {
+      document.getElementById('sheet-width').value = sheetConfig.width;
+      document.getElementById('sheet-height').value = sheetConfig.height;
+      document.getElementById('sheet-thickness').value = sheetConfig.thickness;
+      document.getElementById('grid-size-input').value = gridSize;
+      document.getElementById('sheet-material').value = sheetConfig.material;
+      document.getElementById('sheet-color').value = sheetConfig.color;
+      document.getElementById('sheet-settings-modal').style.display = 'flex';
+    }
+
+    function applySheetSettings() {
+      sheetConfig.width = parseInt(document.getElementById('sheet-width').value);
+      sheetConfig.height = parseInt(document.getElementById('sheet-height').value);
+      sheetConfig.thickness = parseFloat(document.getElementById('sheet-thickness').value);
+      sheetConfig.material = document.getElementById('sheet-material').value;
+      sheetConfig.color = document.getElementById('sheet-color').value;
+      gridSize = parseInt(document.getElementById('grid-size-input').value);
+      
+      document.getElementById('grid-size').textContent = gridSize + 'mm';
+      
+      closeModal();
+      resizeCanvas();
+      showNotification('Paramètres appliqués', 'success');
+    }
+
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark', isDarkMode);
+      document.getElementById('theme-icon').className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+      redrawCanvas();
+      showNotification(`Thème ${isDarkMode ? 'sombre' : 'clair'} activé`, 'info');
+    }
+
+    function toggleFriendsSidebar() {
+      friendsSidebarOpen = !friendsSidebarOpen;
+      const sidebar = document.getElementById('friends-sidebar');
+      const workspace = document.getElementById('workspace');
+      const icon = document.getElementById('friends-toggle-icon');
+      
+      if (friendsSidebarOpen) {
+        sidebar.classList.remove('hidden');
+        workspace.classList.remove('friends-hidden');
+        icon.className = 'fas fa-chevron-left';
+      } else {
+        sidebar.classList.add('hidden');
+        workspace.classList.add('friends-hidden');
+        icon.className = 'fas fa-chevron-right';
+      }
+      
+      setTimeout(resizeCanvas, 300);
+    }
+
+    function toggleExplorer() {
+      explorerOpen = !explorerOpen;
+      const explorer = document.getElementById('explorer');
+      const workspace = document.getElementById('workspace');
+      const icon = document.getElementById('explorer-toggle-icon');
+      
+      if (explorerOpen) {
+        explorer.classList.remove('hidden');
+        workspace.classList.remove('explorer-hidden');
+        icon.className = 'fas fa-chevron-right';
+      } else {
+        explorer.classList.add('hidden');
+        workspace.classList.add('explorer-hidden');
+        icon.className = 'fas fa-chevron-left';
+      }
+      
+      setTimeout(resizeCanvas, 300);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(tab + '-tab').style.display = 'block';
+    }
+
+    function sendInvite() {
+      const input = document.getElementById('invite-input');
+      const value = input.value.trim();
+      
+      if (!value) {
+        showNotification('Veuillez entrer un email ou nom d\'utilisateur', 'error');
+        return;
+      }
+      
+      input.value = '';
+      showNotification('Invitation envoyée !', 'success');
+    }
+
+    function initTreeView() {
+      updateTreeView();
+    }
+
+    function updateTreeView() {
+      const treeView = document.getElementById('tree-view');
+      
+      // Compter les éléments par type
+      const counts = {
+        rectangles: shapes.filter(s => s.type === 'rectangle').length,
+        circles: shapes.filter(s => s.type === 'circle').length,
+        lines: shapes.filter(s => s.type === 'line').length,
+        cuts: shapes.filter(s => s.type === 'cut-line').length,
+        drills: shapes.filter(s => s.type === 'drill').length
+      };
+      
+      treeView.innerHTML = `
+        <div class="tree-item" onclick="selectTreeItem(this)" data-id="workspace">
+          <div class="tree-toggle expanded" onclick="toggleTreeItem(this, event)">
+            <i class="fas fa-chevron-right"></i>
+          </div>
+          <i class="tree-icon fas fa-folder" style="color: #f59e0b;"></i>
+          Espace de travail
+        </div>
+        <div class="tree-children expanded">
+          <div class="tree-item" onclick="selectTreeItem(this)" data-id="sheet">
+            <div class="tree-indent"></div>
+            <div class="tree-toggle expanded" onclick="toggleTreeItem(this, event)">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <i class="tree-icon fas fa-square" style="color: #64748b;"></i>
+            Tôle (${sheetConfig.width}×${sheetConfig.height}mm)
+          </div>
+          <div class="tree-children expanded">
+            <div class="tree-item" onclick="selectTreeItem(this)" data-id="shapes">
+              <div class="tree-indent"></div>
+              <div class="tree-indent"></div>
+              <div class="tree-toggle expanded" onclick="toggleTreeItem(this, event)">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+              <i class="tree-icon fas fa-shapes" style="color: #3b82f6;"></i>
+              Formes (${shapes.length})
+            </div>
+            <div class="tree-children expanded">
+              ${shapes.map((shape, index) => `
+                <div class="tree-item ${selectedElement && selectedElement.id === shape.id ? 'selected' : ''}" onclick="selectShapeFromTree('${shape.id}')" data-id="${shape.id}">
+                  <div class="tree-indent"></div>
+                  <div class="tree-indent"></div>
+                  <div class="tree-indent"></div>
+                  <i class="tree-icon fas ${getShapeIcon(shape.type)}" style="color: ${getShapeIconColor(shape.type)};"></i>
+                  ${getShapeDisplayName(shape.type)} ${index + 1}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectShapeFromTree(shapeId) {
+      selectedElement = shapes.find(s => s.id === shapeId);
+      updatePropertiesPanel();
+      redrawCanvas();
+      updateTreeView();
+    }
+
+    function selectTreeItem(element) {
+      document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    function toggleTreeItem(element, event) {
+      if (event) event.stopPropagation();
+      
+      const toggle = element;
+      const item = toggle.closest('.tree-item');
+      const children = item.nextElementSibling;
+      
+      if (children && children.classList.contains('tree-children')) {
+        const isExpanded = toggle.classList.contains('expanded');
+        
+        if (isExpanded) {
+          toggle.classList.remove('expanded');
+          children.classList.remove('expanded');
+        } else {
+          toggle.classList.add('expanded');
+          children.classList.add('expanded');
+        }
+      }
+    }
+
+    function getShapeIcon(type) {
+      const icons = {
+        'rectangle': 'fa-square-full',
+        'circle': 'fa-circle',
+        'line': 'fa-minus',
+        'cut-line': 'fa-cut',
+        'drill': 'fa-circle-dot'
+      };
+      return icons[type] || 'fa-square';
+    }
+
+    function getShapeIconColor(type) {
+      const colors = {
+        'rectangle': '#22c55e',
+        'circle': '#f59e0b',
+        'line': '#3b82f6',
+        'cut-line': '#ef4444',
+        'drill': '#ef4444'
+      };
+      return colors[type] || '#64748b';
+    }
+
+    function saveProject() {
+      const user = auth.currentUser;
+      if (!user) {
+        showNotification('Vous devez être connecté pour sauvegarder', 'error');
+        return;
+      }
+      
+      const projectData = {
+        name: document.getElementById('project-name').textContent,
+        shapes: shapes,
+        sheetConfig: sheetConfig,
+        gridSize: gridSize,
+        lastModified: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      db.collection('projects').add({
+        ...projectData,
+        userId: user.uid
+      }).then(() => {
+        showNotification('Projet sauvegardé avec succès !', 'success');
+      }).catch(err => {
+        console.error('Erreur sauvegarde:', err);
+        showNotification('        <div class="property-label">Dimensions (mm)</div>
+        <div class="property-row">
+          <input type="number" class="property-input" placeholder="L" id="prop-width" step="0.1">
+          <input type="number" class="property-input" placeholder="H" id="prop-height" step="0.1">
+        </div>
+      </div>
+      
+      <div class="property-group">
+        <div class="property-label">Style</div>
+        <input type="color" class="property-input" id="prop-color" value="#1e40af">
+      </div>
+      
+      <div class="property-group">
+        <div class="property-label">Rotation (°)</div>
+        <input type="number" class="property-input" id="prop-rotation" value="0" step="1" min="0" max="360">
+      </div>
+      
+      <div class="property-group">
+        <div class="property-label">Épaisseur (mm)</div>
+        <input type="number" class="property-input" id="prop-thickness" value="2" step="0.1" min="0.1">
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="modal-btn" onclick="duplicateSelected()" style="flex: 1; font-size: 14px; padding: 10px;">
+          <i class="fas fa-copy"></i> Dupliquer
+        </button>
+        <button class="modal-btn" onclick="deleteSelected()" style="flex: 1; font-size: 14px; padding: 10px; background: var(--danger);">
+          <i class="fas fa-trash"></i> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Paramètres Tôle -->
+  <div id="sheet-settings-modal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h3><i class="fas fa-cog"></i> Paramètres de la tôle</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Largeur (mm)</label>
+          <input type="number" class="form-input" id="sheet-width" value="1000" min="100" step="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hauteur (mm)</label>
+          <input type="number" class="form-input" id="sheet-height" value="600" min="100" step="10">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Épaisseur (mm)</label>
+          <input type="number" class="form-input" id="sheet-thickness" value="2" min="0.1" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Taille grille (mm)</label>
+          <input type="number" class="form-input" id="grid-size-input" value="10" min="1" step="1">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Matériau</label>
+        <select class="form-select" id="sheet-material">
+          <option value="steel">Acier inoxydable</option>
+          <option value="aluminum">Aluminium</option>
+          <option value="carbon">Acier carbone</option>
+          <option value="brass">Laiton</option>
+          <option value="copper">Cuivre</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Couleur de la tôle</label>
+        <input type="color" class="form-input" id="sheet-color" value="#e2e8f0">
+      </div>
+      
+      <button class="modal-btn" onclick="applySheetSettings()">
+        <i class="fas fa-check"></i> Appliquer les paramètres
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase + Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
+      authDomain: "steelsketch-b7264.firebaseapp.com",
+      projectId: "steelsketch-b7264",
+      storageBucket: "steelsketch-b7264.firebasestorage.app",
+      messagingSenderId: "424606073739",
+      appId: "1:424606073739:web:696f400e992a50d7bee58e",
+      measurementId: "G-TD79BYQ5P6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Variables globales
+    let canvas, ctx;
+    let currentTool = 'select';
+    let selectedElement = null;
+    let isDrawing = false;
+    let startX = 0, startY = 0;
+    let shapes = [];
+    let history = [];
+    let historyStep = 0;
+    let zoom = 1;
+    let panX = 0, panY = 0;
+    let gridSize = 10; // mm
+    let pixelsPerMM = 2; // 2 pixels = 1mm par défaut
+    let friendsSidebarOpen = true;
+    let explorerOpen = true;
+    let isDarkMode = false;
+
+    // Configuration de la tôle
+    let sheetConfig = {
+      width: 1000, // mm
+      height: 600, // mm
+      thickness: 2, // mm
+      material: 'steel',
+      color: '#e2e8f0'
+    };
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      initAuth();
+      initCanvas();
+      initEventListeners();
+      initTreeView();
+      loadExampleShapes();
+      showNotification('SteelSketch chargé avec succès!', 'success');
+    });
+
+    function initAuth() {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          document.getElementById('user-name').textContent = user.displayName || user.email.split('@')[0];
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+    }
+
+    function initCanvas() {
+      canvas = document.getElementById('mainCanvas');
+      ctx = canvas.getContext('2d');
+      
+      // Taille initiale du canvas
+      resizeCanvas();
+      
+      // Événements canvas
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('wheel', handleWheel, { passive: false });
+      canvas.addEventListener('contextmenu', e => e.preventDefault());
+      
+      // Redimensionnement
+      window.addEventListener('resize', resizeCanvas);
+      
+      // Première render
+      redrawCanvas();
+    }
+
+    function initEventListeners() {
+      // Outils
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectTool(btn.getAttribute('data-tool'));
+        });
+      });
+
+      // Inputs de propriétés
+      ['prop-x', 'prop-y', 'prop-width', 'prop-height', 'prop-color', 'prop-rotation', 'prop-thickness'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+          input.addEventListener('input', updateSelectedElement);
+        }
+      });
+
+      // Raccourcis clavier
+      document.addEventListener('keydown', handleKeyboard);
+    }
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      const rect = container.getBoundingClientRect();
+      
+      // Calcul de la taille optimale
+      const padding = 100;
+      const maxWidth = rect.width - padding;
+      const maxHeight = rect.height - padding;
+      
+      // Conversion mm vers pixels
+      const sheetWidthPx = sheetConfig.width * pixelsPerMM * zoom;
+      const sheetHeightPx = sheetConfig.height * pixelsPerMM * zoom;
+      
+      // Ajustement pour tenir dans la fenêtre
+      let canvasWidth = sheetWidthPx + 200; // Marge pour la grille
+      let canvasHeight = sheetHeightPx + 200;
+      
+      if (canvasWidth > maxWidth) {
+        const scale = maxWidth / canvasWidth;
+        canvasWidth = maxWidth;
+        canvasHeight *= scale;
+      }
+      
+      if (canvasHeight > maxHeight) {
+        const scale = maxHeight / canvasHeight;
+        canvasHeight = maxHeight;
+        canvasWidth *= scale;
+      }
+      
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      
+      redrawCanvas();
+    }
+
+    function redrawCanvas() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Sauvegarder l'état
+      ctx.save();
+      
+      // Appliquer zoom et pan
+      ctx.scale(zoom, zoom);
+      ctx.translate(panX, panY);
+      
+      // Dessiner la grille
+      drawGrid();
+      
+      // Dessiner la tôle
+      drawSheet();
+      
+      // Dessiner toutes les formes
+      shapes.forEach(shape => drawShape(shape));
+      
+      // Dessiner la sélection
+      if (selectedElement) {
+        drawSelection(selectedElement);
+      }
+      
+      // Restaurer l'état
+      ctx.restore();
+      
+      // Mettre à jour l'affichage du zoom
+      document.getElementById('zoom-display').textContent = Math.round(zoom * 100) + '%';
+    }
+
+    function drawGrid() {
+      const gridSizePx = gridSize * pixelsPerMM;
+      const canvasWidthScaled = canvas.width / zoom;
+      const canvasHeightScaled = canvas.height / zoom;
+      
+      ctx.strokeStyle = isDarkMode ? '#374151' : '#e2e8f0';
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([]);
+      
+      // Lignes verticales
+      for (let x = 0; x < canvasWidthScaled; x += gridSizePx) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeightScaled);
+        ctx.stroke();
+      }
+      
+      // Lignes horizontales
+      for (let y = 0; y < canvasHeightScaled; y += gridSizePx) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidthScaled, y);
+        ctx.stroke();
+      }
+      
+      // Grille principale tous les 50mm
+      ctx.strokeStyle = isDarkMode ? '#4b5563' : '#cbd5e1';
+      ctx.lineWidth = 1;
+      
+      const majorGridSize = gridSizePx * 5;
+      
+      for (let x = 0; x < canvasWidthScaled; x += majorGridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeightScaled);
+        ctx.stroke();
+      }
+      
+      for (let y = 0; y < canvasHeightScaled; y += majorGridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidthScaled, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawSheet() {
+      const sheetX = 100;
+      const sheetY = 100;
+      const sheetWidthPx = sheetConfig.width * pixelsPerMM;
+      const sheetHeightPx = sheetConfig.height * pixelsPerMM;
+      
+      // Fond de la tôle
+      ctx.fillStyle = sheetConfig.color;
+      ctx.fillRect(sheetX, sheetY, sheetWidthPx, sheetHeightPx);
+      
+      // Contour de la tôle
+      ctx.strokeStyle = '#1e40af';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([]);
+      ctx.strokeRect(sheetX, sheetY, sheetWidthPx, sheetHeightPx);
+      
+      // Dimensions (affichage)
+      ctx.fillStyle = '#374151';
+      ctx.font = '12px Inter';
+      ctx.textAlign = 'center';
+      
+      // Largeur
+      ctx.fillText(`${sheetConfig.width}mm`, sheetX + sheetWidthPx/2, sheetY - 10);
+      
+      // Hauteur
+      ctx.save();
+      ctx.translate(sheetX - 20, sheetY + sheetHeightPx/2);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillText(`${sheetConfig.height}mm`, 0, 0);
+      ctx.restore();
+    }
+
+    function drawShape(shape) {
+      const sheetX = 100;
+      const sheetY = 100;
+      
+      ctx.strokeStyle = shape.color || '#1e40af';
+      ctx.fillStyle = shape.color || '#1e40af';
+      ctx.lineWidth = shape.lineWidth || 2;
+      ctx.setLineDash(shape.type.includes('cut') ? [5, 5] : []);
+      
+      const x = sheetX + (shape.x * pixelsPerMM);
+      const y = sheetY + (shape.y * pixelsPerMM);
+      
+      ctx.save();
+      
+      // Rotation si nécessaire
+      if (shape.rotation) {
+        const centerX = x + (shape.width || shape.radius || 0) * pixelsPerMM / 2;
+        const centerY = y + (shape.height || shape.radius || 0) * pixelsPerMM / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate(shape.rotation * Math.PI / 180);
+        ctx.translate(-centerX, -centerY);
+      }
+      
+      switch (shape.type) {
+        case 'rectangle':
+          const widthPx = shape.width * pixelsPerMM;
+          const heightPx = shape.height * pixelsPerMM;
+          ctx.strokeRect(x, y, widthPx, heightPx);
+          if (shape.filled) {
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(x, y, widthPx, heightPx);
+            ctx.globalAlpha = 1;
+          }
+          break;
+          
+        case 'circle':
+          const radiusPx = shape.radius * pixelsPerMM;
+          ctx.beginPath();
+          ctx.arc(x + radiusPx, y + radiusPx, radiusPx, 0, 2 * Math.PI);
+          ctx.stroke();
+          if (shape.filled) {
+            ctx.globalAlpha = 0.3;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+          break;
+          
+        case 'line':
+          const x2 = sheetX + (shape.x2 * pixelsPerMM);
+          const y2 = sheetY + (shape.y2 * pixelsPerMM);
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          break;
+          
+        case 'cut-line':
+          const x2Cut = sheetX + (shape.x2 * pixelsPerMM);
+          const y2Cut = sheetY + (shape.y2 * pixelsPerMM);
+          ctx.strokeStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x2Cut, y2Cut);
+          ctx.stroke();
+          break;
+          
+        case 'drill':
+          const drillRadiusPx = (shape.radius || 2.5) * pixelsPerMM;
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(x, y, drillRadiusPx, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = '#dc2626';
+          ctx.stroke();
+          break;
+      }
+      
+      ctx.restore();
+    }
+
+    function drawSelection(shape) {
+      const sheetX = 100;
+      const sheetY = 100;
+      
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      
+      const bounds = getShapeBounds(shape);
+      const x = sheetX + (bounds.x * pixelsPerMM) - 5;
+      const y = sheetY + (bounds.y * pixelsPerMM) - 5;
+      const width = bounds.width * pixelsPerMM + 10;
+      const height = bounds.height * pixelsPerMM + 10;
+      
+      ctx.strokeRect(x, y, width, height);
+      
+      // Points de contrôle
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x - 3, y - 3, 6, 6);
+      ctx.fillRect(x + width - 3, y - 3, 6, 6);
+      ctx.fillRect(x - 3, y + height - 3, 6, 6);
+      ctx.fillRect(x + width - 3, y + height - 3, 6, 6);
+      
+      ctx.setLineDash([]);
+    }
+
+    function getShapeBounds(shape) {
+      switch (shape.type) {
+        case 'rectangle':
+          return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
+        case 'circle':
+          return { 
+            x: shape.x, 
+            y: shape.y, 
+            width: shape.radius * 2, 
+            height: shape.radius * 2 
+          };
+        case 'line':
+        case 'cut-line':
+          return {
+            x: Math.min(shape.x, shape.x2),
+            y: Math.min(shape.y, shape.y2),
+            width: Math.abs(shape.x2 - shape.x),
+            height: Math.abs(shape.y2 - shape.y)
+          };
+        case 'drill':
+          const radius = shape.radius || 2.5;
+          return {
+            x: shape.x - radius,
+            y: shape.y - radius,
+            width: radius * 2,
+            height: radius * 2
+          };
+        default:
+          return { x: 0, y: 0, width: 0, height: 0 };
+      }
+    }
+
+    function handleMouseDown(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) / zoom - panX;
+      const mouseY = (e.clientY - rect.top) / zoom - panY;
+      
+      // Conversion en coordonnées tôle
+      const sheetX = 100;
+      const sheetY = 100;
+      startX = (mouseX - sheetX) / pixelsPerMM;
+      startY = (mouseY - sheetY) / pixelsPerMM;
+      
+      isDrawing = true;
+      
+      if (currentTool === 'select') {
+        selectedElement = findShapeAtPoint(startX, startY);
+        updatePropertiesPanel();
+        redrawCanvas();
+      }
+    }
+
+    function handleMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) / zoom - panX;
+      const mouseY = (e.clientY - rect.top) / zoom - panY;
+      
+      // Conversion en coordonnées tôle
+      const sheetX = 100;
+      const sheetY = 100;
+      const currentX = (mouseX - sheetX) / pixelsPerMM;
+      const currentY = (mouseY - sheetY) / pixelsPerMM;
+      
+      // Mise à jour position curseur
+      document.getElementById('cursor-pos').textContent = `${Math.round(currentX)}, ${Math.round(currentY)}`;
+      
+      if (isDrawing && currentTool !== 'select') {
+        redrawCanvas();
+        drawPreview(startX, startY, currentX, currentY);
+      }
+    }
+
+    function handleMouseUp(e) {
+      if (!isDrawing) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) / zoom - panX;
+      const mouseY = (e.clientY - rect.top) / zoom - panY;
+      
+      const sheetX = 100;
+      const sheetY = 100;
+      const endX = (mouseX - sheetX) / pixelsPerMM;
+      const endY = (mouseY - sheetY) / pixelsPerMM;
+      
+      if (currentTool !== 'select') {
+        createShape(startX, startY, endX, endY);
+      }
+      
+      isDrawing = false;
+      redrawCanvas();
+    }
+
+    function handleWheel(e) {
+      e.preventDefault();
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newZoom = Math.max(0.1, Math.min(5, zoom * zoomFactor));
+      
+      // Zoom centré sur la souris
+      const dx = mouseX / zoom - mouseX / newZoom;
+      const dy = mouseY / zoom - mouseY / newZoom;
+      
+      panX += dx;
+      panY += dy;
+      zoom = newZoom;
+      
+      redrawCanvas();
+    }
+
+    function drawPreview(x1, y1, x2, y2) {
+      const sheetX = 100;
+      const sheetY = 100;
+      
+      ctx.save();
+      ctx.scale(zoom, zoom);
+      ctx.translate(panX, panY);
+      
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      
+      const startXPx = sheetX + x1 * pixelsPerMM;
+      const startYPx = sheetY + y1 * pixelsPerMM;
+      const endXPx = sheetX + x2 * pixelsPerMM;
+      const endYPx = sheetY + y2 * pixelsPerMM;
+      
+      switch (currentTool) {
+        case 'rectangle':
+          ctx.strokeRect(startXPx, startYPx, endXPx - startXPx, endYPx - startYPx);
+          break;
+        case 'circle':
+          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          const radiusPx = radius * pixelsPerMM;
+          ctx.beginPath();
+          ctx.arc(startXPx, startYPx, radiusPx, 0, 2 * Math.PI);
+          ctx.stroke();
+          break;
+        case 'line':
+        case 'cut-line':
+          ctx.beginPath();
+          ctx.moveTo(startXPx, startYPx);
+          ctx.lineTo(endXPx, endYPx);
+          ctx.stroke();
+          break;
+      }
+      
+      ctx.restore();
+    }
+
+    function createShape(x1, y1, x2, y2) {
+      // Grille magnétique
+      x1 = Math.round(x1 / gridSize) * gridSize;
+      y1 = Math.round(y1 / gridSize) * gridSize;
+      x2 = Math.round(x2 / gridSize) * gridSize;
+      y2 = Math.round(y2 / gridSize) * gridSize;
+      
+      let newShape = null;
+      
+      switch (currentTool) {
+        case 'rectangle':
+          if (Math.abs(x2 - x1) < 5 || Math.abs(y2 - y1) < 5) return;
+          newShape = {
+            id: generateId(),
+            type: 'rectangle',
+            x: Math.min(x1, x2),
+            y: Math.min(y1, y2),
+            width: Math.abs(x2 - x1),
+            height: Math.abs(y2 - y1),
+            color: '#1e40af',
+            rotation: 0,
+            thickness: sheetConfig.thickness
+          };
+          break;
+          
+        case 'circle':
+          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          if (radius < 5) return;
+          newShape = {
+            id: generateId(),
+            type: 'circle',
+            x: x1 - radius,
+            y: y1 - radius,
+            radius: radius,
+            color: '#1e40af',
+            rotation: 0,
+            thickness: sheetConfig.thickness
+          };
+          break;
+          
+        case 'line':
+          if (Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) < 10) return;
+          newShape = {
+            id: generateId(),
+            type: 'line',
+            x: x1,
+            y: y1,
+            x2: x2,
+            y2: y2,
+            color: '#1e40af',
+            thickness: sheetConfig.thickness
+          };
+          break;
+          
+        case 'cut-line':
+          if (Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) < 10) return;
+          newShape = {
+            id: generateId(),
+            type: 'cut-line',
+            x: x1,
+            y: y1,
+            x2: x2,
+            y2: y2,
+            color: '#ef4444',
+            thickness: 0.1
+          };
+          break;
+          
+        case 'drill':
+          newShape = {
+            id: generateId(),
+            type: 'drill',
+            x: x1,
+            y: y1,
+            radius: 2.5,
+            color: '#ef4444'
+          };
+          break;
+      }
+      
+      if (newShape) {
+        shapes.push(newShape);
+        selectedElement = newShape;
+        saveHistory();
+        updatePropertiesPanel();
+        updateTreeView();
+        showNotification(`${getShapeDisplayName(newShape.type)} créé`, 'success');
+      }
+    }
+
+    function findShapeAtPoint(x, y) {
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const shape = shapes[i];
+        if (isPointInShape(x, y, shape)) {
+          return shape;
+        }
+      }
+      return null;
+    }
+
+    function isPointInShape(x, y, shape) {
+      switch (shape.type) {
+        case 'rectangle':
+          return x >= shape.x && x <= shape.x + shape.width && 
+                 y >= shape.y && y <= shape.y + shape.height;
+        case 'circle':
+          const dx = x - (shape.x + shape.radius);
+          const dy = y - (shape.y + shape.radius);
+          return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
+        case 'line':
+        case 'cut-line':
+          const dist = distanceToLine(x, y, shape.x, shape.y, shape.x2, shape.y2);
+          return dist <= 5;
+        case 'drill':
+          const drillDx = x - shape.x;
+          const drillDy = y - shape.y;
+          return Math.sqrt(drillDx * drillDx + drillDy * drillDy) <= (shape.radius || 2.5) + 2;
+        default:
+          return false;
+      }
+    }
+
+    function distanceToLine(px, py, x1, y1, x2, y2) {
+      const A = px - x1;
+      const B = py - y1;
+      const C = x2 - x1;
+      const D = y2 - y1;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      
+      if (lenSq === 0) return Math.sqrt(A * A + B * B);
+      
+      const param = dot / lenSq;
+      
+      let xx, yy;
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+      
+      const dx = px - xx;
+      const dy = py - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function selectTool(tool) {
+      currentTool = tool;
+      
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
+      
+      canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
+      
+      if (tool !== 'select') {
+        selectedElement = null;
+        updatePropertiesPanel();
+        redrawCanvas();
+      }
+      
+      showNotification(`Outil ${getToolDisplayName(tool)} sélectionné`, 'info');
+    }
+
+    function getToolDisplayName(tool) {
+      const names = {
+        'select': 'Sélection',
+        'move': 'Déplacement', 
+        'rectangle': 'Rectangle',
+        'circle': 'Cercle',
+        'line': 'Ligne',
+        'polygon': '<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -176,7 +1684,6 @@ Voici le script terminé. J'ai complété la fonction `getToolDisplayName`, ajou
     }
 
     /* Sidebar Amis */
-
     .friends-sidebar {
       position: fixed;
       left: 0;
@@ -975,1226 +2482,4 @@ Voici le script terminé. J'ai complété la fonction `getToolDisplayName`, ajou
       </div>
       
       <div class="property-group">
-        <div class="property-label">Dimensions (mm)</div>
-        <div class="property-row">
-          <input type="number" class="property-input" placeholder="L" id="prop-width" step="0.1">
-          <input type="number" class="property-input" placeholder="H" id="prop-height" step="0.1">
-        </div>
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Style</div>
-        <input type="color" class="property-input" id="prop-color" value="#1e40af">
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Rotation (°)</div>
-        <input type="number" class="property-input" id="prop-rotation" value="0" step="1" min="0" max="360">
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Épaisseur (mm)</div>
-        <input type="number" class="property-input" id="prop-thickness" value="2" step="0.1" min="0.1">
-      </div>
-      
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button class="modal-btn" onclick="duplicateSelected()" style="flex: 1; font-size: 14px; padding: 10px;">
-          <i class="fas fa-copy"></i> Dupliquer
-        </button>
-        <button class="modal-btn" onclick="deleteSelected()" style="flex: 1; font-size: 14px; padding: 10px; background: var(--danger);">
-          <i class="fas fa-trash"></i> Supprimer
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Paramètres Tôle -->
-  <div id="sheet-settings-modal" class="modal">
-    <div class="modal-content">
-      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
-      <h3><i class="fas fa-cog"></i> Paramètres de la tôle</h3>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Largeur (mm)</label>
-          <input type="number" class="form-input" id="sheet-width" value="1000" min="100" step="10">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Hauteur (mm)</label>
-          <input type="number" class="form-input" id="sheet-height" value="600" min="100" step="10">
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Épaisseur (mm)</label>
-          <input type="number" class="form-input" id="sheet-thickness" value="2" min="0.1" step="0.1">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Taille grille (mm)</label>
-          <input type="number" class="form-input" id="grid-size-input" value="10" min="1" step="1">
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Matériau</label>
-        <select class="form-select" id="sheet-material">
-          <option value="steel">Acier inoxydable</option>
-          <option value="aluminum">Aluminium</option>
-          <option value="carbon">Acier carbone</option>
-          <option value="brass">Laiton</option>
-          <option value="copper">Cuivre</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Couleur de la tôle</label>
-        <input type="color" class="form-input" id="sheet-color" value="#e2e8f0">
-      </div>
-      
-      <button class="modal-btn" onclick="applySheetSettings()">
-        <i class="fas fa-check"></i> Appliquer les paramètres
-      </button>
-    </div>
-  </div>
-
-  <!-- Firebase + Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    // Configuration Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
-      authDomain: "steelsketch-b7264.firebaseapp.com",
-      projectId: "steelsketch-b7264",
-      storageBucket: "steelsketch-b7264.firebasestorage.app",
-      messagingSenderId: "424606073739",
-      appId: "1:424606073739:web:696f400e992a50d7bee58e",
-      measurementId: "G-TD79BYQ5P6"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // Variables globales
-    let canvas, ctx;
-    let currentTool = 'select';
-    let selectedElement = null;
-    let isDrawing = false;
-    let isDragging = false;
-    let startX = 0, startY = 0;
-    let shapes = [];
-    let history = [];
-    let historyStep = 0;
-    let zoom = 1;
-    let panX = 0, panY = 0;
-    let gridSize = 10; // mm
-    let pixelsPerMM = 2; // 2 pixels = 1mm par défaut
-    let friendsSidebarOpen = true;
-    let explorerOpen = true;
-    let isDarkMode = false;
-    let currentPoints = [];
-    let initialShape = null;
-
-    // Configuration de la tôle
-    let sheetConfig = {
-      width: 1000, // mm
-      height: 600, // mm
-      thickness: 2, // mm
-      material: 'steel',
-      color: '#e2e8f0'
-    };
-
-    // Initialisation
-    document.addEventListener('DOMContentLoaded', function() {
-      initAuth();
-      initCanvas();
-      initEventListeners();
-      initTreeView();
-      loadExampleShapes();
-      showNotification('SteelSketch chargé avec succès!', 'success');
-    });
-
-    function initAuth() {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          document.getElementById('user-name').textContent = user.displayName || user.email.split('@')[0];
-        } else {
-          window.location.href = 'index.html';
-        }
-      });
-    }
-
-    function initCanvas() {
-      canvas = document.getElementById('mainCanvas');
-      ctx = canvas.getContext('2d');
-      
-      // Taille initiale du canvas
-      resizeCanvas();
-      
-      // Événements canvas
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('wheel', handleWheel, { passive: false });
-      canvas.addEventListener('contextmenu', e => e.preventDefault());
-      canvas.addEventListener('dblclick', handleDoubleClick);
-      
-      // Redimensionnement
-      window.addEventListener('resize', resizeCanvas);
-      
-      // Première render
-      redrawCanvas();
-    }
-
-    function initEventListeners() {
-      // Outils
-      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          selectTool(btn.getAttribute('data-tool'));
-        });
-      });
-
-      // Inputs de propriétés
-      ['prop-x', 'prop-y', 'prop-width', 'prop-height', 'prop-color', 'prop-rotation', 'prop-thickness'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-          input.addEventListener('input', updateSelectedElement);
-        }
-      });
-
-      // Raccourcis clavier
-      document.addEventListener('keydown', handleKeyboard);
-    }
-
-    function resizeCanvas() {
-      const container = document.getElementById('canvas-container');
-      const rect = container.getBoundingClientRect();
-      
-      // Calcul de la taille optimale
-      const padding = 100;
-      const maxWidth = rect.width - padding;
-      const maxHeight = rect.height - padding;
-      
-      // Conversion mm vers pixels
-      const sheetWidthPx = sheetConfig.width * pixelsPerMM * zoom;
-      const sheetHeightPx = sheetConfig.height * pixelsPerMM * zoom;
-      
-      // Ajustement pour tenir dans la fenêtre
-      let canvasWidth = sheetWidthPx + 200; // Marge pour la grille
-      let canvasHeight = sheetHeightPx + 200;
-      
-      if (canvasWidth > maxWidth) {
-        const scale = maxWidth / canvasWidth;
-        canvasWidth = maxWidth;
-        canvasHeight *= scale;
-      }
-      
-      if (canvasHeight > maxHeight) {
-        const scale = maxHeight / canvasHeight;
-        canvasHeight = maxHeight;
-        canvasWidth *= scale;
-      }
-      
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      
-      redrawCanvas();
-    }
-
-    function redrawCanvas() {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Sauvegarder l'état
-      ctx.save();
-      
-      // Appliquer zoom et pan
-      ctx.scale(zoom, zoom);
-      ctx.translate(panX, panY);
-      
-      // Dessiner la grille
-      drawGrid();
-      
-      // Dessiner la tôle
-      drawSheet();
-      
-      // Dessiner toutes les formes
-      shapes.forEach(shape => drawShape(shape));
-      
-      // Dessiner la sélection
-      if (selectedElement) {
-        drawSelection(selectedElement);
-      }
-      
-      // Restaurer l'état
-      ctx.restore();
-      
-      // Mettre à jour l'affichage du zoom
-      document.getElementById('zoom-display').textContent = Math.round(zoom * 100) + '%';
-    }
-
-    function drawGrid() {
-      const gridSizePx = gridSize * pixelsPerMM;
-      const canvasWidthScaled = canvas.width / zoom;
-      const canvasHeightScaled = canvas.height / zoom;
-      
-      ctx.strokeStyle = isDarkMode ? '#374151' : '#e2e8f0';
-      ctx.lineWidth = 0.5;
-      ctx.setLineDash([]);
-      
-      // Lignes verticales
-      for (let x = 0; x < canvasWidthScaled; x += gridSizePx) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasHeightScaled);
-        ctx.stroke();
-      }
-      
-      // Lignes horizontales
-      for (let y = 0; y < canvasHeightScaled; y += gridSizePx) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasWidthScaled, y);
-        ctx.stroke();
-      }
-      
-      // Grille principale tous les 50mm
-      ctx.strokeStyle = isDarkMode ? '#4b5563' : '#cbd5e1';
-      ctx.lineWidth = 1;
-      
-      const majorGridSize = gridSizePx * 5;
-      
-      for (let x = 0; x < canvasWidthScaled; x += majorGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasHeightScaled);
-        ctx.stroke();
-      }
-      
-      for (let y = 0; y < canvasHeightScaled; y += majorGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasWidthScaled, y);
-        ctx.stroke();
-      }
-    }
-
-    function drawSheet() {
-      const sheetX = 100;
-      const sheetY = 100;
-      const sheetWidthPx = sheetConfig.width * pixelsPerMM;
-      const sheetHeightPx = sheetConfig.height * pixelsPerMM;
-      
-      // Fond de la tôle
-      ctx.fillStyle = sheetConfig.color;
-      ctx.fillRect(sheetX, sheetY, sheetWidthPx, sheetHeightPx);
-      
-      // Contour de la tôle
-      ctx.strokeStyle = '#1e40af';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([]);
-      ctx.strokeRect(sheetX, sheetY, sheetWidthPx, sheetHeightPx);
-      
-      // Dimensions (affichage)
-      ctx.fillStyle = '#374151';
-      ctx.font = '12px Inter';
-      ctx.textAlign = 'center';
-      
-      // Largeur
-      ctx.fillText(`${sheetConfig.width}mm`, sheetX + sheetWidthPx/2, sheetY - 10);
-      
-      // Hauteur
-      ctx.save();
-      ctx.translate(sheetX - 20, sheetY + sheetHeightPx/2);
-      ctx.rotate(-Math.PI/2);
-      ctx.fillText(`${sheetConfig.height}mm`, 0, 0);
-      ctx.restore();
-    }
-
-    function drawShape(shape) {
-      const sheetX = 100;
-      const sheetY = 100;
-      
-      ctx.strokeStyle = shape.color || '#1e40af';
-      ctx.fillStyle = shape.color || '#1e40af';
-      ctx.lineWidth = shape.lineWidth || 2;
-      ctx.setLineDash(shape.type.includes('cut') ? [5, 5] : []);
-      
-      const x = sheetX + (shape.x * pixelsPerMM);
-      const y = sheetY + (shape.y * pixelsPerMM);
-      
-      ctx.save();
-      
-      // Rotation si nécessaire
-      if (shape.rotation && !shape.points) {
-        const centerX = x + (shape.width || shape.radius || 0) * pixelsPerMM / 2;
-        const centerY = y + (shape.height || shape.radius || 0) * pixelsPerMM / 2;
-        ctx.translate(centerX, centerY);
-        ctx.rotate(shape.rotation * Math.PI / 180);
-        ctx.translate(-centerX, -centerY);
-      }
-      
-      switch (shape.type) {
-        case 'rectangle':
-          const widthPx = shape.width * pixelsPerMM;
-          const heightPx = shape.height * pixelsPerMM;
-          ctx.strokeRect(x, y, widthPx, heightPx);
-          if (shape.filled) {
-            ctx.globalAlpha = 0.3;
-            ctx.fillRect(x, y, widthPx, heightPx);
-            ctx.globalAlpha = 1;
-          }
-          break;
-          
-        case 'circle':
-          const radiusPx = shape.radius * pixelsPerMM;
-          ctx.beginPath();
-          ctx.arc(x + radiusPx, y + radiusPx, radiusPx, 0, 2 * Math.PI);
-          ctx.stroke();
-          if (shape.filled) {
-            ctx.globalAlpha = 0.3;
-            ctx.fill();
-            ctx.globalAlpha = 1;
-          }
-          break;
-          
-        case 'line':
-          const x2 = sheetX + (shape.x2 * pixelsPerMM);
-          const y2 = sheetY + (shape.y2 * pixelsPerMM);
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(x2, y2);
-          ctx.stroke();
-          break;
-          
-        case 'cut-line':
-          const x2Cut = sheetX + (shape.x2 * pixelsPerMM);
-          const y2Cut = sheetY + (shape.y2 * pixelsPerMM);
-          ctx.strokeStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(x2Cut, y2Cut);
-          ctx.stroke();
-          break;
-          
-        case 'drill':
-          const drillRadiusPx = (shape.radius || 2.5) * pixelsPerMM;
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(x, y, drillRadiusPx, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.strokeStyle = '#dc2626';
-          ctx.stroke();
-          break;
-          
-        case 'polygon':
-        case 'cut-curve':
-          ctx.beginPath();
-          shape.points.forEach((p, i) => {
-            const px = sheetX + p.x * pixelsPerMM;
-            const py = sheetY + p.y * pixelsPerMM;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          });
-          if (shape.type === 'polygon') ctx.closePath();
-          ctx.stroke();
-          if (shape.type === 'polygon' && shape.filled) {
-            ctx.globalAlpha = 0.3;
-            ctx.fill();
-            ctx.globalAlpha = 1;
-          }
-          break;
-      }
-      
-      ctx.restore();
-    }
-
-    function drawSelection(shape) {
-      const sheetX = 100;
-      const sheetY = 100;
-      
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      
-      const bounds = getShapeBounds(shape);
-      const x = sheetX + (bounds.x * pixelsPerMM) - 5;
-      const y = sheetY + (bounds.y * pixelsPerMM) - 5;
-      const width = bounds.width * pixelsPerMM + 10;
-      const height = bounds.height * pixelsPerMM + 10;
-      
-      ctx.strokeRect(x, y, width, height);
-      
-      // Points de contrôle
-      ctx.fillStyle = '#22c55e';
-      ctx.fillRect(x - 3, y - 3, 6, 6);
-      ctx.fillRect(x + width - 3, y - 3, 6, 6);
-      ctx.fillRect(x - 3, y + height - 3, 6, 6);
-      ctx.fillRect(x + width - 3, y + height - 3, 6, 6);
-      
-      ctx.setLineDash([]);
-    }
-
-    function getShapeBounds(shape) {
-      switch (shape.type) {
-        case 'rectangle':
-          return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
-        case 'circle':
-          return { 
-            x: shape.x, 
-            y: shape.y, 
-            width: shape.radius * 2, 
-            height: shape.radius * 2 
-          };
-        case 'line':
-        case 'cut-line':
-          return {
-            x: Math.min(shape.x, shape.x2),
-            y: Math.min(shape.y, shape.y2),
-            width: Math.abs(shape.x2 - shape.x),
-            height: Math.abs(shape.y2 - shape.y)
-          };
-        case 'drill':
-          const radius = shape.radius || 2.5;
-          return {
-            x: shape.x - radius,
-            y: shape.y - radius,
-            width: radius * 2,
-            height: radius * 2
-          };
-        case 'polygon':
-        case 'cut-curve':
-          const minX = Math.min(...shape.points.map(p => p.x));
-          const minY = Math.min(...shape.points.map(p => p.y));
-          const maxX = Math.max(...shape.points.map(p => p.x));
-          const maxY = Math.max(...shape.points.map(p => p.y));
-          return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-        default:
-          return { x: 0, y: 0, width: 0, height: 0 };
-      }
-    }
-
-    function handleMouseDown(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = (e.clientX - rect.left) / zoom - panX;
-      const mouseY = (e.clientY - rect.top) / zoom - panY;
-      
-      // Conversion en coordonnées tôle
-      const sheetX = 100;
-      const sheetY = 100;
-      startX = (mouseX - sheetX) / pixelsPerMM;
-      startY = (mouseY - sheetY) / pixelsPerMM;
-      
-      if (currentTool === 'select') {
-        selectedElement = findShapeAtPoint(startX, startY);
-        updatePropertiesPanel();
-        redrawCanvas();
-      } else if (currentTool === 'move') {
-        selectedElement = findShapeAtPoint(startX, startY);
-        if (selectedElement) {
-          updatePropertiesPanel();
-          isDragging = true;
-          initialShape = JSON.parse(JSON.stringify(selectedElement));
-        }
-      } else if (currentTool === 'polygon' || currentTool === 'cut-curve') {
-        currentPoints.push({x: startX, y: startY});
-        redrawCanvas();
-      } else {
-        isDrawing = true;
-      }
-    }
-
-    function handleMouseMove(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = (e.clientX - rect.left) / zoom - panX;
-      const mouseY = (e.clientY - rect.top) / zoom - panY;
-      
-      // Conversion en coordonnées tôle
-      const sheetX = 100;
-      const sheetY = 100;
-      const currentX = (mouseX - sheetX) / pixelsPerMM;
-      const currentY = (mouseY - sheetY) / pixelsPerMM;
-      
-      // Mise à jour position curseur
-      document.getElementById('cursor-pos').textContent = `${Math.round(currentX)}, ${Math.round(currentY)}`;
-      
-      if (isDrawing && currentTool !== 'select' && currentTool !== 'move') {
-        redrawCanvas();
-        drawPreview(startX, startY, currentX, currentY);
-      } else if (isDragging) {
-        const dx = currentX - startX;
-        const dy = currentY - startY;
-        const snappedDx = Math.round(dx / gridSize) * gridSize;
-        const snappedDy = Math.round(dy / gridSize) * gridSize;
-        if (selectedElement.type === 'rectangle' || selectedElement.type === 'circle' || selectedElement.type === 'drill') {
-          selectedElement.x = initialShape.x + snappedDx;
-          selectedElement.y = initialShape.y + snappedDy;
-        } else if (selectedElement.type === 'line' || selectedElement.type === 'cut-line') {
-          selectedElement.x = initialShape.x + snappedDx;
-          selectedElement.y = initialShape.y + snappedDy;
-          selectedElement.x2 = initialShape.x2 + snappedDx;
-          selectedElement.y2 = initialShape.y2 + snappedDy;
-        } else if (selectedElement.type === 'polygon' || selectedElement.type === 'cut-curve') {
-          selectedElement.points = initialShape.points.map(p => ({
-            x: p.x + snappedDx,
-            y: p.y + snappedDy
-          }));
-        }
-        redrawCanvas();
-      } else if (currentPoints.length > 0) {
-        redrawCanvas();
-        drawPreviewMultiPoint(currentX, currentY);
-      }
-    }
-
-    function handleMouseUp(e) {
-      if (isDrawing) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = (e.clientX - rect.left) / zoom - panX;
-        const mouseY = (e.clientY - rect.top) / zoom - panY;
-        
-        const sheetX = 100;
-        const sheetY = 100;
-        const endX = (mouseX - sheetX) / pixelsPerMM;
-        const endY = (mouseY - sheetY) / pixelsPerMM;
-        
-        createShape(startX, startY, endX, endY);
-        isDrawing = false;
-      } else if (isDragging) {
-        isDragging = false;
-        initialShape = null;
-        saveHistory();
-      }
-      redrawCanvas();
-    }
-
-    function handleDoubleClick(e) {
-      if (currentTool === 'polygon' || currentTool === 'cut-curve') {
-        if (currentPoints.length < 2) return;
-        createMultiPointShape();
-      }
-    }
-
-    function handleWheel(e) {
-      e.preventDefault();
-      
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newZoom = Math.max(0.1, Math.min(5, zoom * zoomFactor));
-      
-      // Zoom centré sur la souris
-      const dx = mouseX / zoom - mouseX / newZoom;
-      const dy = mouseY / zoom - mouseY / newZoom;
-      
-      panX += dx;
-      panY += dy;
-      zoom = newZoom;
-      
-      redrawCanvas();
-    }
-
-    function drawPreview(x1, y1, x2, y2) {
-      const sheetX = 100;
-      const sheetY = 100;
-      
-      ctx.save();
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      
-      const startXPx = sheetX + x1 * pixelsPerMM;
-      const startYPx = sheetY + y1 * pixelsPerMM;
-      const endXPx = sheetX + x2 * pixelsPerMM;
-      const endYPx = sheetY + y2 * pixelsPerMM;
-      
-      switch (currentTool) {
-        case 'rectangle':
-          ctx.strokeRect(startXPx, startYPx, endXPx - startXPx, endYPx - startYPx);
-          break;
-        case 'circle':
-          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-          const radiusPx = radius * pixelsPerMM;
-          ctx.beginPath();
-          ctx.arc(startXPx, startYPx, radiusPx, 0, 2 * Math.PI);
-          ctx.stroke();
-          break;
-        case 'line':
-        case 'cut-line':
-          ctx.beginPath();
-          ctx.moveTo(startXPx, startYPx);
-          ctx.lineTo(endXPx, endYPx);
-          ctx.stroke();
-          break;
-      }
-      
-      ctx.restore();
-    }
-
-    function drawPreviewMultiPoint(currentX, currentY) {
-      const sheetX = 100;
-      const sheetY = 100;
-      
-      ctx.save();
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      
-      ctx.beginPath();
-      currentPoints.forEach((p, i) => {
-        const px = sheetX + p.x * pixelsPerMM;
-        const py = sheetY + p.y * pixelsPerMM;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      if (currentX !== undefined && currentY !== undefined) {
-        const px = sheetX + currentX * pixelsPerMM;
-        const py = sheetY + currentY * pixelsPerMM;
-        ctx.lineTo(px, py);
-        if (currentTool === 'polygon' && currentPoints.length > 0) {
-          ctx.lineTo(sheetX + currentPoints[0].x * pixelsPerMM, sheetY + currentPoints[0].y * pixelsPerMM);
-        }
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function createShape(x1, y1, x2, y2) {
-      // Grille magnétique
-      x1 = Math.round(x1 / gridSize) * gridSize;
-      y1 = Math.round(y1 / gridSize) * gridSize;
-      x2 = Math.round(x2 / gridSize) * gridSize;
-      y2 = Math.round(y2 / gridSize) * gridSize;
-      
-      let newShape = null;
-      
-      switch (currentTool) {
-        case 'rectangle':
-          if (Math.abs(x2 - x1) < 5 || Math.abs(y2 - y1) < 5) return;
-          newShape = {
-            id: generateId(),
-            type: 'rectangle',
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1),
-            color: '#1e40af',
-            rotation: 0,
-            thickness: sheetConfig.thickness
-          };
-          break;
-          
-        case 'circle':
-          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-          if (radius < 5) return;
-          newShape = {
-            id: generateId(),
-            type: 'circle',
-            x: x1 - radius,
-            y: y1 - radius,
-            radius: radius,
-            color: '#1e40af',
-            rotation: 0,
-            thickness: sheetConfig.thickness
-          };
-          break;
-          
-        case 'line':
-          if (Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) < 10) return;
-          newShape = {
-            id: generateId(),
-            type: 'line',
-            x: x1,
-            y: y1,
-            x2: x2,
-            y2: y2,
-            color: '#1e40af',
-            thickness: sheetConfig.thickness
-          };
-          break;
-          
-        case 'cut-line':
-          if (Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) < 10) return;
-          newShape = {
-            id: generateId(),
-            type: 'cut-line',
-            x: x1,
-            y: y1,
-            x2: x2,
-            y2: y2,
-            color: '#ef4444',
-            thickness: 0.1
-          };
-          break;
-          
-        case 'drill':
-          newShape = {
-            id: generateId(),
-            type: 'drill',
-            x: x1,
-            y: y1,
-            radius: 2.5,
-            color: '#ef4444'
-          };
-          break;
-      }
-      
-      if (newShape) {
-        shapes.push(newShape);
-        selectedElement = newShape;
-        saveHistory();
-        updatePropertiesPanel();
-        updateTreeView();
-        showNotification(`${getShapeDisplayName(newShape.type)} créé`, 'success');
-      }
-    }
-
-    function createMultiPointShape() {
-      currentPoints = currentPoints.map(p => ({
-        x: Math.round(p.x / gridSize) * gridSize,
-        y: Math.round(p.y / gridSize) * gridSize
-      }));
-      
-      let newShape = {
-        id: generateId(),
-        type: currentTool,
-        points: currentPoints,
-        color: currentTool === 'polygon' ? '#1e40af' : '#ef4444',
-        rotation: 0,
-        thickness: currentTool === 'polygon' ? sheetConfig.thickness : 0.1
-      };
-      
-      shapes.push(newShape);
-      selectedElement = newShape;
-      saveHistory();
-      updatePropertiesPanel();
-      updateTreeView();
-      currentPoints = [];
-      showNotification(`${getShapeDisplayName(newShape.type)} créé`, 'success');
-    }
-
-    function findShapeAtPoint(x, y) {
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const shape = shapes[i];
-        if (isPointInShape(x, y, shape)) {
-          return shape;
-        }
-      }
-      return null;
-    }
-
-    function isPointInShape(x, y, shape) {
-      switch (shape.type) {
-        case 'rectangle':
-          return x >= shape.x && x <= shape.x + shape.width && 
-                 y >= shape.y && y <= shape.y + shape.height;
-        case 'circle':
-          const dx = x - (shape.x + shape.radius);
-          const dy = y - (shape.y + shape.radius);
-          return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
-        case 'line':
-        case 'cut-line':
-          const dist = distanceToLine(x, y, shape.x, shape.y, shape.x2, shape.y2);
-          return dist <= 5;
-        case 'drill':
-          const drillDx = x - shape.x;
-          const drillDy = y - shape.y;
-          return Math.sqrt(drillDx * drillDx + drillDy * drillDy) <= (shape.radius || 2.5) + 2;
-        case 'polygon':
-        case 'cut-curve':
-          const minX = Math.min(...shape.points.map(p => p.x));
-          const minY = Math.min(...shape.points.map(p => p.y));
-          const maxX = Math.max(...shape.points.map(p => p.x));
-          const maxY = Math.max(...shape.points.map(p => p.y));
-          return x >= minX && x <= maxX && y >= minY && y <= maxY; // Bounds check for simplicity
-        default:
-          return false;
-      }
-    }
-
-    function distanceToLine(px, py, x1, y1, x2, y2) {
-      const A = px - x1;
-      const B = py - y1;
-      const C = x2 - x1;
-      const D = y2 - y1;
-      
-      const dot = A * C + B * D;
-      const lenSq = C * C + D * D;
-      
-      if (lenSq === 0) return Math.sqrt(A * A + B * B);
-      
-      const param = dot / lenSq;
-      
-      let xx, yy;
-      if (param < 0) {
-        xx = x1;
-        yy = y1;
-      } else if (param > 1) {
-        xx = x2;
-        yy = y2;
-      } else {
-        xx = x1 + param * C;
-        yy = y1 + param * D;
-      }
-      
-      const dx = px - xx;
-      const dy = py - yy;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    function selectTool(tool) {
-      currentTool = tool;
-      
-      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
-      
-      canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
-      
-      if (tool !== 'select') {
-        selectedElement = null;
-        updatePropertiesPanel();
-        redrawCanvas();
-      }
-      
-      if (tool !== 'polygon' && tool !== 'cut-curve') {
-        currentPoints = [];
-      }
-      
-      showNotification(`Outil ${getToolDisplayName(tool)} sélectionné`, 'info');
-    }
-
-    function getToolDisplayName(tool) {
-      const names = {
-        'select': 'Sélection',
-        'move': 'Déplacement',
-        'rectangle': 'Rectangle',
-        'circle': 'Cercle',
-        'line': 'Ligne',
-        'polygon': 'Polygone',
-        'cut-line': 'Découpe droite',
-        'cut-curve': 'Découpe courbe',
-        'drill': 'Perçage'
-      };
-      return names[tool] || tool;
-    }
-
-    function getShapeDisplayName(type) {
-      const names = {
-        'rectangle': 'Rectangle',
-        'circle': 'Cercle',
-        'line': 'Ligne',
-        'cut-line': 'Ligne de découpe',
-        'drill': 'Perçage',
-        'polygon': 'Polygone',
-        'cut-curve': 'Courbe de découpe'
-      };
-      return names[type] || type;
-    }
-
-    function generateId() {
-      return Math.random().toString(36).substr(2, 9);
-    }
-
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
-    }
-
-    function updatePropertiesPanel() {
-      const panel = document.getElementById('properties-panel');
-      if (!selectedElement) {
-        panel.classList.add('hidden');
-        return;
-      }
-      panel.classList.remove('hidden');
-      document.getElementById('prop-x').value = selectedElement.x || '';
-      document.getElementById('prop-y').value = selectedElement.y || '';
-      document.getElementById('prop-color').value = selectedElement.color || '#1e40af';
-      document.getElementById('prop-rotation').value = selectedElement.rotation || 0;
-      document.getElementById('prop-thickness').value = selectedElement.thickness || 2;
-      if (selectedElement.width) document.getElementById('prop-width').value = selectedElement.width || '';
-      if (selectedElement.height) document.getElementById('prop-height').value = selectedElement.height || '';
-      if (selectedElement.radius) {
-        document.getElementById('prop-width').value = selectedElement.radius * 2 || '';
-        document.getElementById('prop-height').value = selectedElement.radius * 2 || '';
-      }
-      // For polygon/cut-curve, perhaps hide some fields or handle differently
-    }
-
-    function updateSelectedElement() {
-      if (!selectedElement) return;
-      selectedElement.x = parseFloat(document.getElementById('prop-x').value) || 0;
-      selectedElement.y = parseFloat(document.getElementById('prop-y').value) || 0;
-      selectedElement.color = document.getElementById('prop-color').value;
-      selectedElement.rotation = parseFloat(document.getElementById('prop-rotation').value) || 0;
-      selectedElement.thickness = parseFloat(document.getElementById('prop-thickness').value) || 2;
-      if (selectedElement.type === 'rectangle') {
-        selectedElement.width = parseFloat(document.getElementById('prop-width').value) || 0;
-        selectedElement.height = parseFloat(document.getElementById('prop-height').value) || 0;
-      } else if (selectedElement.type === 'circle') {
-        const diameter = parseFloat(document.getElementById('prop-width').value) || 0;
-        selectedElement.radius = diameter / 2;
-      } // Add for other types if needed
-      redrawCanvas();
-      updateTreeView();
-    }
-
-    function handleKeyboard(e) {
-      if (e.ctrlKey) {
-        if (e.key === 'z') undoAction();
-        if (e.key === 'y') redoAction();
-        if (e.key === 's') {
-          e.preventDefault();
-          saveProject();
-        }
-        if (e.key === '+') zoomIn();
-        if (e.key === '-') zoomOut();
-        if (e.key === '0') fitToScreen();
-      }
-      if (e.key === 'Delete') deleteSelected();
-      switch (e.key.toLowerCase()) {
-        case 's': selectTool('select'); break;
-        case 'm': selectTool('move'); break;
-        case 'r': selectTool('rectangle'); break;
-        case 'c': selectTool('circle'); break;
-        case 'l': selectTool('line'); break;
-        case 'p': selectTool('polygon'); break;
-        case 'd': selectTool('drill'); break;
-      }
-    }
-
-    function saveHistory() {
-      history = history.slice(0, historyStep + 1);
-      history.push(JSON.stringify(shapes));
-      historyStep = history.length - 1;
-    }
-
-    function undoAction() {
-      if (historyStep > 0) {
-        historyStep--;
-        shapes = JSON.parse(history[historyStep]);
-        selectedElement = null;
-        redrawCanvas();
-        updatePropertiesPanel();
-        updateTreeView();
-      }
-    }
-
-    function redoAction() {
-      if (historyStep < history.length - 1) {
-        historyStep++;
-        shapes = JSON.parse(history[historyStep]);
-        selectedElement = null;
-        redrawCanvas();
-        updatePropertiesPanel();
-        updateTreeView();
-      }
-    }
-
-    function initTreeView() {
-      updateTreeView();
-    }
-
-    function updateTreeView() {
-      const treeView = document.getElementById('tree-view');
-      treeView.innerHTML = '';
-      const sheetItem = document.createElement('div');
-      sheetItem.classList.add('tree-item');
-      sheetItem.innerHTML = '<i class="tree-icon fas fa-file"></i> Tôle principale';
-      treeView.appendChild(sheetItem);
-      shapes.forEach(shape => {
-        const item = document.createElement('div');
-        item.classList.add('tree-item');
-        item.innerHTML = '<div class="tree-indent"></div><i class="tree-icon fas fa-shape"></i>' + getShapeDisplayName(shape.type) + ' ' + shape.id;
-        if (selectedElement && selectedElement.id === shape.id) item.classList.add('selected');
-        item.onclick = () => {
-          selectedElement = shape;
-          updatePropertiesPanel();
-          redrawCanvas();
-        };
-        treeView.appendChild(item);
-      });
-    }
-
-    function loadExampleShapes() {
-      shapes = [];
-      saveHistory();
-      updateTreeView();
-    }
-
-    function applySheetSettings() {
-      sheetConfig.width = parseFloat(document.getElementById('sheet-width').value);
-      sheetConfig.height = parseFloat(document.getElementById('sheet-height').value);
-      sheetConfig.thickness = parseFloat(document.getElementById('sheet-thickness').value);
-      sheetConfig.material = document.getElementById('sheet-material').value;
-      sheetConfig.color = document.getElementById('sheet-color').value;
-      gridSize = parseFloat(document.getElementById('grid-size-input').value);
-      closeModal();
-      resizeCanvas();
-      redrawCanvas();
-      document.getElementById('grid-size').textContent = gridSize + 'mm';
-      showNotification('Paramètres appliqués', 'success');
-    }
-
-    function closeModal() {
-      document.getElementById('sheet-settings-modal').style.display = 'none';
-    }
-
-    function openSheetSettings() {
-      document.getElementById('sheet-width').value = sheetConfig.width;
-      document.getElementById('sheet-height').value = sheetConfig.height;
-      document.getElementById('sheet-thickness').value = sheetConfig.thickness;
-      document.getElementById('sheet-material').value = sheetConfig.material;
-      document.getElementById('sheet-color').value = sheetConfig.color;
-      document.getElementById('grid-size-input').value = gridSize;
-      document.getElementById('sheet-settings-modal').style.display = 'flex';
-    }
-
-    function duplicateSelected() {
-      if (!selectedElement) return;
-      const newShape = JSON.parse(JSON.stringify(selectedElement));
-      newShape.id = generateId();
-      if (newShape.x !== undefined) newShape.x += 10;
-      if (newShape.y !== undefined) newShape.y += 10;
-      if (newShape.points) newShape.points = newShape.points.map(p => ({x: p.x + 10, y: p.y + 10}));
-      if (newShape.x2 !== undefined) newShape.x2 += 10;
-      if (newShape.y2 !== undefined) newShape.y2 += 10;
-      shapes.push(newShape);
-      selectedElement = newShape;
-      saveHistory();
-      updatePropertiesPanel();
-      updateTreeView();
-      redrawCanvas();
-      showNotification('Élément dupliqué', 'success');
-    }
-
-    function deleteSelected() {
-      if (!selectedElement) return;
-      shapes = shapes.filter(s => s.id !== selectedElement.id);
-      selectedElement = null;
-      saveHistory();
-      updatePropertiesPanel();
-      updateTreeView();
-      redrawCanvas();
-      showNotification('Élément supprimé', 'success');
-    }
-
-    function zoomIn() {
-      zoom = Math.min(5, zoom * 1.1);
-      redrawCanvas();
-    }
-
-    function zoomOut() {
-      zoom = Math.max(0.1, zoom / 1.1);
-      redrawCanvas();
-    }
-
-    function fitToScreen() {
-      zoom = 1;
-      panX = 0;
-      panY = 0;
-      resizeCanvas();
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-      isDarkMode = !isDarkMode;
-      const icon = document.getElementById('theme-icon');
-      icon.classList.toggle('fa-moon');
-      icon.classList.toggle('fa-sun');
-      redrawCanvas();
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.sidebar-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-      document.getElementById('online-tab').style.display = tab === 'online' ? 'block' : 'none';
-      document.getElementById('invite-tab').style.display = tab === 'invite' ? 'block' : 'none';
-    }
-
-    function sendInvite() {
-      const input = document.getElementById('invite-input').value;
-      if (input) {
-        showNotification(`Invitation envoyée à ${input}`, 'success');
-        document.getElementById('invite-input').value = '';
-      }
-    }
-
-    function toggleFriendsSidebar() {
-      friendsSidebarOpen = !friendsSidebarOpen;
-      const sidebar = document.getElementById('friends-sidebar');
-      const workspace = document.getElementById('workspace');
-      const icon = document.getElementById('friends-toggle-icon');
-      if (friendsSidebarOpen) {
-        sidebar.classList.remove('hidden');
-        workspace.classList.remove('friends-hidden');
-        icon.classList.remove('fa-chevron-right');
-        icon.classList.add('fa-chevron-left');
-      } else {
-        sidebar.classList.add('hidden');
-        workspace.classList.add('friends-hidden');
-        icon.classList.remove('fa-chevron-left');
-        icon.classList.add('fa-chevron-right');
-      }
-    }
-
-    function toggleExplorer() {
-      explorerOpen = !explorerOpen;
-      const explorer = document.getElementById('explorer');
-      const workspace = document.getElementById('workspace');
-      const icon = document.getElementById('explorer-toggle-icon');
-      if (explorerOpen) {
-        explorer.classList.remove('hidden');
-        workspace.classList.remove('explorer-hidden');
-        icon.classList.remove('fa-chevron-left');
-        icon.classList.add('fa-chevron-right');
-      } else {
-        explorer.classList.add('hidden');
-        workspace.classList.add('explorer-hidden');
-        icon.classList.remove('fa-chevron-right');
-        icon.classList.add('fa-chevron-left');
-      }
-    }
-
-    function newSheet() {
-      shapes = [];
-      selectedElement = null;
-      history = [];
-      historyStep = 0;
-      updatePropertiesPanel();
-      updateTreeView();
-      redrawCanvas();
-      showNotification('Nouvelle tôle créée', 'success');
-    }
-
-    function saveProject() {
-      // Implémentation avec Firestore possible ici
-      showNotification('Projet sauvegardé', 'success');
-    }
-
-    function importProject() {
-      showNotification('Importation non implémentée', 'info');
-    }
-
-    function exportProject() {
-      showNotification('Exportation non implémentée', 'info');
-    }
-  </script>
-</body>
-</html>
-]]>
-</xaiArtifact>
+        <div class="property-label">Dimensions (mm)
