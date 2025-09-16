@@ -1,1113 +1,18 @@
-<button class="tool-btn" data-tooltip="Rectangle" onclick="selectTool('rectangle')">
-          <i class="fas fa-square"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Cercle" onclick="selectTool('circle')">
-          <i class="fas fa-circle"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Ligne" onclick="selectTool('line')">
-          <i class="fas fa-minus"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Polygone" onclick="selectTool('polygon')">
-          <i class="fas fa-draw-polygon"></i>
-        </button>
-      </div>
-      
-      <div class="tool-group">
-        <button class="tool-btn" data-tooltip="Découpe droite" onclick="selectTool('cut-line')">
-          <i class="fas fa-cut"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Découpe courbe" onclick="selectTool('cut-curve')">
-          <i class="fas fa-bezier-curve"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Perçage" onclick="selectTool('drill')">
-          <i class="fas fa-circle-dot"></i>
-        </button>
-      </div>
-      
-      <div class="tool-group">
-        <button class="tool-btn" data-tooltip="Zoom+" onclick="zoomIn()">
-          <i class="fas fa-search-plus"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Zoom-" onclick="zoomOut()">
-          <i class="fas fa-search-minus"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Ajuster" onclick="fitToScreen()">
-          <i class="fas fa-expand-arrows-alt"></i>
-        </button>
-      </div>
-    </div>
-
-    <div class="canvas-container" id="canvas-container">
-      <canvas id="main-canvas" class="canvas" width="800" height="600"></canvas>
-    </div>
-
-    <!-- Panneau de propriétés -->
-    <div class="properties-panel" id="properties-panel" style="display: none;">
-      <div class="property-group">
-        <div class="property-label">Position</div>
-        <div style="display: flex; gap: 8px;">
-          <input type="number" class="property-input" placeholder="X" id="prop-x">
-          <input type="number" class="property-input" placeholder="Y" id="prop-y">
-        </div>
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Dimensions</div>
-        <div style="display: flex; gap: 8px;">
-          <input type="number" class="property-input" placeholder="L" id="prop-width">
-          <input type="number" class="property-input" placeholder="H" id="prop-height">
-        </div>
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Style</div>
-        <input type="color" class="property-input" id="prop-color" value="#1e40af">
-      </div>
-      
-      <div class="property-group">
-        <div class="property-label">Épaisseur</div>
-        <input type="number" class="property-input" placeholder="mm" id="prop-thickness" value="2">
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Nouveau Projet -->
-  <div id="new-project-modal" class="modal">
-    <div class="modal-content">
-      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
-      <h3><i class="fas fa-plus-circle"></i> Nouveau projet</h3>
-      
-      <div class="form-group">
-        <label class="form-label">Nom du projet</label>
-        <input type="text" class="form-input" id="new-project-name" placeholder="Mon projet de découpe">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Dimensions de la tôle (mm)</label>
-        <div style="display: flex; gap: 10px;">
-          <input type="number" class="form-input" placeholder="Largeur" id="sheet-width" value="1000">
-          <input type="number" class="form-input" placeholder="Hauteur" id="sheet-height" value="600">
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Épaisseur (mm)</label>
-        <input type="number" class="form-input" id="sheet-thickness" value="2">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Matériau</label>
-        <select class="form-input" id="sheet-material">
-          <option>Acier inoxydable</option>
-          <option>Aluminium</option>
-          <option>Acier carbone</option>
-          <option>Laiton</option>
-          <option>Cuivre</option>
-        </select>
-      </div>
-      
-      <button class="modal-btn" onclick="createNewProject()">
-        <i class="fas fa-rocket"></i> Créer le projet
-      </button>
-    </div>
-  </div>
-
-  <!-- Firebase + Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    // Configuration Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
-      authDomain: "steelsketch-b7264.firebaseapp.com",
-      projectId: "steelsketch-b7264",
-      storageBucket: "steelsketch-b7264.firebasestorage.app",
-      messagingSenderId: "424606073739",
-      appId: "1:424606073739:web:696f400e992a50d7bee58e",
-      measurementId: "G-TD79BYQ5P6"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // Variables globales
-    let currentTool = 'select';
-    let canvas = null;
-    let ctx = null;
-    let selectedElement = null;
-    let isDrawing = false;
-    let startX = 0;
-    let startY = 0;
-    let shapes = [];
-    let friendsSidebarOpen = true;
-    let explorerOpen = true;
-    let currentProject = {
-      name: 'Projet Sans Nom',
-      sheetWidth: 1000,
-      sheetHeight: 600,
-      thickness: 2,
-      material: 'Acier inoxydable'
-    };
-
-    // Initialisation
-    document.addEventListener('DOMContentLoaded', function() {
-      initCanvas();
-      initAuth();
-      loadProject();
-      
-      // Gérer le redimensionnement
-      window.addEventListener('resize', resizeCanvas);
-    });
-
-    function initAuth() {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          document.getElementById('user-name').textContent = user.displayName || user.email.split('@')[0];
-        } else {
-          window.location.href = 'index.html';
-        }
-      });
-    }
-
-    function initCanvas() {
-      canvas = document.getElementById('main-canvas');
-      ctx = canvas.getContext('2d');
-      
-      // Événements canvas
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-      
-      drawGrid();
-      drawSheet();
-    }
-
-    function resizeCanvas() {
-      const container = document.getElementById('canvas-container');
-      const rect = container.getBoundingClientRect();
-      
-      // Ajuster la taille du canvas en fonction du container
-      const maxWidth = rect.width - 100;
-      const maxHeight = rect.height - 100;
-      
-      // Maintenir le ratio de la tôle
-      const ratio = currentProject.sheetWidth / currentProject.sheetHeight;
-      
-      let canvasWidth = maxWidth;
-      let canvasHeight = maxWidth / ratio;
-      
-      if (canvasHeight > maxHeight) {
-        canvasHeight = maxHeight;
-        canvasWidth = maxHeight * ratio;
-      }
-      
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      
-      redrawCanvas();
-    }
-
-    function drawGrid() {
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 0.5;
-      
-      const gridSize = 20;
-      
-      // Lignes verticales
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      
-      // Lignes horizontales
-      for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-    }
-
-    function drawSheet() {
-      // Contour de la tôle
-      ctx.strokeStyle = '#1e40af';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-      
-      // Remplissage semi-transparent
-      ctx.fillStyle = 'rgba(30, 64, 175, 0.1)';
-      ctx.fillRect(10, 10, canvas.width - 20, canvas.height - 20);
-    }
-
-    function redrawCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
-      drawSheet();
-      
-      // Redessiner toutes les formes
-      shapes.forEach(shape => drawShape(shape));
-      
-      // Dessiner la sélection
-      if (selectedElement) {
-        drawSelection(selectedElement);
-      }
-    }
-
-    function drawShape(shape) {
-      ctx.strokeStyle = shape.color || '#1e40af';
-      ctx.fillStyle = shape.color || '#1e40af';
-      ctx.lineWidth = shape.lineWidth || 2;
-      
-      switch (shape.type) {
-        case 'rectangle':
-          ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-          if (shape.filled) {
-            ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-          }
-          break;
-          
-        case 'circle':
-          ctx.beginPath();
-          ctx.arc(shape.x + shape.radius, shape.y + shape.radius, shape.radius, 0, 2 * Math.PI);
-          ctx.stroke();
-          if (shape.filled) {
-            ctx.fill();
-          }
-          break;
-          
-        case 'line':
-          ctx.beginPath();
-          ctx.moveTo(shape.x1, shape.y1);
-          ctx.lineTo(shape.x2, shape.y2);
-          ctx.stroke();
-          break;
-          
-        case 'cut':
-          ctx.strokeStyle = '#ef4444';
-          ctx.setLineDash([5, 5]);
-          ctx.beginPath();
-          ctx.moveTo(shape.x1, shape.y1);
-          ctx.lineTo(shape.x2, shape.y2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          break;
-          
-        case 'drill':
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(shape.x, shape.y, shape.radius || 5, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.strokeStyle = '#dc2626';
-          ctx.stroke();
-          break;
-      }
-    }
-
-    function drawSelection(shape) {
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      
-      let bounds = getShapeBounds(shape);
-      ctx.strokeRect(bounds.x - 5, bounds.y - 5, bounds.width + 10, bounds.height + 10);
-      
-      ctx.setLineDash([]);
-    }
-
-    function getShapeBounds(shape) {
-      switch (shape.type) {
-        case 'rectangle':
-          return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
-        case 'circle':
-          return { 
-            x: shape.x, 
-            y: shape.y, 
-            width: shape.radius * 2, 
-            height: shape.radius * 2 
-          };
-        case 'line':
-        case 'cut':
-          return {
-            x: Math.min(shape.x1, shape.x2),
-            y: Math.min(shape.y1, shape.y2),
-            width: Math.abs(shape.x2 - shape.x1),
-            height: Math.abs(shape.y2 - shape.y1)
-          };
-        case 'drill':
-          return {
-            x: shape.x - shape.radius,
-            y: shape.y - shape.radius,
-            width: shape.radius * 2,
-            height: shape.radius * 2
-          };
-        default:
-          return { x: 0, y: 0, width: 0, height: 0 };
-      }
-    }
-
-    function handleMouseDown(e) {
-      const rect = canvas.getBoundingClientRect();
-      startX = e.clientX - rect.left;
-      startY = e.clientY - rect.top;
-      isDrawing = true;
-      
-      if (currentTool === 'select') {
-        // Vérifier si on clique sur une forme existante
-        selectedElement = findShapeAtPoint(startX, startY);
-        showProperties(selectedElement);
-        redrawCanvas();
-      }
-    }
-
-    function handleMouseMove(e) {
-      if (!isDrawing) return;
-      
-      const rect = canvas.getBoundingClientRect();
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
-      
-      // Prévisualisation pour les outils de dessin
-      if (currentTool !== 'select' && currentTool !== 'move') {
-        redrawCanvas();
-        drawPreview(startX, startY, currentX, currentY);
-      }
-    }
-
-    function handleMouseUp(e) {
-      if (!isDrawing) return;
-      
-      const rect = canvas.getBoundingClientRect();
-      const endX = e.clientX - rect.left;
-      const endY = e.clientY - rect.top;
-      
-      createShape(startX, startY, endX, endY);
-      isDrawing = false;
-      redrawCanvas();
-      updateExplorer();
-    }
-
-    function drawPreview(x1, y1, x2, y2) {
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      
-      switch (currentTool) {
-        case 'rectangle':
-          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-          break;
-        case 'circle':
-          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-          ctx.beginPath();
-          ctx.arc(x1, y1, radius, 0, 2 * Math.PI);
-          ctx.stroke();
-          break;
-        case 'line':
-        case 'cut-line':
-          ctx.beginPath();
-          ctx.moveTo(x1, y1);
-          ctx.lineTo(x2, y2);
-          ctx.stroke();
-          break;
-      }
-      
-      ctx.setLineDash([]);
-    }
-
-    function createShape(x1, y1, x2, y2) {
-      let newShape = null;
-      
-      switch (currentTool) {
-        case 'rectangle':
-          newShape = {
-            id: generateId(),
-            type: 'rectangle',
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1),
-            color: '#1e40af'
-          };
-          break;
-          
-        case 'circle':
-          const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-          newShape = {
-            id: generateId(),
-            type: 'circle',
-            x: x1 - radius,
-            y: y1 - radius,
-            radius: radius,
-            color: '#1e40af'
-          };
-          break;
-          
-        case 'line':
-          newShape = {
-            id: generateId(),
-            type: 'line',
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2,
-            color: '#1e40af'
-          };
-          break;
-          
-        case 'cut-line':
-          newShape = {
-            id: generateId(),
-            type: 'cut',
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2,
-            color: '#ef4444'
-          };
-          break;
-          
-        case 'drill':
-          newShape = {
-            id: generateId(),
-            type: 'drill',
-            x: x1,
-            y: y1,
-            radius: 5,
-            color: '#ef4444'
-          };
-          break;
-      }
-      
-      if (newShape && (Math.abs(x2 - x1) > 5 || Math.abs(y2 - y1) > 5 || currentTool === 'drill')) {
-        shapes.push(newShape);
-        selectedElement = newShape;
-        showProperties(newShape);
-        showNotification('Forme créée avec succès', 'success');
-      }
-    }
-
-    function findShapeAtPoint(x, y) {
-      // Parcourir les formes en ordre inverse (les plus récentes d'abord)
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const shape = shapes[i];
-        if (isPointInShape(x, y, shape)) {
-          return shape;
-        }
-      }
-      return null;
-    }
-
-    function isPointInShape(x, y, shape) {
-      switch (shape.type) {
-        case 'rectangle':
-          return x >= shape.x && x <= shape.x + shape.width && 
-                 y >= shape.y && y <= shape.y + shape.height;
-        case 'circle':
-          const dx = x - (shape.x + shape.radius);
-          const dy = y - (shape.y + shape.radius);
-          return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
-        case 'line':
-        case 'cut':
-          // Vérifier si le point est proche de la ligne
-          const dist = distanceToLine(x, y, shape.x1, shape.y1, shape.x2, shape.y2);
-          return dist <= 5;
-        case 'drill':
-          const drillDx = x - shape.x;
-          const drillDy = y - shape.y;
-          return Math.sqrt(drillDx * drillDx + drillDy * drillDy) <= shape.radius;
-      }
-      return false;
-    }
-
-    function distanceToLine(px, py, x1, y1, x2, y2) {
-      const A = px - x1;
-      const B = py - y1;
-      const C = x2 - x1;
-      const D = y2 - y1;
-      
-      const dot = A * C + B * D;
-      const lenSq = C * C + D * D;
-      
-      if (lenSq === 0) return Math.sqrt(A * A + B * B);
-      
-      const param = dot / lenSq;
-      
-      let xx, yy;
-      if (param < 0) {
-        xx = x1;
-        yy = y1;
-      } else if (param > 1) {
-        xx = x2;
-        yy = y2;
-      } else {
-        xx = x1 + param * C;
-        yy = y1 + param * D;
-      }
-      
-      const dx = px - xx;
-      const dy = py - yy;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    function generateId() {
-      return 'shape_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    // Fonctions UI
-    function selectTool(tool) {
-      currentTool = tool;
-      
-      // Mettre à jour l'UI
-      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      // Changer le curseur
-      const cursor = tool === 'select' ? 'default' : 'crosshair';
-      canvas.style.cursor = cursor;
-      
-      showNotification(`Outil ${getToolName(tool)} sélectionné`, 'info');
-    }
-
-    function getToolName(tool) {
-      const names = {
-        'select': 'Sélection',
-        'move': 'Déplacement',
-        'rectangle': 'Rectangle',
-        'circle': 'Cercle',
-        'line': 'Ligne',
-        'polygon': 'Polygone',
-        'cut-line': 'Découpe droite',
-        'cut-curve': 'Découpe courbe',
-        'drill': 'Perçage'
-      };
-      return names[tool] || tool;
-    }
-
-    function toggleFriendsSidebar() {
-      friendsSidebarOpen = !friendsSidebarOpen;
-      const sidebar = document.getElementById('friends-sidebar');
-      const workspace = document.getElementById('workspace');
-      const toggle = sidebar.querySelector('.sidebar-toggle i');
-      
-      if (friendsSidebarOpen) {
-        sidebar.classList.remove('hidden');
-        workspace.classList.remove('friends-hidden');
-        toggle.className = 'fas fa-chevron-left';
-      } else {
-        sidebar.classList.add('hidden');
-        workspace.classList.add('friends-hidden');
-        toggle.className = 'fas fa-chevron-right';
-      }
-      
-      setTimeout(resizeCanvas, 300);
-    }
-
-    function toggleExplorer() {
-      explorerOpen = !explorerOpen;
-      const explorer = document.getElementById('explorer');
-      const workspace = document.getElementById('workspace');
-      const toggle = explorer.querySelector('.explorer-toggle i');
-      
-      if (explorerOpen) {
-        explorer.classList.remove('hidden');
-        workspace.classList.remove('explorer-hidden');
-        toggle.className = 'fas fa-chevron-right';
-      } else {
-        explorer.classList.add('hidden');
-        workspace.classList.add('explorer-hidden');
-        toggle.className = 'fas fa-chevron-left';
-      }
-      
-      setTimeout(resizeCanvas, 300);
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-      
-      event.target.classList.add('active');
-      document.getElementById(tab + '-tab').style.display = 'block';
-    }
-
-    function toggleTreeItem(element) {
-      const toggle = element;
-      const item = toggle.closest('.tree-item');
-      const children = item.nextElementSibling;
-      
-      if (children && children.classList.contains('tree-children')) {
-        const isExpanded = toggle.classList.contains('expanded');
-        
-        if (isExpanded) {
-          toggle.classList.remove('expanded');
-          children.classList.remove('expanded');
-        } else {
-          toggle.classList.add('expanded');
-          children.classList.add('expanded');
-        }
-      }
-    }
-
-    function selectTreeItem(element) {
-      document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('selected'));
-      element.classList.add('selected');
-      
-      const path = element.getAttribute('data-path');
-      showNotification(`Sélectionné: ${path}`, 'info');
-    }
-
-    function updateExplorer() {
-      // Mise à jour dynamique de l'explorateur
-      // Cette fonction serait appelée quand on ajoute/supprime des éléments
-      const formesContainer = document.querySelector('[data-path="workspace/tole/formes"]').nextElementSibling;
-      
-      // Vider les formes existantes
-      const existingShapes = formesContainer.querySelectorAll('.tree-item[data-path*="workspace/tole/formes/"]');
-      existingShapes.forEach(shape => shape.remove());
-      
-      // Ajouter les nouvelles formes
-      shapes.forEach((shape, index) => {
-        const shapeItem = document.createElement('div');
-        shapeItem.className = 'tree-item';
-        shapeItem.setAttribute('data-path', `workspace/tole/formes/${shape.type}${index + 1}`);
-        shapeItem.onclick = () => selectTreeItem(shapeItem);
-        
-        const icon = getShapeIcon(shape.type);
-        const color = getShapeColor(shape.type);
-        
-        shapeItem.innerHTML = `
-          <div class="tree-indent"></div>
-          <div class="tree-indent"></div>
-          <div class="tree-indent"></div>
-          <i class="tree-icon fas ${icon}" style="color: ${color};"></i>
-          ${getShapeDisplayName(shape.type)} ${index + 1}
-        `;
-        
-        formesContainer.appendChild(shapeItem);
-      });
-    }
-
-    function getShapeIcon(type) {
-      const icons = {
-        'rectangle': 'fa-square-full',
-        'circle': 'fa-circle',
-        'line': 'fa-minus',
-        'cut': 'fa-cut',
-        'drill': 'fa-circle-dot'
-      };
-      return icons[type] || 'fa-square';
-    }
-
-    function getShapeColor(type) {
-      const colors = {
-        'rectangle': '#22c55e',
-        'circle': '#f59e0b',
-        'line': '#3b82f6',
-        'cut': '#ef4444',
-        'drill': '#ef4444'
-      };
-      return colors[type] || '#64748b';
-    }
-
-    function getShapeDisplayName(type) {
-      const names = {
-        'rectangle': 'Rectangle',
-        'circle': 'Cercle',
-        'line': 'Ligne',
-        'cut': 'Découpe',
-        'drill': 'Perçage'
-      };
-      return names[type] || type;
-    }
-
-    function showProperties(shape) {
-      const panel = document.getElementById('properties-panel');
-      
-      if (!shape) {
-        panel.style.display = 'none';
-        return;
-      }
-      
-      panel.style.display = 'block';
-      
-      // Remplir les champs selon le type de forme
-      const bounds = getShapeBounds(shape);
-      document.getElementById('prop-x').value = Math.round(bounds.x);
-      document.getElementById('prop-y').value = Math.round(bounds.y);
-      document.getElementById('prop-width').value = Math.round(bounds.width);
-      document.getElementById('prop-height').value = Math.round(bounds.height);
-      document.getElementById('prop-color').value = shape.color || '#1e40af';
-      
-      // Écouter les changements
-      ['prop-x', 'prop-y', 'prop-width', 'prop-height', 'prop-color'].forEach(id => {
-        document.getElementById(id).onchange = updateSelectedShape;
-      });
-    }
-
-    function updateSelectedShape() {
-      if (!selectedElement) return;
-      
-      const newX = parseInt(document.getElementById('prop-x').value);
-      const newY = parseInt(document.getElementById('prop-y').value);
-      const newWidth = parseInt(document.getElementById('prop-width').value);
-      const newHeight = parseInt(document.getElementById('prop-height').value);
-      const newColor = document.getElementById('prop-color').value;
-      
-      // Mettre à jour l'élément sélectionné
-      selectedElement.color = newColor;
-      
-      if (selectedElement.type === 'rectangle') {
-        selectedElement.x = newX;
-        selectedElement.y = newY;
-        selectedElement.width = newWidth;
-        selectedElement.height = newHeight;
-      } else if (selectedElement.type === 'circle') {
-        selectedElement.x = newX;
-        selectedElement.y = newY;
-        selectedElement.radius = Math.min(newWidth, newHeight) / 2;
-      }
-      
-      redrawCanvas();
-    }
-
-    // Fonctions d'actions
-    function undoAction() {
-      if (shapes.length > 0) {
-        shapes.pop();
-        selectedElement = null;
-        redrawCanvas();
-        updateExplorer();
-        showProperties(null);
-        showNotification('Action annulée', 'info');
-      }
-    }
-
-    function redoAction() {
-      // Implémenter un système de redo plus sophistiqué si nécessaire
-      showNotification('Redo pas encore implémenté', 'info');
-    }
-
-    function saveProject() {
-      const user = auth.currentUser;
-      if (!user) return;
-      
-      const projectData = {
-        name: currentProject.name,
-        shapes: shapes,
-        sheetWidth: currentProject.sheetWidth,
-        sheetHeight: currentProject.sheetHeight,
-        thickness: currentProject.thickness,
-        material: currentProject.material,
-        lastModified: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      
-      db.collection('projects').add({
-        ...projectData,
-        userId: user.uid
-      }).then(() => {
-        showNotification('Projet sauvegardé !', 'success');
-      }).catch(err => {
-        showNotification('Erreur de sauvegarde', 'error');
-      });
-    }
-
-    function loadProject() {
-      // Charger un projet par défaut ou depuis l'URL
-      document.getElementById('project-name').textContent = currentProject.name;
-      resizeCanvas();
-    }
-
-    function zoomIn() {
-      const currentWidth = canvas.width;
-      const currentHeight = canvas.height;
-      canvas.width = currentWidth * 1.2;
-      canvas.height = currentHeight * 1.2;
-      redrawCanvas();
-      showNotification('Zoom avant', 'info');
-    }
-
-    function zoomOut() {
-      const currentWidth = canvas.width;
-      const currentHeight = canvas.height;
-      canvas.width = currentWidth * 0.8;
-      canvas.height = currentHeight * 0.8;
-      redrawCanvas();
-      showNotification('Zoom arrière', 'info');
-    }
-
-    function fitToScreen() {
-      resizeCanvas();
-      showNotification('Ajusté à l\'écran', 'info');
-    }
-
-    // Fonctions amis et invitations
-    function inviteFriend(friendId) {
-      showNotification(`Invitation envoyée à ${friendId}`, 'success');
-    }
-
-    function sendInvite() {
-      const input = document.getElementById('invite-input');
-      const value = input.value.trim();
-      
-      if (!value) {
-        showNotification('Veuillez entrer un code ami ou email', 'error');
-        return;
-      }
-      
-      // Simuler l'envoi d'invitation
-      input.value = '';
-      showNotification('Invitation envoyée !', 'success');
-      
-      // Ajouter à la liste des invitations en attente
-      const pendingContainer = document.getElementById('pending-invites');
-      const inviteItem = document.createElement('div');
-      inviteItem.className = 'friend-item';
-      inviteItem.style.opacity = '0.6';
-      inviteItem.innerHTML = `
-        <div class="status-indicator" style="background: var(--warning);"></div>
-        <div class="friend-name">${value}</div>
-        <span style="font-size: 12px; color: var(--text-secondary);">En attente</span>
-      `;
-      pendingContainer.appendChild(inviteItem);
-    }
-
-    // Modals
-    function openNewProjectModal() {
-      document.getElementById('new-project-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-      document.querySelectorAll('.modal').forEach(modal => {
-        modal.style.display = 'none';
-      });
-    }
-
-    function createNewProject() {
-      const name = document.getElementById('new-project-name').value.trim();
-      const width = parseInt(document.getElementById('sheet-width').value);
-      const height = parseInt(document.getElementById('sheet-height').value);
-      const thickness = parseInt(document.getElementById('sheet-thickness').value);
-      const material = document.getElementById('sheet-material').value;
-      
-      if (!name) {
-        showNotification('Nom du projet requis', 'error');
-        return;
-      }
-      
-      // Mettre à jour le projet actuel
-      currentProject = {
-        name: name,
-        sheetWidth: width,
-        sheetHeight: height,
-        thickness: thickness,
-        material: material
-      };
-      
-      // Réinitialiser le canvas
-      shapes = [];
-      selectedElement = null;
-      
-      // Mettre à jour l'interface
-      document.getElementById('project-name').textContent = name;
-      
-      closeModal();
-      resizeCanvas();
-      updateExplorer();
-      showNotification('Nouveau projet créé !', 'success');
-    }
-
-    // Notifications
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      
-      const icon = type === 'success' ? 'check-circle' : 
-                   type === 'error' ? 'exclamation-triangle' : 
-                   'info-circle';
-      
-      notification.innerHTML = `
-        <i class="fas fa-${icon}"></i>
-        ${message}
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease forwards';
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
-
-    // Raccourcis clavier
-    document.addEventListener('keydown', function(e) {
-      // Ctrl+S pour sauvegarder
-      if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        saveProject();
-      }
-      
-      // Ctrl+Z pour annuler
-      if (e.ctrlKey && e.key === 'z') {
-        e.preventDefault();
-        undoAction();
-      }
-      
-      // Échap pour désélectionner
-      if (e.key === 'Escape') {
-        selectedElement = null;
-        showProperties(null);
-        redrawCanvas();
-      }
-      
-      // Suppr pour supprimer l'élément sélectionné
-      if (e.key === 'Delete' && selectedElement) {
-        const index = shapes.indexOf(selectedElement);
-        if (index > -1) {
-          shapes.splice(index, 1);
-          selectedElement = null;
-          showProperties(null);
-          redrawCanvas();
-          updateExplorer();
-          showNotification('Élément supprimé', 'success');
-        }
-      }
-      
-      // Raccourcis pour les outils
-      const toolKeys = {
-        's': 'select',
-        'm': 'move', 
-        'r': 'rectangle',
-        'c': 'circle',
-        'l': 'line',
-        'd': 'drill'
-      };
-      
-      if (toolKeys[e.key] && !e.ctrlKey) {
-        selectTool(toolKeys[e.key]);
-        // Mettre à jour visuellement le bouton actif
-        document.querySelectorAll('.tool-btn').forEach(btn => {
-          btn.classList.remove('active');
-          if (btn.getAttribute('data-tooltip').toLowerCase().includes(getToolName(toolKeys[e.key]).toLowerCase())) {
-            btn.classList.add('active');
-          }
-        });
-      }
-    });
-
-    // Animation de démarrage
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(() => {
-        showNotification('SteelSketch prêt !', 'success');
-      }, 1000);
-      
-      // Charger des formes d'exemple
-      setTimeout(() => {
-        // Exemple rectangle
-        shapes.push({
-          id: generateId(),
-          type: 'rectangle',
-          x: 100,
-          y: 100,
-          width: 200,
-          height: 150,
-          color: '#1e40af'
-        });
-        
-        // Exemple cercle
-        shapes.push({
-          id: generateId(),
-          type: 'circle',
-          x: 350,
-          y: 200,
-          radius: 75,
-          color: '#f59e0b'
-        });
-        
-        // Exemple découpe
-        shapes.push({
-          id: generateId(),
-          type: 'cut',
-          x1: 150,
-          y1: 50,
-          x2: 450,
-          y2: 50,
-          color: '#ef4444'
-        });
-        
-        redrawCanvas();
-        updateExplorer();
-      }, 1500);
-    });
-
-    // Export et fonctionnalités avancées
-    function exportProject() {
-      const dataURL = canvas.toDataURL();
-      const link = document.createElement('a');
-      link.download = currentProject.name + '.png';
-      link.href = dataURL;
-      link.click();
-      showNotification('Projet exporté !', 'success');
-    }
-
-    function importProject() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            try {
-              const data = JSON.parse(e.target.result);
-              shapes = data.shapes || [];
-              currentProject = { ...currentProject, ...data.project };
-              document.getElementById('project-name').textContent = currentProject.name;
-              redrawCanvas();
-              updateExplorer();
-              showNotification('Projet importé !', 'success');
-            } catch (err) {
-              showNotification('Erreur lors de l\'importation', 'error');
-            }
-          };
-          reader.readAsText(file);
-        }
-      };
-      input.click();
-    }
-
-    // Fonctions utilitaires pour le CSS
-    const slideOutRightKeyframes = `
-      @keyframes slideOutRight {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-      }
-    `;
-    
-    const style = document.createElement('style');
-    style.textContent = slideOutRightKeyframes;
-    document.head.appendChild(style);
-
-  </script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>SteelSketch - Logiciel de Découpe</title>
+  <title>SteelSketch - Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
   <style>
     :root {
       --primary: #1e40af;
       --primary-hover: #1d4ed8;
       --secondary: #64748b;
-      --bg: #f1f5f9;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #0f172a;
       --text-secondary: #64748b;
@@ -1120,7 +25,6 @@
       --info: #3b82f6;
       --toolbar-h: 70px;
       --sidebar-w: 280px;
-      --explorer-w: 300px;
     }
 
     body.dark {
@@ -1135,20 +39,17 @@
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
       font-family: 'Inter', sans-serif;
+      margin: 0;
       background: var(--bg);
       color: var(--text);
-      transition: all 0.3s ease;
-      overflow: hidden;
-      height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
     }
 
-    /* Header */
     header {
       position: fixed;
       top: 0;
@@ -1177,63 +78,18 @@
       font-size: 24px;
       font-weight: 700;
       letter-spacing: -0.5px;
+    }
+
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .header-center {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .project-name {
-      font-size: 18px;
-      font-weight: 600;
-      background: rgba(255,255,255,0.1);
-      padding: 8px 16px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .header-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 15px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      backdrop-filter: blur(10px);
-    }
-
-    .header-btn:hover {
-      background: rgba(255,255,255,0.3);
-      transform: translateY(-1px);
-    }
-
-    .header-btn.save {
-      background: var(--success);
-      border-color: rgba(255,255,255,0.5);
+      gap: 15px;
     }
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 10px;
     }
 
     .user-avatar {
@@ -1246,8 +102,34 @@
       justify-content: center;
     }
 
-    /* Sidebar Amis */
-    .friends-sidebar {
+    .user-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 10px 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar {
       position: fixed;
       left: 0;
       top: var(--toolbar-h);
@@ -1258,384 +140,18 @@
       display: flex;
       flex-direction: column;
       transition: transform 0.3s ease;
-      z-index: 900;
+      z-index: 999;
       box-shadow: var(--shadow-sm);
     }
 
-    .friends-sidebar.hidden {
+    body.sidebar-closed .sidebar {
       transform: translateX(-100%);
     }
 
-    .sidebar-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    .sidebar-tabs {
-      display: flex;
-      gap: 5px;
-      background: var(--card-bg);
-      border-radius: 8px;
-      padding: 4px;
-    }
-
-    .sidebar-tab {
-      flex: 1;
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .sidebar-tab.active {
-      background: var(--primary);
-      color: white;
-    }
-
-    .sidebar-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .online-friends, .invite-section {
-      margin-bottom: 25px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .friend-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 8px;
-    }
-
-    .friend-item:hover {
-      background: var(--bg);
-      transform: translateX(5px);
-    }
-
-    .status-indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      position: relative;
-    }
-
-    .status-indicator.online {
-      background: var(--success);
-      box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
-    }
-
-    .status-indicator.idle {
-      background: var(--warning);
-    }
-
-    .status-indicator.dnd {
-      background: var(--danger);
-    }
-
-    .friend-name {
-      flex: 1;
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    .invite-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
-
-    .friend-item:hover .invite-btn {
-      opacity: 1;
-    }
-
-    .invite-form {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-
-    .invite-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
-      background: var(--card-bg);
-      color: var(--text);
-    }
-
-    .invite-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .invite-submit {
-      padding: 8px 12px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    /* Explorer */
-    .explorer {
-      position: fixed;
-      right: 0;
-      top: var(--toolbar-h);
-      width: var(--explorer-w);
-      height: calc(100vh - var(--toolbar-h));
-      background: var(--card-bg);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s ease;
-      z-index: 900;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .explorer.hidden {
-      transform: translateX(100%);
-    }
-
-    .explorer-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    .explorer-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .explorer-content {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-    }
-
-    .tree-view {
-      font-size: 14px;
-    }
-
-    .tree-item {
-      display: flex;
-      align-items: center;
-      padding: 6px 8px;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-      user-select: none;
-    }
-
-    .tree-item:hover {
-      background: var(--bg);
-    }
-
-    .tree-item.selected {
-      background: var(--primary);
-      color: white;
-    }
-
-    .tree-indent {
-      width: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tree-toggle {
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border-radius: 3px;
-      transition: all 0.3s ease;
-    }
-
-    .tree-toggle:hover {
-      background: var(--border);
-    }
-
-    .tree-toggle i {
-      font-size: 10px;
-      transition: transform 0.3s ease;
-    }
-
-    .tree-toggle.expanded i {
-      transform: rotate(90deg);
-    }
-
-    .tree-icon {
-      margin-right: 8px;
-      color: var(--text-secondary);
-    }
-
-    .tree-children {
-      margin-left: 20px;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-
-    .tree-children.expanded {
-      max-height: 1000px;
-    }
-
-    /* Workspace */
-    .workspace {
-      position: fixed;
-      left: var(--sidebar-w);
-      top: var(--toolbar-h);
-      right: var(--explorer-w);
-      bottom: 0;
-      background: var(--card-bg);
-      display: flex;
-      flex-direction: column;
-      transition: all 0.3s ease;
-    }
-
-    .workspace.friends-hidden {
-      left: 0;
-    }
-
-    .workspace.explorer-hidden {
-      right: 0;
-    }
-
-    .workspace-toolbar {
-      height: 50px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 15px;
-    }
-
-    .tool-group {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      padding-right: 15px;
-      border-right: 1px solid var(--border);
-    }
-
-    .tool-group:last-child {
-      border-right: none;
-    }
-
-    .tool-btn {
-      width: 36px;
-      height: 36px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text);
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .tool-btn:hover {
-      background: var(--primary);
-      color: white;
-      transform: translateY(-1px);
-    }
-
-    .tool-btn.active {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 0 10px rgba(30, 64, 175, 0.3);
-    }
-
-    .tool-btn::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--text);
-      color: var(--card-bg);
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    .tool-btn:hover::after {
-      opacity: 1;
-    }
-
-    .canvas-container {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: 
-        radial-gradient(circle at 20px 20px, var(--border) 1px, transparent 1px),
-        var(--card-bg);
-      background-size: 20px 20px;
-    }
-
-    .canvas {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border: 2px solid var(--border);
-      background: white;
-      box-shadow: var(--shadow-md);
-      cursor: crosshair;
-    }
-
-    /* Toggles */
     .sidebar-toggle {
       position: absolute;
-      top: 50%;
+      top: 20px;
       right: -15px;
-      transform: translateY(-50%);
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-left: none;
@@ -1650,32 +166,485 @@
     .sidebar-toggle:hover {
       background: var(--primary);
       color: white;
-      transform: translateY(-50%) translateX(2px);
+      transform: translateX(2px);
     }
 
-    .explorer-toggle {
-      position: absolute;
-      top: 50%;
-      left: -15px;
-      transform: translateY(-50%);
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-right: none;
-      padding: 8px;
+    body.sidebar-closed .sidebar-toggle {
+      transform: translateX(15px);
+    }
+
+    body.sidebar-closed .sidebar-toggle:hover {
+      transform: translateX(17px);
+    }
+
+    .sidebar-header {
+      padding: 30px 20px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      padding: 12px 8px;
+      text-align: center;
       cursor: pointer;
-      border-radius: 8px 0 0 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 14px;
       transition: all 0.3s ease;
-      color: var(--text);
-      z-index: 10;
     }
 
-    .explorer-toggle:hover {
+    .sidebar-tab.active {
       background: var(--primary);
       color: white;
-      transform: translateY(-50%) translateX(-2px);
     }
 
-    /* Modal */
+    .sidebar-tab:hover:not(.active) {
+      background: rgba(30, 64, 175, 0.1);
+      color: var(--text);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .friend-code {
+      background: var(--bg);
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .friend-code i {
+      cursor: pointer;
+      color: var(--secondary);
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .friend-code i:hover {
+      color: var(--primary);
+      background: rgba(30, 64, 175, 0.1);
+    }
+
+    .add-friend {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .add-friend input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--card-bg);
+      color: var(--text);
+      transition: border-color 0.3s ease;
+    }
+
+    .add-friend input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .add-friend button {
+      padding: 10px 15px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .add-friend button:hover {
+      background: var(--primary-hover);
+    }
+
+    .create-group {
+      margin-bottom: 20px;
+    }
+
+    .create-group button {
+      width: 100%;
+      padding: 12px 15px;
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .create-group button:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .friend-list, .group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .friend, .group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .friend::before, .group::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .friend:hover::before, .group:hover::before {
+      transform: translateX(100%);
+    }
+
+    .friend:hover, .group:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    .online { background: var(--success); }
+    .idle { background: var(--warning); }
+    .dnd { background: var(--danger); }
+    .offline { background: var(--secondary-text); }
+
+    .friend-name, .group-name {
+      font-weight: 500;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .group {
+      border-left: 4px solid var(--info);
+    }
+
+    .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .group-members {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .remove-friend, .leave-group {
+      margin-left: auto;
+      cursor: pointer;
+      color: var(--danger);
+      opacity: 0.7;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .remove-friend:hover, .leave-group:hover {
+      opacity: 1;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .no-friends, .no-groups {
+      text-align: center;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-top: 20px;
+      font-size: 14px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .content {
+      margin-left: var(--sidebar-w);
+      padding: calc(var(--toolbar-h) + 30px) 30px 30px 30px;
+      transition: margin-left 0.3s ease;
+      min-height: calc(100vh - var(--toolbar-h));
+    }
+
+    body.sidebar-closed .content {
+      margin-left: 0;
+    }
+
+    .dashboard-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .overview-card {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .overview-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .overview-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .overview-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 15px 18px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    .new-project-btn {
+      position: relative;
+      padding: 15px 25px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 0 rgba(102, 126, 234, 0),
+        0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .new-project-btn::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+      background-size: 400%;
+      z-index: -2;
+      filter: blur(5px);
+      animation: glowing 20s linear infinite;
+      opacity: 0;
+      border-radius: 14px;
+      transition: opacity 0.3s ease;
+    }
+
+    .new-project-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: -1;
+      border-radius: 12px;
+    }
+
+    @keyframes glowing {
+      0% { background-position: 0 0; }
+      50% { background-position: 400% 0; }
+      100% { background-position: 0 0; }
+    }
+
+    .new-project-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 20px 5px rgba(102, 126, 234, 0.4), 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .new-project-btn:hover::before {
+      opacity: 1;
+    }
+
+    .new-project-btn:active {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .new-project-btn i {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    .projects {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+
+    .project-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #0ea5e9);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .project-item:hover::before {
+      transform: scaleX(1);
+    }
+
+    .project-item:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .project-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .project-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 10px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn.delete {
+      background: var(--danger);
+    }
+
+    .action-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .action-btn.delete:hover {
+      background: #dc2626;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -1693,10 +662,10 @@
 
     .modal-content {
       background: var(--card-bg);
-      padding: 30px;
+      padding: 35px;
       border-radius: 16px;
       box-shadow: var(--shadow-md);
-      width: 400px;
+      width: 450px;
       max-width: 90vw;
       animation: scaleIn 0.3s;
       position: relative;
@@ -1705,10 +674,10 @@
 
     .modal-close {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 15px;
+      right: 15px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
       color: var(--text-secondary);
       padding: 5px;
       border-radius: 50%;
@@ -1720,60 +689,84 @@
       color: var(--text);
     }
 
-    .modal h3 {
-      margin-bottom: 20px;
-      font-size: 18px;
+    .modal h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
       font-weight: 600;
       color: var(--text);
     }
 
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    .form-input {
+    .modal input {
       width: 100%;
-      padding: 10px 12px;
+      padding: 15px;
+      margin-bottom: 20px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 16px;
       background: var(--card-bg);
       color: var(--text);
       transition: border-color 0.3s ease;
     }
 
-    .form-input:focus {
+    .modal input:focus {
       outline: none;
       border-color: var(--primary);
     }
 
-    .modal-btn {
+    .modal .btn {
       width: 100%;
-      padding: 12px;
+      padding: 15px;
       background: var(--primary);
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      margin-top: 10px;
     }
 
-    .modal-btn:hover {
+    .modal .btn:hover {
       background: var(--primary-hover);
       transform: translateY(-1px);
     }
 
-    /* Animations */
+    .chart-container {
+      margin-top: 40px;
+      padding: 20px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      height: 300px;
+    }
+
+    .chart-container h3 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .chart-container canvas {
+      height: 220px !important;
+    }
+
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 5000;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -1784,293 +777,1087 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .friends-sidebar {
-        width: 250px;
-      }
-      .explorer {
-        width: 250px;
-      }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (max-width: 768px) {
-      .friends-sidebar, .explorer {
-        position: fixed;
-        width: 100vw;
-        z-index: 1500;
-      }
-      
-      .workspace {
-        left: 0 !important;
-        right: 0 !important;
-      }
-      
-      .header-center {
-        display: none;
-      }
-    }
-
-    /* Notification */
-    .notification {
-      position: fixed;
-      top: 90px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: var(--shadow-md);
-      z-index: 3000;
-      animation: slideInRight 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-      min-width: 250px;
-    }
-
-    .notification.success {
-      background: var(--success);
-      color: white;
-    }
-
-    .notification.error {
-      background: var(--danger);
-      color: white;
-    }
-
-    .notification.info {
-      background: var(--info);
-      color: white;
-    }
-
-    @keyframes slideInRight {
+    @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Properties Panel */
-    .properties-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 250px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: var(--shadow-md);
-      max-height: 300px;
-      overflow-y: auto;
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
     }
 
-    .property-group {
-      margin-bottom: 15px;
-    }
-
-    .property-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .property-input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 12px;
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+      }
+      
+      body.sidebar-closed .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .content {
+        margin-left: 0;
+        padding: calc(var(--toolbar-h) + 20px) 20px 20px 20px;
+      }
+      
+      .search-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .projects {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-overview {
+        grid-template-columns: 1fr;
+      }
+      
+      .logo {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <i class="fas fa-cube fa-3x" style="color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite;"></i>
+    <h2 style="margin: 10px 0; color: var(--text);">SteelSketch</h2>
+    <p style="color: var(--text-secondary); margin: 0;">Chargement...</p>
+  </div>
+
   <!-- Header -->
   <header>
     <div class="logo">
-      <i class="fas fa-cube"></i>
-      SteelSketch
+      <i class="fas fa-cube"></i> SteelSketch
     </div>
-    <div class="header-center">
-      <div class="project-name" id="project-name">Projet Sans Nom</div>
-      <div class="header-actions">
-        <button class="header-btn" onclick="undoAction()">
-          <i class="fas fa-undo"></i>
-        </button>
-        <button class="header-btn" onclick="redoAction()">
-          <i class="fas fa-redo"></i>
-        </button>
-        <button class="header-btn save" onclick="saveProject()">
-          <i class="fas fa-save"></i> Sauvegarder
-        </button>
+    <div class="header-right">
+      <div class="user-info">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <span class="user-name" id="user-name">Chargement...</span>
       </div>
-    </div>
-    <div class="user-info">
-      <div class="user-avatar"><i class="fas fa-user"></i></div>
-      <span id="user-name">Utilisateur</span>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> 
+        Déconnexion
+      </button>
     </div>
   </header>
 
-  <!-- Sidebar Amis -->
-  <div class="friends-sidebar" id="friends-sidebar">
-    <button class="sidebar-toggle" onclick="toggleFriendsSidebar()">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
       <i class="fas fa-chevron-left"></i>
     </button>
-    
+
     <div class="sidebar-header">
       <div class="sidebar-tabs">
-        <button class="sidebar-tab active" onclick="switchTab('online')">
-          <i class="fas fa-circle"></i> En ligne
+        <button class="sidebar-tab active" onclick="switchTab('friends')">
+          <i class="fas fa-users"></i> Amis
         </button>
-        <button class="sidebar-tab" onclick="switchTab('invite')">
-          <i class="fas fa-paper-plane"></i> Inviter
+        <button class="sidebar-tab" onclick="switchTab('groups')">
+          <i class="fas fa-layer-group"></i> Groupes
         </button>
       </div>
     </div>
 
     <div class="sidebar-content">
-      <!-- Onglet En ligne -->
-      <div id="online-tab" class="tab-content">
-        <div class="section-title">
-          <i class="fas fa-users"></i>
-          Amis connectés
+      <!-- Onglet Amis -->
+      <div id="friends-tab" class="tab-content active">
+        <div class="friend-code">
+          Code ami : <strong id="friend-code">Chargement...</strong> 
+          <i class="fas fa-copy" onclick="copyFriendCode()" title="Copier le code"></i>
         </div>
-        <div id="online-friends">
-          <div class="friend-item">
-            <div class="status-indicator online"></div>
-            <div class="friend-name">Jean Dupont</div>
-            <button class="invite-btn" onclick="inviteFriend('jean')">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-          <div class="friend-item">
-            <div class="status-indicator idle"></div>
-            <div class="friend-name">Marie Martin</div>
-            <button class="invite-btn" onclick="inviteFriend('marie')">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-          <div class="friend-item">
-            <div class="status-indicator dnd"></div>
-            <div class="friend-name">Paul Durand</div>
-            <button class="invite-btn" onclick="inviteFriend('paul')">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
+        <div class="add-friend">
+          <input type="text" id="add-friend-input" placeholder="Code ami..." maxlength="6">
+          <button onclick="addFriend()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="friend-list" id="friend-list">
+          <!-- Amis listés ici -->
         </div>
       </div>
 
-      <!-- Onglet Inviter -->
-      <div id="invite-tab" class="tab-content" style="display: none;">
-        <div class="section-title">
-          <i class="fas fa-paper-plane"></i>
-          Inviter des amis
-        </div>
-        <div class="invite-form">
-          <input type="text" class="invite-input" placeholder="Code ami ou email..." id="invite-input">
-          <button class="invite-submit" onclick="sendInvite()">
-            <i class="fas fa-plus"></i>
+      <!-- Onglet Groupes -->
+      <div id="groups-tab" class="tab-content">
+        <div class="create-group">
+          <button onclick="openCreateGroupModal()">
+            <i class="fas fa-plus"></i> Créer un groupe
           </button>
         </div>
-        <div class="section-title" style="margin-top: 25px;">
-          <i class="fas fa-clock"></i>
-          Invitations envoyées
-        </div>
-        <div id="pending-invites">
-          <div class="friend-item" style="opacity: 0.6;">
-            <div class="status-indicator" style="background: var(--warning);"></div>
-            <div class="friend-name">Alice Petit</div>
-            <span style="font-size: 12px; color: var(--text-secondary);">En attente</span>
-          </div>
+        <div class="group-list" id="group-list">
+          <!-- Groupes listés ici -->
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Explorer -->
-  <div class="explorer" id="explorer">
-    <button class="explorer-toggle" onclick="toggleExplorer()">
-      <i class="fas fa-chevron-right"></i>
-    </button>
-    
-    <div class="explorer-header">
-      <div class="explorer-title">
-        <i class="fas fa-sitemap"></i>
-        Explorateur
+  <!-- Contenu principal -->
+  <div class="content">
+    <h1 style="animation: fadeInUp 0.5s; margin: 0 0 30px 0; font-size: 32px; font-weight: 700;">
+      <i class="fas fa-folder-open"></i> Mes Projets
+    </h1>
+
+    <div class="search-bar">
+      <input class="search-input" type="text" placeholder="🔍 Rechercher un projet..." onkeyup="searchProjects(this.value)">
+      <button class="new-project-btn" onclick="openCreateModal()">
+        <i class="fas fa-plus"></i> Nouveau projet
+      </button>
+    </div>
+
+    <div class="dashboard-overview">
+      <div class="overview-card">
+        <h3>Projets totaux</h3>
+        <div class="overview-number" id="total-projects">0</div>
+      </div>
+      <div class="overview-card">
+        <h3>Projets partagés</h3>
+        <div class="overview-number" id="shared-projects">0</div>
+      </div>
+      <div class="overview-card">
+        <h3>Dernier projet</h3>
+        <div class="overview-number" id="last-project" style="font-size: 16px; font-weight: 600;">Aucun</div>
       </div>
     </div>
 
-    <div class="explorer-content">
-      <div class="tree-view" id="tree-view">
-        <div class="tree-item" data-path="workspace">
-          <div class="tree-toggle expanded" onclick="toggleTreeItem(this)">
-            <i class="fas fa-chevron-right"></i>
-          </div>
-          <i class="tree-icon fas fa-folder"></i>
-          Espace de travail
-        </div>
-        <div class="tree-children expanded">
-          <div class="tree-item" data-path="workspace/tole" onclick="selectTreeItem(this)">
-            <div class="tree-indent"></div>
-            <div class="tree-toggle expanded" onclick="toggleTreeItem(this)">
-              <i class="fas fa-chevron-right"></i>
-            </div>
-            <i class="tree-icon fas fa-square" style="color: #64748b;"></i>
-            Tôle
-          </div>
-          <div class="tree-children expanded">
-            <div class="tree-item" data-path="workspace/tole/formes" onclick="selectTreeItem(this)">
-              <div class="tree-indent"></div>
-              <div class="tree-indent"></div>
-              <div class="tree-toggle expanded" onclick="toggleTreeItem(this)">
-                <i class="fas fa-chevron-right"></i>
-              </div>
-              <i class="tree-icon fas fa-shapes" style="color: #3b82f6;"></i>
-              Formes
-            </div>
-            <div class="tree-children expanded">
-              <div class="tree-item" data-path="workspace/tole/formes/rectangle1" onclick="selectTreeItem(this)">
-                <div class="tree-indent"></div>
-                <div class="tree-indent"></div>
-                <div class="tree-indent"></div>
-                <i class="tree-icon fas fa-square-full" style="color: #22c55e;"></i>
-                Rectangle 1
-              </div>
-              <div class="tree-item" data-path="workspace/tole/formes/cercle1" onclick="selectTreeItem(this)">
-                <div class="tree-indent"></div>
-                <div class="tree-indent"></div>
-                <div class="tree-indent"></div>
-                <i class="tree-icon fas fa-circle" style="color: #f59e0b;"></i>
-                Cercle 1
-              </div>
-            </div>
-            <div class="tree-item" data-path="workspace/tole/decoupes" onclick="selectTreeItem(this)">
-              <div class="tree-indent"></div>
-              <div class="tree-indent"></div>
-              <div class="tree-toggle" onclick="toggleTreeItem(this)">
-                <i class="fas fa-chevron-right"></i>
-              </div>
-              <i class="tree-icon fas fa-cut" style="color: #ef4444;"></i>
-              Découpes
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="chart-container">
+      <h3><i class="fas fa-chart-line"></i> Activité récente</h3>
+      <canvas id="activityChart"></canvas>
+    </div>
+
+    <div class="projects" id="projects-list">
+      <!-- Projets -->
     </div>
   </div>
 
-  <!-- Workspace -->
-  <div class="workspace" id="workspace">
-    <div class="workspace-toolbar">
-      <div class="tool-group">
-        <button class="tool-btn active" data-tooltip="Sélection" onclick="selectTool('select')">
-          <i class="fas fa-mouse-pointer"></i>
-        </button>
-        <button class="tool-btn" data-tooltip="Déplacer" onclick="selectTool('move')">
-          <i class="fas fa-arrows-alt"></i>
-        </button>
-      </div>
+  <!-- Modal Créer Projet -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h2><i class="fas fa-plus-circle"></i> Créer un nouveau projet</h2>
+      <input id="projectName" type="text" placeholder="Nom du projet" maxlength="50">
+      <input id="projectDesc" type="text" placeholder="Description (optionnel)" maxlength="200">
+      <button class="btn" onclick="createNewProject()">
+        <i class="fas fa-rocket"></i> Créer le projet
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Créer Groupe -->
+  <div id="createGroupModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close" onclick="closeModal()"></i>
+      <h2><i class="fas fa-layer-group"></i> Créer un nouveau groupe</h2>
+      <input id="groupName" type="text" placeholder="Nom du groupe" maxlength="50">
+      <input id="groupDesc" type="text" placeholder="Description (optionnel)" maxlength="200">
+      <button class="btn" onclick="createNewGroup()">
+        <i class="fas fa-users"></i> Créer le groupe
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase + librairies -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+  <script>
+    // Masquer l'écran de chargement après initialisation
+    function hideLoadingScreen() {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }
+    }
+
+    // Afficher message d'erreur
+    function showError(message) {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.innerHTML = `
+          <i class="fas fa-exclamation-triangle fa-3x" style="color: var(--danger); margin-bottom: 20px;"></i>
+          <h2 style="margin: 10px 0; color: var(--text);">Erreur</h2>
+          <p style="color: var(--text-secondary); margin: 0 0 20px 0; text-align: center;">${message}</p>
+          <button onclick="location.reload()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Recharger la page</button>
+        `;
+      }
+    }
+
+    // Attendre que Firebase soit chargé
+    function initializeApp() {
+      console.log('Initializing app...');
       
-      <div class="tool-group">
-        <button class="tool-btn" data-tooltip="Rectangle" onclick="select
+      // Vérifier si Firebase est chargé
+      if (typeof firebase === 'undefined') {
+        console.error('Firebase n\'est pas chargé !');
+        showError('Firebase ne s\'est pas chargé correctement.<br>Vérifiez votre connexion internet.');
+        return;
+      }
+
+      console.log('Firebase detected, initializing...');
+
+      // Configuration Firebase - TA VRAIE CONFIG
+      const firebaseConfig = {
+        apiKey: "AIzaSyB3jjwsFcv3-gbc6ZqEyMuzfMs97SSJeE8",
+        authDomain: "steelsketch-b7264.firebaseapp.com",
+        projectId: "steelsketch-b7264",
+        storageBucket: "steelsketch-b7264.firebasestorage.app",
+        messagingSenderId: "424606073739",
+        appId: "1:424606073739:web:696f400e992a50d7bee58e",
+        measurementId: "G-TD79BYQ5P6"
+      };
+
+      try {
+        // Initialisation Firebase
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+          console.log('Firebase initialisé avec succès');
+        }
+        
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        // Maintenant on peut initialiser l'app
+        initializeDashboard();
+        
+      } catch (error) {
+        console.error('Erreur Firebase:', error);
+        showError('Erreur de configuration Firebase:<br>' + error.message + '<br><br>Vérifiez votre configuration.');
+      }
+    }
+
+    function initializeDashboard() {
+      console.log('Initializing dashboard...');
+      
+      let authInitialized = false;
+      let authTimeout;
+
+      // Fonction pour vérifier l'authentification
+      function checkAuth() {
+        console.log('Checking auth...');
+        
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          console.log('User found immediately:', currentUser.email);
+          initializeUserData(currentUser);
+          return;
+        }
+
+        console.log('No immediate user, waiting...');
+        
+        // Timeout de sécurité
+        authTimeout = setTimeout(() => {
+          console.log('Auth timeout - redirecting to login');
+          window.location.href = 'index.html';
+        }, 3000);
+      }
+
+      function initializeUserData(user) {
+        console.log('Initializing user data for:', user.email);
+        
+        if (authTimeout) {
+          clearTimeout(authTimeout);
+          authTimeout = null;
+        }
+        
+        authInitialized = true;
+        
+        // Masquer l'écran de chargement
+        hideLoadingScreen();
+        
+        // Afficher le nom d'utilisateur
+        const nameEl = document.getElementById('user-name');
+        if (nameEl) {
+          const displayName = user.displayName || 
+                             user.email?.split('@')[0] || 
+                             'Utilisateur';
+          nameEl.innerText = displayName;
+          console.log('Display name set to:', displayName);
+        }
+        
+        // Initialiser les données utilisateur
+        generateFriendCode(user.uid);
+        loadFriends(user.uid);
+        loadGroups(user.uid);
+        loadProjects(user.uid);
+        loadActivityChart(user.uid);
+      }
+
+      // Gestion de l'authentification
+      auth.onAuthStateChanged((user) => {
+        console.log('Auth state changed:', user ? `${user.email} (${user.uid.slice(0,8)}...)` : 'null');
+        
+        if (user) {
+          initializeUserData(user);
+        } else if (authInitialized) {
+          console.log('User signed out - redirecting');
+          window.location.href = 'index.html';
+        } else {
+          console.log('No user on initial load - checking auth in 1 second');
+          setTimeout(checkAuth, 1000);
+        }
+      });
+
+      // Déclarer toutes les fonctions globales
+      window.logout = function() {
+        if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+          console.log('Logging out...');
+          auth.signOut().then(() => {
+            console.log('User signed out successfully');
+            window.location.href = 'index.html';
+          }).catch(err => {
+            console.error('Error signing out:', err);
+            showNotification('Erreur lors de la déconnexion', 'error');
+          });
+        }
+      };
+
+      window.toggleSidebar = function() {
+        sidebarOpen = !sidebarOpen;
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)';
+        document.querySelector('.content').style.marginLeft = sidebarOpen ? 'var(--sidebar-w)' : '0';
+        document.querySelector('.sidebar-toggle i').className = sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+      };
+
+      window.switchTab = function(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        document.getElementById(`${tab}-tab`).classList.add('active');
+      };
+
+      window.generateFriendCode = function(uid) {
+        const code = uid.slice(0,6).toUpperCase();
+        const fcEl = document.getElementById('friend-code');
+        if (fcEl) fcEl.innerText = code;
+      };
+
+      window.copyFriendCode = function() {
+        const code = document.getElementById('friend-code').innerText;
+        if (code && code !== 'Chargement...') {
+          navigator.clipboard.writeText(code).then(() => {
+            showNotification('Code copié !', 'success');
+          }).catch(() => {
+            showNotification('Impossible de copier le code', 'error');
+          });
+        }
+      };
+
+      window.addFriend = function() {
+        const input = document.getElementById('add-friend-input');
+        if (!input) return;
+        
+        const code = input.value.toUpperCase().trim();
+        if (!code) {
+          showNotification('Veuillez entrer un code ami', 'error');
+          return;
+        }
+        
+        if (code.length !== 6) {
+          showNotification('Le code ami doit contenir 6 caractères', 'error');
+          return;
+        }
+        
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const ownCode = user.uid.slice(0,6).toUpperCase();
+        if (code === ownCode) {
+          showNotification("Vous ne pouvez pas vous ajouter vous-même !", 'error');
+          return;
+        }
+
+        // Rechercher l'utilisateur avec ce code
+        db.collection('users')
+          .where('friendCode', '==', code)
+          .get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              showNotification('Aucun utilisateur trouvé avec ce code', 'error');
+              return;
+            }
+
+            const friendData = snapshot.docs[0].data();
+            const friendId = snapshot.docs[0].id;
+
+            // Vérifier si déjà ami
+            return db.collection('friends')
+              .where('userId', '==', user.uid)
+              .where('friendId', '==', friendId)
+              .get()
+              .then(friendSnapshot => {
+                if (!friendSnapshot.empty) {
+                  showNotification('Cet utilisateur est déjà dans votre liste d\'amis !', 'error');
+                  return;
+                }
+
+                // Ajouter l'ami
+                return db.collection('friends').add({
+                  userId: user.uid,
+                  friendId: friendId,
+                  friendCode: code,
+                  friendName: friendData.displayName || friendData.email?.split('@')[0] || 'Utilisateur',
+                  status: 'accepted',
+                  addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              });
+          })
+          .then(() => {
+            input.value = '';
+            loadFriends(user.uid);
+            showNotification('Ami ajouté avec succès !', 'success');
+          })
+          .catch(err => {
+            console.error('Erreur addFriend:', err);
+            showNotification('Erreur lors de l\'ajout : ' + err.message, 'error');
+          });
+      };
+
+      window.loadFriends = function(userId) {
+        const container = document.getElementById('friend-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('friends')
+          .where('userId', '==', userId)
+          .orderBy('addedAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-friends"><i class="fas fa-user-friends"></i><br>Aucun ami ajouté pour le moment.<br><small>Ajoutez des amis avec leur code !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'friend';
+              
+              const statuses = ['online', 'offline', 'idle', 'dnd'];
+              const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+              
+              div.innerHTML = `
+                <span class="status ${randomStatus}"></span>
+                <span class="friend-name">${data.friendName}</span>
+                <i class="fas fa-times remove-friend" onclick="removeFriend('${doc.id}')" title="Supprimer cet ami"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadFriends:', err);
+            container.innerHTML = '<div class="no-friends" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.removeFriend = function(friendId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet ami ?')) {
+          db.collection('friends').doc(friendId).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) loadFriends(user.uid);
+              showNotification('Ami supprimé', 'success');
+            })
+            .catch(err => {
+              console.error('Erreur removeFriend:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
+        }
+      };
+
+      window.openCreateGroupModal = function() {
+        const modal = document.getElementById('createGroupModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('groupName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.createNewGroup = function() {
+        const nameInput = document.getElementById('groupName');
+        const descInput = document.getElementById('groupDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du groupe est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createGroupModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('groups').add({
+          name: name,
+          description: desc || 'Aucune description',
+          ownerId: user.uid,
+          ownerName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          members: [user.uid],
+          memberNames: [user.displayName || user.email?.split('@')[0] || 'Utilisateur'],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadGroups(user.uid);
+          showNotification('Groupe créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createGroup:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-users"></i> Créer le groupe';
+          }
+        });
+      };
+
+      window.loadGroups = function(userId) {
+        const container = document.getElementById('group-list');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+        
+        db.collection('groups')
+          .where('members', 'array-contains', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="no-groups"><i class="fas fa-layer-group"></i><br>Aucun groupe pour le moment.<br><small>Créez ou rejoignez un groupe !</small></div>';
+              return;
+            }
+            
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'group';
+              
+              const isOwner = data.ownerId === userId;
+              const memberCount = data.members ? data.members.length : 1;
+              
+              div.innerHTML = `
+                <i class="fas fa-layer-group" style="color: var(--info); margin-right: 8px;"></i>
+                <div class="group-info">
+                  <div class="group-name">${data.name}</div>
+                  <div class="group-members">${memberCount} membre${memberCount > 1 ? 's' : ''}</div>
+                </div>
+                ${isOwner 
+                  ? `<i class="fas fa-crown" style="color: var(--warning); margin-right: 8px;" title="Propriétaire"></i>`
+                  : ''
+                }
+                <i class="fas fa-sign-out-alt leave-group" onclick="leaveGroup('${doc.id}', '${isOwner}')" title="${isOwner ? 'Supprimer le groupe' : 'Quitter le groupe'}"></i>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadGroups:', err);
+            container.innerHTML = '<div class="no-groups" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i><br>Erreur de chargement</div>';
+          });
+      };
+
+      window.leaveGroup = function(groupId, isOwner) {
+        const confirmMessage = isOwner === 'true' 
+          ? 'Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.'
+          : 'Êtes-vous sûr de vouloir quitter ce groupe ?';
+          
+        if (confirm(confirmMessage)) {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          if (isOwner === 'true') {
+            // Supprimer le groupe
+            db.collection('groups').doc(groupId).delete()
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Groupe supprimé', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur deleteGroup:', err);
+                showNotification('Erreur lors de la suppression', 'error');
+              });
+          } else {
+            // Quitter le groupe
+            db.collection('groups').doc(groupId).update({
+              members: firebase.firestore.FieldValue.arrayRemove(user.uid),
+              memberNames: firebase.firestore.FieldValue.arrayRemove(user.displayName || user.email?.split('@')[0] || 'Utilisateur')
+            })
+              .then(() => {
+                loadGroups(user.uid);
+                showNotification('Vous avez quitté le groupe', 'success');
+              })
+              .catch(err => {
+                console.error('Erreur leaveGroup:', err);
+                showNotification('Erreur lors de la sortie du groupe', 'error');
+              });
+          }
+        }
+      };
+
+      window.openCreateModal = function() {
+        const modal = document.getElementById('createModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('projectName');
+          if (nameInput) {
+            setTimeout(() => nameInput.focus(), 100);
+          }
+        }
+      };
+
+      window.closeModal = function() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          modal.style.display = 'none';
+        });
+        
+        // Réinitialiser les champs
+        const inputs = document.querySelectorAll('.modal input');
+        inputs.forEach(input => input.value = '');
+      };
+
+      window.createNewProject = function() {
+        const nameInput = document.getElementById('projectName');
+        const descInput = document.getElementById('projectDesc');
+        if (!nameInput) return;
+        
+        const name = nameInput.value.trim();
+        const desc = descInput ? descInput.value.trim() : '';
+
+        if (!name) {
+          showNotification('Le nom du projet est requis', 'error');
+          nameInput.focus();
+          return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+          showNotification('Utilisateur non connecté', 'error');
+          return;
+        }
+
+        const createBtn = document.querySelector('#createModal .btn');
+        if (createBtn) {
+          createBtn.disabled = true;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        }
+
+        db.collection('projects').add({
+          name: name,
+          desc: desc || 'Aucune description',
+          userId: user.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastModified: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          closeModal();
+          loadProjects(user.uid);
+          showNotification('Projet créé avec succès !', 'success');
+        }).catch(err => {
+          console.error('Erreur createProject:', err);
+          showNotification('Erreur lors de la création : ' + err.message, 'error');
+        }).finally(() => {
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="fas fa-rocket"></i> Créer le projet';
+          }
+        });
+      };
+
+      window.loadProjects = function(userId) {
+        const container = document.getElementById('projects-list');
+        if (!container) return;
+        
+        const totalProjects = document.getElementById('total-projects');
+        const lastProject = document.getElementById('last-project');
+        const sharedProjects = document.getElementById('shared-projects');
+        
+        container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Chargement des projets...</div>';
+        
+        db.collection('projects')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get()
+          .then(snapshot => {
+            // Mise à jour des statistiques
+            if (totalProjects) totalProjects.innerText = snapshot.size;
+            if (sharedProjects) sharedProjects.innerText = '0'; // TODO: logique pour projets partagés
+            
+            if (snapshot.size > 0 && lastProject) {
+              const latestProject = snapshot.docs[0].data();
+              lastProject.innerText = latestProject.name;
+              lastProject.style.fontSize = '16px';
+            } else if (lastProject) {
+              lastProject.innerText = 'Aucun';
+              lastProject.style.fontSize = '16px';
+            }
+            
+            container.innerHTML = '';
+            
+            if (snapshot.empty) {
+              container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                  <i class="fas fa-folder-open fa-4x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                  <h3 style="margin: 20px 0 10px 0; font-weight: 600;">Aucun projet pour le moment</h3>
+                  <p style="margin: 0; font-size: 16px;">Créez votre premier projet pour commencer !</p>
+                </div>
+              `;
+              return;
+            }
+            
+            snapshot.forEach((doc, index) => {
+              const data = doc.data();
+              const div = document.createElement('div');
+              div.className = 'project-item';
+              div.style.animationDelay = `${index * 0.1}s`;
+              div.style.animation = 'fadeInUp 0.5s ease forwards';
+              
+              // Format de la date
+              let dateStr = 'Date inconnue';
+              if (data.createdAt && data.createdAt.toDate) {
+                const date = data.createdAt.toDate();
+                dateStr = date.toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+              }
+              
+              div.innerHTML = `
+                <div class="project-name">${data.name}</div>
+                <div class="project-desc">${data.desc || 'Aucune description'}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">
+                  <i class="fas fa-calendar-alt"></i> Créé le ${dateStr}
+                </div>
+                <div class="project-actions">
+                  <button class="action-btn" onclick="openProject('${doc.id}')">
+                    <i class="fas fa-external-link-alt"></i> Ouvrir
+                  </button>
+                  <button class="action-btn delete" onclick="deleteProject('${doc.id}')">
+                    <i class="fas fa-trash-alt"></i> Supprimer
+                  </button>
+                </div>
+              `;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error('Erreur loadProjects:', err);
+            container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 40px;"><i class="fas fa-exclamation-triangle fa-2x"></i><br><br>Erreur de chargement des projets</div>';
+          });
+      };
+
+      window.searchProjects = function(query) {
+        const items = document.querySelectorAll('.project-item');
+        const searchQuery = query.toLowerCase().trim();
+        
+        items.forEach(item => {
+          const nameEl = item.querySelector('.project-name');
+          const descEl = item.querySelector('.project-desc');
+          
+          if (!nameEl) return;
+          
+          const name = nameEl.innerText.toLowerCase();
+          const desc = descEl ? descEl.innerText.toLowerCase() : '';
+          
+          const matches = name.includes(searchQuery) || desc.includes(searchQuery);
+          
+          item.style.display = matches || searchQuery === '' ? 'block' : 'none';
+          
+          if (matches && searchQuery !== '') {
+            item.style.animation = 'fadeInUp 0.3s ease';
+          }
+        });
+        
+        // Afficher un message si aucun résultat
+        const container = document.getElementById('projects-list');
+        const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+        
+        if (visibleItems.length === 0 && searchQuery !== '' && items.length > 0) {
+          const noResults = document.createElement('div');
+          noResults.id = 'no-results';
+          noResults.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--text-secondary);';
+          noResults.innerHTML = `
+            <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+            <h3>Aucun projet trouvé</h3>
+            <p>Essayez avec d'autres mots-clés</p>
+          `;
+          container.appendChild(noResults);
+        } else {
+          const existingNoResults = document.getElementById('no-results');
+          if (existingNoResults) existingNoResults.remove();
+        }
+      };
+
+      window.openProject = function(id) {
+        showNotification('Ouverture du projet...', 'info');
+        setTimeout(() => {
+          alert(`Projet ${id} ouvert (fonctionnalité à implémenter)`);
+        }, 1000);
+      };
+
+      window.deleteProject = function(id) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')) {
+          db.collection('projects').doc(id).delete()
+            .then(() => {
+              const user = auth.currentUser;
+              if (user) {
+                loadProjects(user.uid);
+                showNotification('Projet supprimé', 'success');
+              }
+            })
+            .catch(err => {
+              console.error('Erreur deleteProject:', err);
+              showNotification('Erreur lors de la suppression', 'error');
+            });
+        }
+      };
+
+      window.loadActivityChart = function(userId) {
+        const ctxEl = document.getElementById('activityChart');
+        if (!ctxEl) return;
+        
+        const ctx = ctxEl.getContext('2d');
+        
+        // Données d'exemple - à remplacer par de vraies données de Firebase
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'];
+        const projectsData = [2, 4, 1, 6, 3, 5];
+        
+        window.activityChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Projets créés',
+              data: projectsData,
+              borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              backgroundColor: 'rgba(30, 64, 175, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }]
+          },
+          options: {
+            responsive: true;
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 20,
+                  font: {
+                    size: 14,
+                    weight: 500
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: {
+                    size: 12,
+                    weight: 500
+                  }
+                }
+              },
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0,0,0,0.05)'
+                },
+                ticks: {
+                  stepSize: 1,
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 2000,
+              easing: 'easeInOutQuart'
+            },
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            }
+          }
+        });
+      };
+
+      window.showNotification = function(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.classList.add('notification', type);
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'notificationOut 0.3s ease forwards';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      };
+
+      // Gestion des événements clavier
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+
+      // Événements Enter pour les inputs
+      document.addEventListener('DOMContentLoaded', () => {
+        const addFriendInput = document.getElementById('add-friend-input');
+        if (addFriendInput) {
+          addFriendInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              addFriend();
+            }
+          });
+        }
+        
+        const projectNameInput = document.getElementById('projectName');
+        if (projectNameInput) {
+          projectNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              createNewProject();
+            }
+          });
+        }
+
+        const groupNameInput = document.getElementById('groupName');
+        if (groupNameInput) {
+          groupNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              createNewGroup();
+            }
+          });
+        }
+        
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            searchProjects(e.target.value);
+          });
+        }
+      });
+
+      // Gestion des clics en dehors des modales
+      document.addEventListener('click', (e) => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+      });
+
+      // Initialiser les utilisateurs dans Firebase si nécessaire
+      function initializeUserInFirebase(user) {
+        const userDocRef = db.collection('users').doc(user.uid);
+        
+        userDocRef.get().then(doc => {
+          if (!doc.exists) {
+            // Créer le document utilisateur
+            userDocRef.set({
+              email: user.email,
+              displayName: user.displayName || user.email?.split('@')[0] || 'Utilisateur',
+              friendCode: user.uid.slice(0, 6).toUpperCase(),
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+              console.log('User document created in Firebase');
+            }).catch(err => {
+              console.error('Error creating user document:', err);
+            });
+          } else {
+            // Mettre à jour la dernière activité
+            userDocRef.update({
+              lastActive: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+              console.error('Error updating last active:', err);
+            });
+          }
+        }).catch(err => {
+          console.error('Error checking user document:', err);
+        });
+      }
+
+      // Modifier la fonction initializeUserData pour inclure l'initialisation Firebase
+      const originalInitializeUserData = initializeUserData;
+      initializeUserData = function(user) {
+        initializeUserInFirebase(user);
+        originalInitializeUserData(user);
+      };
+
+      console.log('Dashboard initialized successfully');
+    }
+
+    // Style pour le pulse de l'icône de chargement
+    const pulseStyle = document.createElement('style');
+    pulseStyle.textContent = `
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(pulseStyle);
+
+    // Attendre que tout soit chargé avant d'initialiser
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      // Si le DOM est déjà chargé, attendre un peu pour les scripts Firebase
+      setTimeout(initializeApp, 500);
+    }
+  </script>
+
+</body>
+</html>
